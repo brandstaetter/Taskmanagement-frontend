@@ -48,26 +48,58 @@ export class TaskCardComponent {
     const now = new Date();
     const targetDate = new Date(date);
     const diffMs = targetDate.getTime() - now.getTime();
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffSecs / 60);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
+    
+    // Convert to absolute values for calculations
+    const absDiffMs = Math.abs(diffMs);
+    const absDiffSecs = Math.floor(absDiffMs / 1000);
+    const absDiffMins = Math.floor(absDiffSecs / 60);
+    const absDiffHours = Math.floor(absDiffMins / 60);
+    const absDiffDays = Math.floor(absDiffHours / 24);
+
+    // Calculate remaining minutes and hours after subtracting days
+    const remainingHours = absDiffHours % 24;
+    const remainingMins = absDiffMins % 60;
+
+    // Helper function to create the time string
+    const getTimeString = (value: number, unit: string): string => {
+      return `${value} ${unit}${value !== 1 ? 's' : ''}`;
+    };
 
     if (diffMs > 0) {
       // Future date
-      if (diffDays > 0) return `in ${diffDays} ${diffDays === 1 ? 'day' : 'days'}`;
-      if (diffHours > 0) return `in ${diffHours} ${diffHours === 1 ? 'hour' : 'hours'}`;
-      if (diffMins > 0) return `in ${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'}`;
+      if (absDiffDays > 0) {
+        if (remainingHours > 0) {
+          return `in ${getTimeString(absDiffDays, 'day')} and ${getTimeString(remainingHours, 'hour')}`;
+        }
+        return `in ${getTimeString(absDiffDays, 'day')}`;
+      }
+      if (absDiffHours > 0) {
+        if (remainingMins > 0) {
+          return `in ${getTimeString(absDiffHours, 'hour')} and ${getTimeString(remainingMins, 'minute')}`;
+        }
+        return `in ${getTimeString(absDiffHours, 'hour')}`;
+      }
+      if (absDiffMins > 0) {
+        return `in ${getTimeString(absDiffMins, 'minute')}`;
+      }
       return 'in less than a minute';
     } else {
       // Past date
-      const absDiffDays = Math.abs(diffDays);
-      const absDiffHours = Math.abs(diffHours);
-      const absDiffMins = Math.abs(diffMins);
-
-      if (absDiffDays > 0) return `${absDiffDays} ${absDiffDays === 1 ? 'day' : 'days'} ago`;
-      if (absDiffHours > 0) return `${absDiffHours} ${absDiffHours === 1 ? 'hour' : 'hours'} ago`;
-      if (absDiffMins > 0) return `${absDiffMins} ${absDiffMins === 1 ? 'minute' : 'minutes'} ago`;
+      if (absDiffDays > 0) {
+        if (remainingHours > 0) {
+          return `${getTimeString(absDiffDays, 'day')} and ${getTimeString(remainingHours, 'hour')} ago`;
+        }
+        return `${getTimeString(absDiffDays, 'day')} ago`;
+      }
+      if (absDiffHours > 0) {
+        if (remainingMins > 0) {
+          return `${getTimeString(absDiffHours, 'hour')} and ${getTimeString(remainingMins, 'minute')} ago`;
+        }
+        return `${getTimeString(absDiffHours, 'hour')} ago`;
+      }
+      if (absDiffMins > 0) {
+        return `${getTimeString(absDiffMins, 'minute')} ago`;
+      }
       return 'just now';
     }
   }
