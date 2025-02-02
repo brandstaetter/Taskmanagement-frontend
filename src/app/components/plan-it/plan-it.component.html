@@ -1,0 +1,33 @@
+<div class="plan-it-container">
+  <div class="column">
+    <h2>To Do</h2>
+    <div class="task-list">
+      <app-task-card *ngFor="let task of todoTasks"
+                    [task]="task"
+                    (startTask)="onStartTask($event)"
+                    (completeTask)="onCompleteTask($event)">
+      </app-task-card>
+    </div>
+  </div>
+
+  <div class="column">
+    <h2>In Progress</h2>
+    <div class="task-list">
+      <app-task-card *ngFor="let task of inProgressTasks"
+                    [task]="task"
+                    (startTask)="onStartTask($event)"
+                    (completeTask)="onCompleteTask($event)">
+      </app-task-card>
+    </div>
+  </div>
+
+  <div class="column">
+    <h2>Done</h2>
+    <div class="task-list">
+      <app-task-card *ngFor="let task of doneTasks"
+                    [task]="task"
+                    [showActions]="false">
+      </app-task-card>
+    </div>
+  </div>
+</div>

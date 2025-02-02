@@ -1,0 +1,31 @@
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.datetime-container {
+  display: flex;
+  gap: 16px;
+  
+  mat-form-field {
+    flex: 1;
+  }
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+mat-dialog-actions {
+  padding: 0 24px 16px;
+  margin: 0;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+
+  button {
+    min-width: 88px;
+  }
+}

@@ -1,0 +1,77 @@
+<mat-card class="task-card" [ngClass]="getTaskClass()">
+  <mat-card-header>
+    <mat-card-title>{{ task.title }}</mat-card-title>
+    <mat-card-subtitle>
+      <ng-container *ngIf="task.due_date">
+        <span *ngIf="isOverdue(task)">⚠️ Overdue: </span>
+        <span *ngIf="!isOverdue(task)">Due: </span>
+        {{ formatDate(task.due_date) }}
+        <br>
+        <span class="timespan">{{ getTimespan(task.due_date) }}</span>
+      </ng-container>
+      <ng-container *ngIf="task.started_at && task.state === 'in_progress'">
+        <br>
+        <span class="started-info">
+          🚀 Started: {{ formatDate(task.started_at) }}
+          <br>
+          <span class="timespan">{{ getTimespan(task.started_at) }}</span>
+        </span>
+      </ng-container>
+    </mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="description-container">
+      <mat-icon class="info-icon">info</mat-icon>
+      <p class="description">{{ task.description }}</p>
+    </div>
+    <p *ngIf="task.completed_at" class="completion-time">
+      ✅ Completed: {{ formatDate(task.completed_at) }}
+      <br>
+      <span class="timespan">{{ getTimespan(task.completed_at) }}</span>
+    </p>
+  </mat-card-content>
+
+  <mat-card-footer>
+    <div class="card-footer-content">
+      <div class="footer-left">
+        <mat-chip-set *ngIf="task.reward">
+          <mat-chip highlighted color="accent">
+            🎁 {{ task.reward }}
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+      <div class="footer-right" *ngIf="mode === 'print-only' || (showActions && mode === 'default')">
+        <ng-container *ngIf="mode === 'print-only'">
+          <button *ngIf="task.state === 'todo'"
+                  mat-icon-button 
+                  (click)="printTask.emit(task)" 
+                  matTooltip="Print task">
+            <mat-icon>print</mat-icon>
+          </button>
+        </ng-container>
+        
+        <ng-container *ngIf="mode === 'default'">
+          <button *ngIf="showPrintButton"
+                  mat-icon-button 
+                  (click)="printTask.emit(task)" 
+                  matTooltip="Print task">
+            <mat-icon>print</mat-icon>
+          </button>
+          <button *ngIf="task.state === 'todo'"
+                  mat-raised-button 
+                  color="primary" 
+                  (click)="startTask.emit(task)">
+            START
+          </button>
+          <button *ngIf="task.state === 'in_progress'"
+                  mat-raised-button 
+                  color="accent" 
+                  (click)="completeTask.emit(task)">
+            COMPLETE
+          </button>
+        </ng-container>
+      </div>
+    </div>
+  </mat-card-footer>
+</mat-card>

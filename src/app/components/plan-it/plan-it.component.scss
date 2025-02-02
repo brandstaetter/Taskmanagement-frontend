@@ -1,0 +1,114 @@
+.plan-it-container {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  height: calc(100vh - 100px);
+  overflow: hidden;
+}
+
+.column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--mat-sys-surface-container-low);
+  border-radius: 8px;
+  padding: 16px;
+
+  h2 {
+    margin: 0 0 16px 0;
+    color: var(--mat-sys-on-surface);
+    text-align: center;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--mat-sys-outline-variant);
+  }
+}
+
+.task-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--mat-sys-surface-container);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--mat-sys-outline);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--mat-sys-outline-variant);
+  }
+}
+
+.task-card {
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  position: relative;
+  border-left: 4px solid transparent;
+
+  &.overdue {
+    border-left-color: var(--mat-sys-error);
+    
+    mat-card-subtitle {
+      color: var(--mat-sys-error);
+    }
+  }
+
+  &.due-soon {
+    border-left-color: var(--mat-sys-tertiary);
+  }
+
+  mat-card-header {
+    padding: 16px 16px 0;
+
+    .mat-mdc-card-header-text {
+      margin: 0;
+    }
+
+    .mat-mdc-card-title {
+      font-size: 20px;
+      line-height: 24px;
+      margin-bottom: 8px;
+    }
+
+    .mat-mdc-card-subtitle {
+      font-size: 14px;
+    }
+  }
+
+  mat-card-content {
+    padding: 16px;
+    
+    p {
+      margin: 0 0 16px 0;
+      white-space: pre-line;
+      font-size: 14px;
+      line-height: 20px;
+
+      &.reward {
+        color: var(--mat-sys-tertiary);
+      }
+
+      &.completion-time {
+        color: var(--mat-sys-primary);
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  mat-card-actions {
+    margin: 0;
+    padding: 8px 16px 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px solid var(--mat-sys-outline-variant);
+  }
+}

@@ -1,0 +1,143 @@
+.task-card {
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  position: relative;
+  border-left: 4px solid transparent;
+
+  &.overdue {
+    border-left-color: var(--mat-sys-error);
+    
+    mat-card-subtitle {
+      color: var(--mat-sys-error);
+    }
+  }
+
+  &.due-soon {
+    border-left-color: var(--mat-sys-tertiary);
+  }
+
+  mat-card-header {
+    padding: 16px 16px 0;
+
+    .mat-mdc-card-header-text {
+      margin: 0;
+    }
+
+    .mat-mdc-card-title {
+      font-size: 20px;
+      line-height: 24px;
+      margin-bottom: 8px;
+    }
+
+    .mat-mdc-card-subtitle {
+      font-size: 14px;
+
+      .timespan {
+        color: var(--mat-sys-outline);
+        font-size: 12px;
+      }
+
+      .started-info {
+        display: block;
+        margin-top: 8px;
+        padding: 4px 8px;
+        background-color: var(--mat-sys-primary-container);
+        color: var(--mat-sys-on-primary-container);
+        border-radius: 4px;
+        font-weight: 500;
+
+        .timespan {
+          color: var(--mat-sys-on-primary-container);
+          opacity: 0.8;
+        }
+      }
+    }
+  }
+
+  mat-card-content {
+    padding: 16px;
+    
+    .description-container {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      background-color: var(--mat-sys-surface-container-lowest);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+
+      .info-icon {
+        color: var(--mat-sys-primary);
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .description {
+        margin: 0;
+        white-space: pre-line;
+        font-size: 14px;
+        line-height: 20px;
+        flex: 1;
+      }
+    }
+
+    p {
+      margin: 0 0 16px 0;
+      white-space: pre-line;
+      font-size: 14px;
+      line-height: 20px;
+
+      &.completion-time {
+        color: var(--mat-sys-primary);
+        font-size: 0.9rem;
+
+        .timespan {
+          color: var(--mat-sys-outline);
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  mat-card-footer {
+    border-top: 1px solid var(--mat-sys-outline-variant);
+
+    .card-footer-content {
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+
+      .footer-left {
+        flex: 1;
+        min-width: 0;
+
+        mat-chip-set {
+          margin: 0;
+        }
+
+        mat-chip {
+          margin: 0;
+          font-size: 14px;
+        }
+      }
+
+      .footer-right {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+    }
+  }
+
+  mat-card-actions {
+    margin: 0;
+    padding: 8px 16px 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px solid var(--mat-sys-outline-variant);
+  }
+}

@@ -1,0 +1,21 @@
+<div class="task-view-container">
+  <button mat-fab 
+          color="primary"
+          class="random-task-button"
+          [disabled]="isLoadingRandom"
+          (click)="onPrintRandomTask()"
+          matTooltip="Print a random task">
+    <mat-icon>casino</mat-icon>
+  </button>
+
+  <div *ngIf="dueTasks.length === 0" class="no-tasks">
+    <mat-icon>check_circle</mat-icon>
+    <p>No upcoming urgent tasks</p>
+  </div>
+  
+  <app-task-card *ngFor="let task of dueTasks"
+                [task]="task"
+                mode="print-only"
+                (printTask)="onPrintTask($event)">
+  </app-task-card>
+</div>

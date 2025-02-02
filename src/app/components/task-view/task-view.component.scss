@@ -1,0 +1,123 @@
+.task-view-container {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+
+  .task-view-header {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: flex-end;
+
+    button {
+      .mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+
+  .random-task-button {
+    position: fixed;
+    right: 24px;
+    bottom: 96px; 
+    z-index: 2;
+
+    &:disabled {
+      opacity: 0.7;
+    }
+  }
+
+  .no-tasks {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--mat-sys-outline);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+    }
+
+    p {
+      font-size: 18px;
+      margin: 0;
+    }
+  }
+
+  .task-card {
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+    position: relative;
+    border-left: 4px solid transparent;
+
+    &.overdue {
+      border-left-color: var(--mat-sys-error);
+      
+      mat-card-subtitle {
+        color: var(--mat-sys-error);
+      }
+    }
+
+    &.due-soon {
+      border-left-color: var(--mat-sys-tertiary);
+
+    }
+
+    mat-card-header {
+      padding: 16px 16px 0;
+
+      .mat-mdc-card-header-text {
+        margin: 0;
+      }
+
+      .mat-mdc-card-title {
+        font-size: 20px;
+        line-height: 24px;
+        margin-bottom: 8px;
+      }
+
+      .mat-mdc-card-subtitle {
+        font-size: 14px;
+      }
+    }
+
+    mat-card-content {
+      padding: 16px;
+      
+      p {
+        margin: 0 0 16px 0;
+        white-space: pre-line;
+        font-size: 14px;
+        line-height: 20px;
+      }
+    }
+
+    mat-card-footer {
+      padding: 16px 16px 16px;
+      border-top: 1px solid var(--mat-sys-outline-variant);
+
+      .card-footer-content {
+        display: flex;
+        align-items: center;
+      }
+
+    }
+
+    mat-card-actions {
+      margin: 0;
+      padding-right: 8px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      
+    }
+  }
+}

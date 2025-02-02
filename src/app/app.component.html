@@ -1,0 +1,15 @@
+<div class="app-container">
+  <mat-tab-group [selectedIndex]="selectedIndex" 
+                (selectedIndexChange)="onTabChange($event)">
+    <mat-tab label="Do It">
+      <app-task-view></app-task-view>
+    </mat-tab>
+    <mat-tab label="Plan It">
+      <app-plan-it></app-plan-it>
+    </mat-tab>
+  </mat-tab-group>
+
+  <button mat-fab color="primary" class="add-task-button" (click)="openAddTaskDialog()">
+    <mat-icon>add</mat-icon>
+  </button>
+</div>

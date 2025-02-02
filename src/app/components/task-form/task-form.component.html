@@ -1,0 +1,57 @@
+<form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
+  <h2 mat-dialog-title>Add New Task</h2>
+  
+  <mat-dialog-content>
+    <div class="form-container">
+      <mat-form-field appearance="outline">
+        <mat-label>Title</mat-label>
+        <input matInput formControlName="title" placeholder="Enter task title">
+        <mat-error *ngIf="taskForm.get('title')?.hasError('required')">
+          Title is required
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" placeholder="Enter task description" rows="3"></textarea>
+        <mat-error *ngIf="taskForm.get('description')?.hasError('required')">
+          Description is required
+        </mat-error>
+      </mat-form-field>
+
+      <div class="datetime-container">
+        <mat-form-field appearance="outline">
+          <mat-label>Due Date</mat-label>
+          <input matInput 
+            [matDatepicker]="datepicker" 
+            formControlName="due_date"
+            (click)="prefillEndOfDay()">
+          <mat-datepicker #datepicker/>
+          <mat-datepicker-toggle [for]="datepicker" matSuffix (click)="prefillEndOfDay()"/>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Due Time</mat-label>
+          <input matInput
+            [matTimepicker]="timepicker"
+            formControlName="due_time"
+            (click)="prefillCurrentTime()">
+          <mat-timepicker #timepicker/>
+          <mat-timepicker-toggle [for]="timepicker" matSuffix (click)="prefillCurrentTime()"/>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Reward</mat-label>
+        <input matInput formControlName="reward" placeholder="Enter reward (optional)">
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button type="button" (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="!taskForm.valid">
+      Add Task
+    </button>
+  </mat-dialog-actions>
+</form>
