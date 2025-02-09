@@ -7,7 +7,7 @@ export interface Task {
   id: number;
   title: string;
   description: string;
-  state: 'todo' | 'in_progress' | 'done';
+  state: 'todo' | 'in_progress' | 'done' | 'archived';
   due_date?: string;
   reward?: string;
   created_at?: string;
@@ -18,12 +18,17 @@ export interface Task {
 export interface TaskCreate {
   title: string;
   description: string;
-  state?: 'todo' | 'in_progress' | 'done';
+  state?: 'todo' | 'in_progress' | 'done' | 'archived';
   due_date?: string;
   reward?: string;
   created_at?: string;
   started_at?: string;
   completed_at?: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
 }
 
 @Injectable({
@@ -34,9 +39,14 @@ export class TaskService {
 
   constructor(private http: HttpClient) { }
 
-  getTasks(skip: number = 0, limit: number = 100): Observable<Task[]> {
+  getTasks(skip: number = 0, limit: number = 100, includeArchived: boolean = false, state?: string): Observable<Task[]> {
     return this.http.get<Task[]>(`${this.apiUrl}/tasks`, {
-      params: { skip: skip.toString(), limit: limit.toString() }
+      params: {
+        skip: skip.toString(),
+        limit: limit.toString(),
+        include_archived: includeArchived.toString(),
+        ...(state && { state })
+      }
     });
   }
 
@@ -52,6 +62,15 @@ export class TaskService {
     return this.http.get<Task>(`${this.apiUrl}/tasks/random/`);
   }
 
+  searchTasks(query: string, includeArchived: boolean = false): Observable<Task[]> {
+    return this.http.get<Task[]>(`${this.apiUrl}/tasks/search/`, {
+      params: {
+        q: query,
+        include_archived: includeArchived.toString()
+      }
+    });
+  }
+
   createTask(task: TaskCreate): Observable<Task> {
     return this.http.post<Task>(`${this.apiUrl}/tasks`, task);
   }
@@ -61,7 +80,7 @@ export class TaskService {
   }
 
   printTask(id: number, printerType?: string): Observable<Blob | any> {
-    return this.http.get(`${this.apiUrl}/tasks/${id}/print`, {
+    return this.http.post(`${this.apiUrl}/tasks/${id}/print`, {}, {
       params: printerType ? { printer_type: printerType } : {},
       observe: 'response',
       responseType: 'blob'
@@ -90,5 +109,30 @@ export class TaskService {
 
   completeTask(id: number): Observable<Task> {
     return this.http.post<Task>(`${this.apiUrl}/tasks/${id}/complete`, {});
+  }
+
+  archiveTask(id: number): Observable<Task> {
+    return this.http.delete<Task>(`${this.apiUrl}/tasks/${id}`);
+  }
+
+  triggerMaintenance(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/tasks/maintenance`, {});
+  }
+
+  login(username: string, password: string): Observable<AuthResponse> {
+    const formData = new FormData();
+    formData.append('username', username);
+    formData.append('password', password);
+    
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/token`, formData);
+  }
+
+  // Admin endpoints - these require authentication
+  initDb(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/db/init`, {});
+  }
+
+  runMigrations(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/db/migrate`, {});
   }
 }

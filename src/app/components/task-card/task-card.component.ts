@@ -29,6 +29,7 @@ export class TaskCardComponent {
   @Output() startTask = new EventEmitter<Task>();
   @Output() completeTask = new EventEmitter<Task>();
   @Output() printTask = new EventEmitter<Task>();
+  @Output() archiveTask = new EventEmitter<Task>();
 
   private readonly SOON_THRESHOLD_HOURS = 12;
 
@@ -119,6 +120,9 @@ export class TaskCardComponent {
   }
 
   getTaskClass(): string {
+    if (this.task.state === 'archived') {
+      return 'archived-task';
+    }
     if (this.isOverdue(this.task)) return 'overdue';
     if (this.isDueSoon(this.task)) return 'due-soon';
     return '';

@@ -1,12 +1,14 @@
 <div class="task-view-container">
-  <button mat-fab 
-          color="primary"
-          class="random-task-button"
-          [disabled]="isLoadingRandom"
-          (click)="onPrintRandomTask()"
-          matTooltip="Print a random task">
-    <mat-icon>casino</mat-icon>
-  </button>
+  <div class="task-view-header">
+    <button mat-fab 
+            color="primary"
+            class="random-task-button"
+            [disabled]="isLoadingRandom"
+            (click)="onPrintRandomTask()"
+            matTooltip="Print a random task">
+      <mat-icon>casino</mat-icon>
+    </button>
+  </div>
 
   <div *ngIf="dueTasks.length === 0" class="no-tasks">
     <mat-icon>check_circle</mat-icon>

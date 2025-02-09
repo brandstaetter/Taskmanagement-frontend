@@ -70,6 +70,14 @@
                   (click)="completeTask.emit(task)">
             COMPLETE
           </button>
+          <button *ngIf="task.state === 'done' && !task.state.includes('archived')"
+                  mat-icon-button
+                  color="warn"
+                  (click)="archiveTask.emit(task)"
+                  matTooltip="Archive task">
+            <mat-icon>archive</mat-icon>
+          </button>
+          <mat-chip *ngIf="task.state === 'archived'" color="warn" selected>Archived</mat-chip>
         </ng-container>
       </div>
     </div>

@@ -23,6 +23,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 export class TaskViewComponent implements OnInit {
   dueTasks: Task[] = [];
   isLoadingRandom = false;
+  showArchived = false;
 
   constructor(private taskService: TaskService) {}
 
@@ -32,9 +33,19 @@ export class TaskViewComponent implements OnInit {
 
   loadDueTasks(): void {
     this.taskService.getDueTasks().subscribe(tasks => {
-      // Filter out completed tasks
-      this.dueTasks = tasks.filter(task => task.state !== 'done');
+      // Filter tasks based on archived state
+      this.dueTasks = tasks.filter(task => {
+        if (this.showArchived) {
+          return true; // Show all tasks when showArchived is true
+        }
+        return task.state !== 'archived' && task.state !== 'done';
+      });
     });
+  }
+
+  toggleArchivedTasks(): void {
+    this.showArchived = !this.showArchived;
+    this.loadDueTasks();
   }
 
   isOverdue(task: Task): boolean {
@@ -59,6 +70,12 @@ export class TaskViewComponent implements OnInit {
 
   onCompleteTask(task: Task): void {
     this.taskService.completeTask(task.id).subscribe(() => {
+      this.loadDueTasks();
+    });
+  }
+
+  onArchiveTask(task: Task): void {
+    this.taskService.archiveTask(task.id).subscribe(() => {
       this.loadDueTasks();
     });
   }

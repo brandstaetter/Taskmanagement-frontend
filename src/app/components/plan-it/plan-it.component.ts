@@ -4,13 +4,19 @@ import { Task } from '../../services/task.service';
 import { TaskService } from '../../services/task.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TaskCardComponent } from '../task-card/task-card.component';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-plan-it',
   standalone: true,
   imports: [
     CommonModule,
-    TaskCardComponent
+    TaskCardComponent,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule
   ],
   templateUrl: './plan-it.component.html',
   styleUrls: ['./plan-it.component.scss']
@@ -19,6 +25,8 @@ export class PlanItComponent implements OnInit {
   todoTasks: Task[] = [];
   inProgressTasks: Task[] = [];
   doneTasks: Task[] = [];
+  archivedTasks: Task[] = [];
+  showArchived = false;
   private readonly SOON_THRESHOLD_HOURS = 12;
 
   constructor(
@@ -31,7 +39,7 @@ export class PlanItComponent implements OnInit {
   }
 
   loadTasks(): void {
-    this.taskService.getTasks().subscribe({
+    this.taskService.getTasks(0, 100, this.showArchived).subscribe({
       next: (tasks) => {
         // Sort tasks by due date (null dates go to the end)
         const sortedTasks = tasks.sort((a, b) => {
@@ -45,10 +53,19 @@ export class PlanItComponent implements OnInit {
         this.todoTasks = sortedTasks.filter(task => task.state === 'todo');
         this.inProgressTasks = sortedTasks.filter(task => task.state === 'in_progress');
         this.doneTasks = sortedTasks.filter(task => task.state === 'done');
+        this.archivedTasks = sortedTasks.filter(task => task.state === 'archived');
       },
       error: (error) => {
-        console.error('Error loading tasks:', error);
-        this.snackBar.open('Error loading tasks', 'Close', { duration: 3000 });
+        // Only show error toast if it's not a 404 (no tasks found)
+        if (error.status !== 404) {
+          console.error('Error loading tasks:', error);
+          this.snackBar.open('Error loading tasks', 'Close', { duration: 3000 });
+        }
+        // Initialize empty arrays for all task lists
+        this.todoTasks = [];
+        this.inProgressTasks = [];
+        this.doneTasks = [];
+        this.archivedTasks = [];
       }
     });
   }
@@ -77,6 +94,24 @@ export class PlanItComponent implements OnInit {
     });
   }
 
+  onArchiveTask(task: Task): void {
+    this.taskService.archiveTask(task.id).subscribe({
+      next: () => {
+        this.loadTasks();
+        this.snackBar.open('Task archived successfully', 'Close', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Error archiving task:', error);
+        this.snackBar.open('Error archiving task', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  toggleArchivedTasks(): void {
+    this.showArchived = !this.showArchived;
+    this.loadTasks();
+  }
+
   formatDueDate(date: string | null | undefined): string {
     if (!date) return 'No date';
     return new Date(date).toLocaleString();
@@ -100,5 +135,12 @@ export class PlanItComponent implements OnInit {
     if (this.isOverdue(task)) return 'overdue';
     if (this.isDueSoon(task)) return 'due-soon';
     return '';
+  }
+
+  hasAnyTasks(): boolean {
+    return this.todoTasks.length > 0 || 
+           this.inProgressTasks.length > 0 || 
+           this.doneTasks.length > 0 || 
+           (this.showArchived && this.archivedTasks.length > 0);
   }
 }
