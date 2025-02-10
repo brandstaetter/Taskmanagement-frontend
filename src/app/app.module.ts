@@ -3,6 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 // Angular Material Imports
 import { MatButtonModule } from '@angular/material/button';
@@ -18,6 +19,7 @@ import { AppComponent } from './app.component';
 import { TaskViewComponent } from './components/task-view/task-view.component';
 import { TaskFormComponent } from './components/task-form/task-form.component';
 import { PlanItComponent } from './components/plan-it/plan-it.component';
+import { routes } from './app.routes';
 
 @NgModule({
   declarations: [
@@ -32,6 +34,7 @@ import { PlanItComponent } from './components/plan-it/plan-it.component';
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule,
+    RouterModule.forRoot(routes),
     MatButtonModule,
     MatCardModule,
     MatDialogModule,

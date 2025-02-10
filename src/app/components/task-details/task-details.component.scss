@@ -1,0 +1,104 @@
+.task-details {
+  padding: 32px;
+  max-width: 800px;
+  margin: 0 auto;
+
+  .back-button {
+    margin-bottom: 16px;
+    color: rgba(0, 0, 0, 0.87);
+    
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+
+  mat-card {
+    margin-bottom: 32px;
+  }
+
+  mat-card-header {
+    margin-bottom: 16px;
+    position: relative;
+    padding-right: 120px; // Make room for status badge
+
+    mat-card-title {
+      margin-bottom: 16px;
+      font-size: 24px;
+      line-height: 32px;
+    }
+
+    .status-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 18px;
+      font-weight: 500;
+      text-transform: capitalize;
+
+      &.todo {
+        background-color: #e3f2fd;
+        color: #1976d2;
+      }
+
+      &.in_progress {
+        background-color: #fff3e0;
+        color: #f57c00;
+      }
+
+      &.done {
+        background-color: #e8f5e9;
+        color: #388e3c;
+      }
+
+      &.archived {
+        background-color: #f5f5f5;
+        color: #616161;
+      }
+    }
+  }
+
+  .detail-section {
+    margin-bottom: 24px;
+
+    h3 {
+      font-size: 18px;
+      font-weight: 500;
+      margin: 0 0 8px 0;
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    p {
+      margin: 0;
+      color: rgba(0, 0, 0, 0.6);
+      white-space: pre-line;
+    }
+  }
+
+  mat-divider {
+    margin: 24px 0;
+  }
+
+  .timestamps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .timestamp-item {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 16px;
+      align-items: start;
+
+      .timestamp-label {
+        font-weight: 500;
+        color: rgba(0, 0, 0, 0.87);
+      }
+
+      .timestamp-value {
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+  }
+}

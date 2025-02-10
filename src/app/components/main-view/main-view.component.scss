@@ -1,0 +1,17 @@
+.main-view {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+
+  ::ng-deep .mat-mdc-tab-body-wrapper {
+    height: calc(100vh - 49px);
+    overflow-y: auto;
+  }
+}
+
+.add-task-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}

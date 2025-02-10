@@ -35,7 +35,7 @@ export interface AuthResponse {
   providedIn: 'root'
 })
 export class TaskService {
-  private apiUrl = 'http://localhost:8000/api/v1';
+  private apiUrl = 'http://taskman.brandstaetters.net:8000/api/v1';
 
   constructor(private http: HttpClient) { }
 
