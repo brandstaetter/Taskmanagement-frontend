@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface Task {
   id: number;
@@ -35,7 +36,8 @@ export interface AuthResponse {
   providedIn: 'root'
 })
 export class TaskService {
-  private apiUrl = 'http://taskman.brandstaetters.net:8000/api/v1';
+  private apiBaseUrl = environment.apiUrl;
+  private apiUrl = `${this.apiBaseUrl}/v1`;
 
   constructor(private http: HttpClient) { }
 
