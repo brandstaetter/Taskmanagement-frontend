@@ -14,7 +14,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 })
 class MockTaskCardComponent {
   @Input() task!: Task;
-  @Input() mode: string = 'default';
+  @Input() mode = 'default';
   @Output() printTask = new EventEmitter<Task>();
 }
 

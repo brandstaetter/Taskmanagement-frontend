@@ -37,6 +37,11 @@ yarn-error.log
 testem.log
 /typings
 
+# SonarQube
+.scannerwork/
+.sonar/
+sonar-report.json
+
 # System files
 .DS_Store
 Thumbs.db

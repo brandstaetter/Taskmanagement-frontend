@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, from, of } from 'rxjs';
-import { map, mergeMap } from 'rxjs/operators';
+import { mergeMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface Task {
@@ -41,13 +41,12 @@ export class TaskService {
 
   constructor(private http: HttpClient) { }
 
-  getTasks(skip = 0, limit = 100, includeArchived = false, state?: string): Observable<Task[]> {
+  getTasks(skip = 0, limit = 100, includeArchived = false): Observable<Task[]> {
     return this.http.get<Task[]>(`${this.apiUrl}/tasks`, {
       params: {
         skip: skip.toString(),
         limit: limit.toString(),
-        include_archived: includeArchived.toString(),
-        ...(state && { state })
+        include_archived: includeArchived.toString()
       }
     });
   }
@@ -100,7 +99,7 @@ export class TaskService {
               try {
                 const result = JSON.parse(reader.result as string) as Record<string, unknown>;
                 resolve(result);
-              } catch (error) {
+              } catch {
                 reject(new Error('Invalid JSON response'));
               }
             };
