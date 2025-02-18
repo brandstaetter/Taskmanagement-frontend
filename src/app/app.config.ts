@@ -1,4 +1,5 @@
-import { ApplicationConfig, importProvidersFrom, LOCALE_ID, provideRouter } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, LOCALE_ID } from '@angular/core';
+import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';

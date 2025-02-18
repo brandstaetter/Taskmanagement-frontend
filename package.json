@@ -22,7 +22,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,html,scss}\"",
     "sonar": "npm run test:coverage && sonar-scanner",
     "sonar:local": "npm run test:coverage && sonar-scanner -Dsonar.host.url=http://localhost:9000",
-    "prepare": "husky init",
+    "prepare": "husky",
     "pre-commit": "lint-staged"
   },
   "lint-staged": {
