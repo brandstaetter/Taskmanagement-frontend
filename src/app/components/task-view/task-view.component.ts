@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Task } from '../../services/task.service';
 import { TaskService } from '../../services/task.service';
 import { MatIconModule } from '@angular/material/icon';
-import { TaskCardComponent } from '../task-card/task-card.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TaskCardComponent } from '../task-card/task-card.component';
 
 @Component({
   selector: 'app-task-view',
@@ -13,9 +13,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   imports: [
     CommonModule,
     MatIconModule,
-    TaskCardComponent,
     MatButtonModule,
-    MatTooltipModule
+    MatTooltipModule,
+    TaskCardComponent
   ],
   templateUrl: './task-view.component.html',
   styleUrls: ['./task-view.component.scss']
@@ -82,7 +82,7 @@ export class TaskViewComponent implements OnInit {
 
   onPrintTask(task: Task): void {
     this.taskService.printTask(task.id).subscribe({
-      next: (response: Blob) => {
+      next: (response: Blob | Record<string, unknown>) => {
         if (response instanceof Blob) {
           // It's a PDF, create a download
           const blob = new Blob([response], { type: 'application/pdf' });
@@ -101,9 +101,8 @@ export class TaskViewComponent implements OnInit {
         if (task.state === 'todo') {
           this.taskService.startTask(task.id).subscribe({
             next: () => {
-              this.loadDueTasks(); // Refresh the task list
-            },
-            error: (error) => console.error('Error starting task after print:', error)
+              this.loadDueTasks();
+            }
           });
         }
       },

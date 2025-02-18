@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, from, of } from 'rxjs';
+import { map, mergeMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface Task {
@@ -87,24 +87,27 @@ export class TaskService {
       observe: 'response',
       responseType: 'blob'
     }).pipe(
-      map(response => {
+      mergeMap(response => {
         const contentType = response.headers.get('content-type');
         if (contentType?.includes('application/pdf')) {
-          return response.body;
+          return of(response.body as Blob);
         }
         // If it's not a PDF, convert the blob to JSON
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            try {
-              resolve(JSON.parse(reader.result as string));
-            } catch {
-              reject(new Error('Invalid JSON response'));
-            }
-          };
-          reader.onerror = () => reject(reader.error);
-          reader.readAsText(response.body as Blob);
-        });
+        return from(
+          new Promise<Record<string, unknown>>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                const result = JSON.parse(reader.result as string) as Record<string, unknown>;
+                resolve(result);
+              } catch (error) {
+                reject(new Error('Invalid JSON response'));
+              }
+            };
+            reader.onerror = () => reject(reader.error);
+            reader.readAsText(response.body as Blob);
+          })
+        );
       })
     );
   }
@@ -118,7 +121,7 @@ export class TaskService {
   }
 
   triggerMaintenance(): Observable<Record<string, unknown>> {
-    return this.http.post(`${this.apiUrl}/tasks/maintenance`, {});
+    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/tasks/maintenance`, {});
   }
 
   login(username: string, password: string): Observable<AuthResponse> {
@@ -131,10 +134,10 @@ export class TaskService {
 
   // Admin endpoints - these require authentication
   initDb(): Observable<Record<string, unknown>> {
-    return this.http.post(`${this.apiUrl}/admin/db/init`, {});
+    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/admin/db/init`, {});
   }
 
   runMigrations(): Observable<Record<string, unknown>> {
-    return this.http.post(`${this.apiUrl}/admin/db/migrate`, {});
+    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/admin/db/migrate`, {});
   }
 }

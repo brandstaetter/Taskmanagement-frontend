@@ -9,3 +9,4 @@
 9. We are in windows, so use powershell commands in terminal
 10. do not hallucinate, verify instead of assuming things about the environment
 11. We use nvm for managing node versions, so use nvm commands in terminal to ensure that the latest lts version is active
+12. We use standalone components, so do not use inline templates or styles
