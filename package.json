@@ -4,9 +4,20 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:dev": "ng serve --configuration=development",
+    "start:prod": "ng serve --configuration=production",
     "build": "ng build",
+    "build:prod": "ng build --configuration=production",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
+    "test:coverage": "ng test --code-coverage --watch=false",
+    "lint": "ng lint",
+    "lint:fix": "ng lint --fix",
+    "e2e": "ng e2e",
+    "analyze": "ng build --stats-json && webpack-bundle-analyzer dist/frontend/stats.json",
+    "clean": "rimraf dist node_modules",
+    "clean:dist": "rimraf dist"
   },
   "private": true,
   "dependencies": {
@@ -29,12 +40,17 @@
     "@angular/cli": "^19.1.4",
     "@angular/compiler-cli": "^19.1.0",
     "@types/jasmine": "~5.1.0",
+    "angular-eslint": "19.1.0",
+    "eslint": "^9.20.0",
     "jasmine-core": "~5.5.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "~5.7.2"
+    "rimraf": "^6.0.1",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "8.23.0",
+    "webpack-bundle-analyzer": "^4.10.2"
   }
 }

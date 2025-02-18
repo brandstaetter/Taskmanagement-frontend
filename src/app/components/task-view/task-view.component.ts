@@ -82,7 +82,7 @@ export class TaskViewComponent implements OnInit {
 
   onPrintTask(task: Task): void {
     this.taskService.printTask(task.id).subscribe({
-      next: (response: any) => {
+      next: (response: Blob) => {
         if (response instanceof Blob) {
           // It's a PDF, create a download
           const blob = new Blob([response], { type: 'application/pdf' });

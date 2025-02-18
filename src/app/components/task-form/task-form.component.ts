@@ -54,7 +54,7 @@ export class TaskFormComponent {
     });
 
     // Update time when date changes if time is already set
-    this.taskForm.get('due_date')?.valueChanges.subscribe(date => {
+    this.taskForm.get('due_date')?.valueChanges.subscribe(() => {
       const timeControl = this.taskForm.get('due_time');
       if (timeControl?.value) {
         this.updateDateTime();

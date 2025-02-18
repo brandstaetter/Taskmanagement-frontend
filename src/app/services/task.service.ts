@@ -41,7 +41,7 @@ export class TaskService {
 
   constructor(private http: HttpClient) { }
 
-  getTasks(skip: number = 0, limit: number = 100, includeArchived: boolean = false, state?: string): Observable<Task[]> {
+  getTasks(skip = 0, limit = 100, includeArchived = false, state?: string): Observable<Task[]> {
     return this.http.get<Task[]>(`${this.apiUrl}/tasks`, {
       params: {
         skip: skip.toString(),
@@ -64,7 +64,7 @@ export class TaskService {
     return this.http.get<Task>(`${this.apiUrl}/tasks/random/`);
   }
 
-  searchTasks(query: string, includeArchived: boolean = false): Observable<Task[]> {
+  searchTasks(query: string, includeArchived = false): Observable<Task[]> {
     return this.http.get<Task[]>(`${this.apiUrl}/tasks/search/`, {
       params: {
         q: query,
@@ -81,7 +81,7 @@ export class TaskService {
     return this.http.post<Task>(`${this.apiUrl}/tasks/${id}/start`, {});
   }
 
-  printTask(id: number, printerType?: string): Observable<Blob | any> {
+  printTask(id: number, printerType?: string): Observable<Blob | Record<string, unknown>> {
     return this.http.post(`${this.apiUrl}/tasks/${id}/print`, {}, {
       params: printerType ? { printer_type: printerType } : {},
       observe: 'response',
@@ -117,7 +117,7 @@ export class TaskService {
     return this.http.delete<Task>(`${this.apiUrl}/tasks/${id}`);
   }
 
-  triggerMaintenance(): Observable<any> {
+  triggerMaintenance(): Observable<Record<string, unknown>> {
     return this.http.post(`${this.apiUrl}/tasks/maintenance`, {});
   }
 
@@ -130,11 +130,11 @@ export class TaskService {
   }
 
   // Admin endpoints - these require authentication
-  initDb(): Observable<any> {
+  initDb(): Observable<Record<string, unknown>> {
     return this.http.post(`${this.apiUrl}/admin/db/init`, {});
   }
 
-  runMigrations(): Observable<any> {
+  runMigrations(): Observable<Record<string, unknown>> {
     return this.http.post(`${this.apiUrl}/admin/db/migrate`, {});
   }
 }
