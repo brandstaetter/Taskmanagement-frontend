@@ -16,7 +16,9 @@ describe('TaskFormComponent', () => {
 
   beforeEach(async () => {
     const taskServiceSpy = jasmine.createSpyObj('TaskService', ['createTask']);
-    taskServiceSpy.createTask.and.returnValue(of({ id: 1, title: 'Test Task', description: 'Test Description', state: 'todo' }));
+    taskServiceSpy.createTask.and.returnValue(
+      of({ id: 1, title: 'Test Task', description: 'Test Description', state: 'todo' })
+    );
 
     const dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close']);
 
@@ -25,14 +27,14 @@ describe('TaskFormComponent', () => {
         TaskFormComponent,
         ReactiveFormsModule,
         HttpClientTestingModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
       ],
       providers: [
         FormBuilder,
         { provide: TaskService, useValue: taskServiceSpy },
         { provide: MatDialogRef, useValue: dialogRefSpy },
-        { provide: MatSnackBar, useValue: jasmine.createSpyObj('MatSnackBar', ['open']) }
-      ]
+        { provide: MatSnackBar, useValue: jasmine.createSpyObj('MatSnackBar', ['open']) },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TaskFormComponent);
@@ -57,12 +59,12 @@ describe('TaskFormComponent', () => {
   it('should validate required fields', () => {
     const form = component.taskForm;
     expect(form.valid).toBeFalse();
-    
+
     form.patchValue({
       title: 'Test Task',
-      description: 'Test Description'
+      description: 'Test Description',
     });
-    
+
     expect(form.valid).toBeTrue();
   });
 
@@ -70,7 +72,7 @@ describe('TaskFormComponent', () => {
     const testTask = {
       title: 'Test Task',
       description: 'Test Description',
-      reward: '10 points'
+      reward: '10 points',
     };
 
     component.taskForm.patchValue(testTask);
@@ -83,9 +85,9 @@ describe('TaskFormComponent', () => {
   it('should not submit form when invalid', () => {
     component.taskForm.patchValue({
       title: '',
-      description: ''
+      description: '',
     });
-    
+
     component.onSubmit();
 
     expect(taskService.createTask).not.toHaveBeenCalled();

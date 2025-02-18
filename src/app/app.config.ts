@@ -24,6 +24,6 @@ export const appConfig: ApplicationConfig = {
       MatNativeDateModule,
       MatDatepickerModule,
       MatTimepickerModule
-    )
-  ]
+    ),
+  ],
 };

@@ -12,13 +12,12 @@
     margin-bottom: 24px;
     display: flex;
     justify-content: flex-end;
-
   }
 
   .random-task-button {
     position: fixed;
     right: 24px;
-    bottom: 96px; 
+    bottom: 96px;
     z-index: 999;
     display: flex;
     align-items: center;
@@ -70,7 +69,7 @@
 
     &.overdue {
       border-left-color: var(--mat-sys-error);
-      
+
       mat-card-subtitle {
         color: var(--mat-sys-error);
       }
@@ -78,7 +77,6 @@
 
     &.due-soon {
       border-left-color: var(--mat-sys-tertiary);
-
     }
 
     mat-card-header {
@@ -101,7 +99,7 @@
 
     mat-card-content {
       padding: 16px;
-      
+
       p {
         margin: 0 0 16px 0;
         white-space: pre-line;
@@ -118,7 +116,6 @@
         display: flex;
         align-items: center;
       }
-
     }
 
     mat-card-actions {
@@ -127,7 +124,6 @@
       display: flex;
       justify-content: flex-end;
       gap: 8px;
-      
     }
   }
 }

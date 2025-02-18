@@ -20,8 +20,8 @@ import { MatIconModule } from '@angular/material/icon';
     MatChipsModule,
     MatDividerModule,
     MatButtonModule,
-    MatIconModule
-  ]
+    MatIconModule,
+  ],
 })
 export class TaskDetailsComponent implements OnInit {
   task$!: Observable<Task>;

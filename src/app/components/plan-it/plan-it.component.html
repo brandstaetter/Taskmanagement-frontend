@@ -1,9 +1,11 @@
 <div class="plan-it-container">
   <div class="plan-it-header">
-    <button mat-button
-            color="primary"
-            (click)="toggleArchivedTasks()"
-            [matTooltip]="showArchived ? 'Hide archived tasks' : 'Show archived tasks'">
+    <button
+      mat-button
+      color="primary"
+      (click)="toggleArchivedTasks()"
+      [matTooltip]="showArchived ? 'Hide archived tasks' : 'Show archived tasks'"
+    >
       <mat-icon>{{ showArchived ? 'visibility_off' : 'visibility' }}</mat-icon>
       {{ showArchived ? 'Hide Archived' : 'Show Archived' }}
     </button>
@@ -21,11 +23,13 @@
         <div *ngIf="todoTasks.length === 0" class="empty-column-message">
           <p>No tasks to do</p>
         </div>
-        <app-task-card *ngFor="let task of todoTasks"
-                      [task]="task"
-                      (startTask)="onStartTask($event)"
-                      (completeTask)="onCompleteTask($event)"
-                      (archiveTask)="onArchiveTask($event)">
+        <app-task-card
+          *ngFor="let task of todoTasks"
+          [task]="task"
+          (startTask)="onStartTask($event)"
+          (completeTask)="onCompleteTask($event)"
+          (archiveTask)="onArchiveTask($event)"
+        >
         </app-task-card>
       </div>
     </div>
@@ -36,11 +40,13 @@
         <div *ngIf="inProgressTasks.length === 0" class="empty-column-message">
           <p>No tasks in progress</p>
         </div>
-        <app-task-card *ngFor="let task of inProgressTasks"
-                      [task]="task"
-                      (startTask)="onStartTask($event)"
-                      (completeTask)="onCompleteTask($event)"
-                      (archiveTask)="onArchiveTask($event)">
+        <app-task-card
+          *ngFor="let task of inProgressTasks"
+          [task]="task"
+          (startTask)="onStartTask($event)"
+          (completeTask)="onCompleteTask($event)"
+          (archiveTask)="onArchiveTask($event)"
+        >
         </app-task-card>
       </div>
     </div>
@@ -51,9 +57,11 @@
         <div *ngIf="doneTasks.length === 0" class="empty-column-message">
           <p>No completed tasks</p>
         </div>
-        <app-task-card *ngFor="let task of doneTasks"
-                      [task]="task"
-                      (archiveTask)="onArchiveTask($event)">
+        <app-task-card
+          *ngFor="let task of doneTasks"
+          [task]="task"
+          (archiveTask)="onArchiveTask($event)"
+        >
         </app-task-card>
       </div>
     </div>
@@ -64,9 +72,7 @@
         <div *ngIf="archivedTasks.length === 0" class="empty-column-message">
           <p>No archived tasks</p>
         </div>
-        <app-task-card *ngFor="let task of archivedTasks"
-                      [task]="task"
-                      [showActions]="false">
+        <app-task-card *ngFor="let task of archivedTasks" [task]="task" [showActions]="false">
         </app-task-card>
       </div>
     </div>

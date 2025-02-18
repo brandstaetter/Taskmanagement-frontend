@@ -10,7 +10,7 @@
         <mat-card-title>{{ task.title }}</mat-card-title>
         <div class="status-badge" [ngClass]="task.state">{{ task.state }}</div>
       </mat-card-header>
-      
+
       <mat-card-content>
         <div class="detail-section">
           <h3>Description</h3>
@@ -21,7 +21,7 @@
 
         <div class="detail-section" *ngIf="task.due_date">
           <h3>Due Date</h3>
-          <p>{{ task.due_date | date:'short' }}</p>
+          <p>{{ task.due_date | date: 'short' }}</p>
         </div>
 
         <div class="detail-section" *ngIf="task.reward">
@@ -34,15 +34,15 @@
         <div class="timestamps">
           <div class="timestamp-item" *ngIf="task.created_at">
             <div class="timestamp-label">Created</div>
-            <div class="timestamp-value">{{ task.created_at | date:'short' }}</div>
+            <div class="timestamp-value">{{ task.created_at | date: 'short' }}</div>
           </div>
           <div class="timestamp-item" *ngIf="task.started_at">
             <div class="timestamp-label">Started</div>
-            <div class="timestamp-value">{{ task.started_at | date:'short' }}</div>
+            <div class="timestamp-value">{{ task.started_at | date: 'short' }}</div>
           </div>
           <div class="timestamp-item" *ngIf="task.completed_at">
             <div class="timestamp-label">Completed</div>
-            <div class="timestamp-value">{{ task.completed_at | date:'short' }}</div>
+            <div class="timestamp-value">{{ task.completed_at | date: 'short' }}</div>
           </div>
         </div>
       </mat-card-content>

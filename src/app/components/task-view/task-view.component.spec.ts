@@ -10,7 +10,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 @Component({
   selector: 'app-task-card',
   template: '',
-  standalone: true
+  standalone: true,
 })
 class MockTaskCardComponent {
   @Input() task!: Task;
@@ -29,22 +29,22 @@ describe('TaskViewComponent', () => {
       title: 'Task 1',
       description: 'Description 1',
       state: 'todo',
-      due_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // tomorrow
+      due_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // tomorrow
     },
     {
       id: 2,
       title: 'Task 2',
       description: 'Description 2',
       state: 'in_progress',
-      due_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // yesterday
+      due_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // yesterday
     },
     {
       id: 3,
       title: 'Task 3',
       description: 'Description 3',
       state: 'archived',
-      due_date: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString() // 2 hours from now
-    }
+      due_date: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
+    },
   ];
 
   beforeEach(async () => {
@@ -53,23 +53,19 @@ describe('TaskViewComponent', () => {
       'startTask',
       'completeTask',
       'archiveTask',
-      'printTask'
+      'printTask',
     ]);
     taskServiceSpy.getDueTasks.and.returnValue(of(mockTasks));
     taskServiceSpy.startTask.and.returnValue(of({ ...mockTasks[0], state: 'in_progress' }));
     taskServiceSpy.completeTask.and.returnValue(of({ ...mockTasks[0], state: 'done' }));
     taskServiceSpy.archiveTask.and.returnValue(of({ ...mockTasks[0], state: 'archived' }));
-    taskServiceSpy.printTask.and.returnValue(of(new Blob(['PDF content'], { type: 'application/pdf' })));
+    taskServiceSpy.printTask.and.returnValue(
+      of(new Blob(['PDF content'], { type: 'application/pdf' }))
+    );
 
     await TestBed.configureTestingModule({
-      imports: [
-        TaskViewComponent,
-        NoopAnimationsModule,
-        MockTaskCardComponent
-      ],
-      providers: [
-        { provide: TaskService, useValue: taskServiceSpy }
-      ]
+      imports: [TaskViewComponent, NoopAnimationsModule, MockTaskCardComponent],
+      providers: [{ provide: TaskService, useValue: taskServiceSpy }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TaskViewComponent);
@@ -89,11 +85,11 @@ describe('TaskViewComponent', () => {
 
   it('should toggle archived tasks visibility', () => {
     expect(component.dueTasks.length).toBe(2); // initially excluding archived
-    
+
     component.toggleArchivedTasks();
     expect(component.showArchived).toBeTrue();
     expect(component.dueTasks.length).toBe(3); // now including archived
-    
+
     component.toggleArchivedTasks();
     expect(component.showArchived).toBeFalse();
     expect(component.dueTasks.length).toBe(2); // back to excluding archived
@@ -112,7 +108,7 @@ describe('TaskViewComponent', () => {
   it('should start a task', fakeAsync(() => {
     component.onStartTask(mockTasks[0]);
     tick();
-    
+
     expect(taskService.startTask).toHaveBeenCalledWith(mockTasks[0].id);
     expect(taskService.getDueTasks).toHaveBeenCalledTimes(2); // initial + after start
   }));
@@ -120,7 +116,7 @@ describe('TaskViewComponent', () => {
   it('should complete a task', fakeAsync(() => {
     component.onCompleteTask(mockTasks[0]);
     tick();
-    
+
     expect(taskService.completeTask).toHaveBeenCalledWith(mockTasks[0].id);
     expect(taskService.getDueTasks).toHaveBeenCalledTimes(2); // initial + after complete
   }));
@@ -128,7 +124,7 @@ describe('TaskViewComponent', () => {
   it('should archive a task', fakeAsync(() => {
     component.onArchiveTask(mockTasks[0]);
     tick();
-    
+
     expect(taskService.archiveTask).toHaveBeenCalledWith(mockTasks[0].id);
     expect(taskService.getDueTasks).toHaveBeenCalledTimes(2); // initial + after archive
   }));
@@ -158,7 +154,7 @@ describe('TaskViewComponent', () => {
   it('should handle non-PDF response when printing', fakeAsync(() => {
     // Mock console.log
     spyOn(console, 'log');
-    
+
     // Change printTask to return a non-PDF response
     taskService.printTask.and.returnValue(of({ message: 'Sent to printer' }));
 

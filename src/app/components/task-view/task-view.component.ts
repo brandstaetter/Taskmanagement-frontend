@@ -10,15 +10,9 @@ import { TaskCardComponent } from '../task-card/task-card.component';
 @Component({
   selector: 'app-task-view',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatIconModule,
-    MatButtonModule,
-    MatTooltipModule,
-    TaskCardComponent
-  ],
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatTooltipModule, TaskCardComponent],
   templateUrl: './task-view.component.html',
-  styleUrls: ['./task-view.component.scss']
+  styleUrls: ['./task-view.component.scss'],
 })
 export class TaskViewComponent implements OnInit {
   dueTasks: Task[] = [];
@@ -102,22 +96,22 @@ export class TaskViewComponent implements OnInit {
           this.taskService.startTask(task.id).subscribe({
             next: () => {
               this.loadDueTasks();
-            }
+            },
           });
         }
       },
-      error: (error) => console.error('Error printing task:', error)
+      error: error => console.error('Error printing task:', error),
     });
   }
 
   onPrintRandomTask(): void {
     if (this.isLoadingRandom) return;
-    
+
     this.isLoadingRandom = true;
     this.taskService.getRandomTask().subscribe({
-      next: (task) => this.onPrintTask(task),
-      error: (error) => console.error('Error getting random task:', error),
-      complete: () => this.isLoadingRandom = false
+      next: task => this.onPrintTask(task),
+      error: error => console.error('Error getting random task:', error),
+      complete: () => (this.isLoadingRandom = false),
     });
   }
 }

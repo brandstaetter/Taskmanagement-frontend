@@ -22,12 +22,7 @@ import { PlanItComponent } from './components/plan-it/plan-it.component';
 import { routes } from './app.routes';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    TaskViewComponent,
-    TaskFormComponent,
-    PlanItComponent
-  ],
+  declarations: [AppComponent, TaskViewComponent, TaskFormComponent, PlanItComponent],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
@@ -41,9 +36,9 @@ import { routes } from './app.routes';
     MatFormFieldModule,
     MatInputModule,
     MatSnackBarModule,
-    MatTabsModule
+    MatTabsModule,
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

@@ -11,15 +11,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 @Component({
   selector: 'app-plan-it',
   standalone: true,
-  imports: [
-    CommonModule,
-    TaskCardComponent,
-    MatIconModule,
-    MatButtonModule,
-    MatTooltipModule
-  ],
+  imports: [CommonModule, TaskCardComponent, MatIconModule, MatButtonModule, MatTooltipModule],
   templateUrl: './plan-it.component.html',
-  styleUrls: ['./plan-it.component.scss']
+  styleUrls: ['./plan-it.component.scss'],
 })
 export class PlanItComponent implements OnInit {
   todoTasks: Task[] = [];
@@ -40,7 +34,7 @@ export class PlanItComponent implements OnInit {
 
   loadTasks(): void {
     this.taskService.getTasks(0, 100, this.showArchived).subscribe({
-      next: (tasks) => {
+      next: tasks => {
         // Sort tasks by due date (null dates go to the end)
         const sortedTasks = tasks.sort((a, b) => {
           if (!a.due_date && !b.due_date) return 0;
@@ -55,7 +49,7 @@ export class PlanItComponent implements OnInit {
         this.doneTasks = sortedTasks.filter(task => task.state === 'done');
         this.archivedTasks = sortedTasks.filter(task => task.state === 'archived');
       },
-      error: (error) => {
+      error: error => {
         // Only show error toast if it's not a 404 (no tasks found)
         if (error.status !== 404) {
           console.error('Error loading tasks:', error);
@@ -66,7 +60,7 @@ export class PlanItComponent implements OnInit {
         this.inProgressTasks = [];
         this.doneTasks = [];
         this.archivedTasks = [];
-      }
+      },
     });
   }
 
@@ -75,10 +69,10 @@ export class PlanItComponent implements OnInit {
       next: () => {
         this.loadTasks();
       },
-      error: (error) => {
+      error: error => {
         console.error('Error starting task:', error);
         this.snackBar.open('Error starting task', 'Close', { duration: 3000 });
-      }
+      },
     });
   }
 
@@ -87,10 +81,10 @@ export class PlanItComponent implements OnInit {
       next: () => {
         this.loadTasks();
       },
-      error: (error) => {
+      error: error => {
         console.error('Error completing task:', error);
         this.snackBar.open('Error completing task', 'Close', { duration: 3000 });
-      }
+      },
     });
   }
 
@@ -100,10 +94,10 @@ export class PlanItComponent implements OnInit {
         this.loadTasks();
         this.snackBar.open('Task archived successfully', 'Close', { duration: 3000 });
       },
-      error: (error) => {
+      error: error => {
         console.error('Error archiving task:', error);
         this.snackBar.open('Error archiving task', 'Close', { duration: 3000 });
-      }
+      },
     });
   }
 
@@ -138,9 +132,11 @@ export class PlanItComponent implements OnInit {
   }
 
   hasAnyTasks(): boolean {
-    return this.todoTasks.length > 0 || 
-           this.inProgressTasks.length > 0 || 
-           this.doneTasks.length > 0 || 
-           (this.showArchived && this.archivedTasks.length > 0);
+    return (
+      this.todoTasks.length > 0 ||
+      this.inProgressTasks.length > 0 ||
+      this.doneTasks.length > 0 ||
+      (this.showArchived && this.archivedTasks.length > 0)
+    );
   }
 }

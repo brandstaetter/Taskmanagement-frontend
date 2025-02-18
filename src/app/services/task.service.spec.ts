@@ -11,7 +11,7 @@ describe('TaskService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [TaskService]
+      providers: [TaskService],
     });
     service = TestBed.inject(TaskService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -28,7 +28,7 @@ describe('TaskService', () => {
   describe('getTasks', () => {
     it('should get tasks with default parameters', () => {
       const mockTasks: Task[] = [
-        { id: 1, title: 'Task 1', description: 'Description 1', state: 'todo' }
+        { id: 1, title: 'Task 1', description: 'Description 1', state: 'todo' },
       ];
 
       service.getTasks().subscribe(tasks => {
@@ -40,18 +40,20 @@ describe('TaskService', () => {
       req.flush(mockTasks);
     });
 
-    it('should get tasks with custom parameters', () => {
-      const mockTasks: Task[] = [
-        { id: 1, title: 'Task 1', description: 'Description 1', state: 'todo' }
+    it('should get tasks with pagination and archive filter', (done: DoneFn) => {
+      const mockResponse: Task[] = [
+        { id: 1, title: 'Task 1', description: 'Description 1', state: 'done' },
+        { id: 2, title: 'Task 2', description: 'Description 2', state: 'archived' },
       ];
 
-      service.getTasks(10, 50, true, 'done').subscribe(tasks => {
-        expect(tasks).toEqual(mockTasks);
+      service.getTasks(10, 50, true).subscribe(tasks => {
+        expect(tasks).toEqual(mockResponse);
+        done();
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/tasks?skip=10&limit=50&include_archived=true&state=done`);
+      const req = httpMock.expectOne(`${apiUrl}/tasks?skip=10&limit=50&include_archived=true`);
       expect(req.request.method).toBe('GET');
-      req.flush(mockTasks);
+      req.flush(mockResponse);
     });
   });
 
@@ -59,14 +61,14 @@ describe('TaskService', () => {
     it('should create a new task', () => {
       const newTask: TaskCreate = {
         title: 'New Task',
-        description: 'New Description'
+        description: 'New Description',
       };
 
       const mockResponse: Task = {
         id: 1,
         title: 'New Task',
         description: 'New Description',
-        state: 'todo'
+        state: 'todo',
       };
 
       service.createTask(newTask).subscribe(task => {
@@ -93,14 +95,16 @@ describe('TaskService', () => {
       const req = httpMock.expectOne(`${apiUrl}/tasks/${taskId}/print`);
       expect(req.request.method).toBe('POST');
       req.flush(mockPdfBlob, {
-        headers: { 'content-type': 'application/pdf' }
+        headers: { 'content-type': 'application/pdf' },
       });
     });
 
     it('should handle JSON response', () => {
       const taskId = 1;
       const mockJsonResponse = { message: 'Success' };
-      const mockJsonBlob = new Blob([JSON.stringify(mockJsonResponse)], { type: 'application/json' });
+      const mockJsonBlob = new Blob([JSON.stringify(mockJsonResponse)], {
+        type: 'application/json',
+      });
 
       service.printTask(taskId).subscribe(response => {
         expect(response).toEqual(mockJsonResponse);
@@ -109,7 +113,7 @@ describe('TaskService', () => {
       const req = httpMock.expectOne(`${apiUrl}/tasks/${taskId}/print`);
       expect(req.request.method).toBe('POST');
       req.flush(mockJsonBlob, {
-        headers: { 'content-type': 'application/json' }
+        headers: { 'content-type': 'application/json' },
       });
     });
   });
@@ -120,7 +124,7 @@ describe('TaskService', () => {
       id: 1,
       title: 'Task',
       description: 'Description',
-      state: 'todo'
+      state: 'todo',
     };
 
     it('should start a task', () => {
@@ -158,7 +162,7 @@ describe('TaskService', () => {
     it('should handle login', () => {
       const mockResponse = {
         access_token: 'token123',
-        token_type: 'bearer'
+        token_type: 'bearer',
       };
 
       service.login('username', 'password').subscribe(response => {

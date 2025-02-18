@@ -6,7 +6,7 @@
 
   &.overdue {
     border-left-color: var(--mat-sys-error);
-    
+
     mat-card-subtitle {
       color: var(--mat-sys-error);
     }
@@ -19,7 +19,7 @@
   &.archived-task {
     opacity: 0.7;
     background-color: #f5f5f5;
-    
+
     .mat-mdc-card-title {
       text-decoration: line-through;
       color: #666;
@@ -66,7 +66,7 @@
 
   mat-card-content {
     padding: 16px;
-    
+
     .description-container {
       display: flex;
       gap: 12px;

@@ -33,21 +33,21 @@ export interface AuthResponse {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TaskService {
   private apiBaseUrl = environment.apiUrl;
   private apiUrl = `${this.apiBaseUrl}/v1`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getTasks(skip = 0, limit = 100, includeArchived = false): Observable<Task[]> {
     return this.http.get<Task[]>(`${this.apiUrl}/tasks`, {
       params: {
         skip: skip.toString(),
         limit: limit.toString(),
-        include_archived: includeArchived.toString()
-      }
+        include_archived: includeArchived.toString(),
+      },
     });
   }
 
@@ -67,8 +67,8 @@ export class TaskService {
     return this.http.get<Task[]>(`${this.apiUrl}/tasks/search/`, {
       params: {
         q: query,
-        include_archived: includeArchived.toString()
-      }
+        include_archived: includeArchived.toString(),
+      },
     });
   }
 
@@ -81,34 +81,40 @@ export class TaskService {
   }
 
   printTask(id: number, printerType?: string): Observable<Blob | Record<string, unknown>> {
-    return this.http.post(`${this.apiUrl}/tasks/${id}/print`, {}, {
-      params: printerType ? { printer_type: printerType } : {},
-      observe: 'response',
-      responseType: 'blob'
-    }).pipe(
-      mergeMap(response => {
-        const contentType = response.headers.get('content-type');
-        if (contentType?.includes('application/pdf')) {
-          return of(response.body as Blob);
+    return this.http
+      .post(
+        `${this.apiUrl}/tasks/${id}/print`,
+        {},
+        {
+          params: printerType ? { printer_type: printerType } : {},
+          observe: 'response',
+          responseType: 'blob',
         }
-        // If it's not a PDF, convert the blob to JSON
-        return from(
-          new Promise<Record<string, unknown>>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              try {
-                const result = JSON.parse(reader.result as string) as Record<string, unknown>;
-                resolve(result);
-              } catch {
-                reject(new Error('Invalid JSON response'));
-              }
-            };
-            reader.onerror = () => reject(reader.error);
-            reader.readAsText(response.body as Blob);
-          })
-        );
-      })
-    );
+      )
+      .pipe(
+        mergeMap(response => {
+          const contentType = response.headers.get('content-type');
+          if (contentType?.includes('application/pdf')) {
+            return of(response.body as Blob);
+          }
+          // If it's not a PDF, convert the blob to JSON
+          return from(
+            new Promise<Record<string, unknown>>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                try {
+                  const result = JSON.parse(reader.result as string) as Record<string, unknown>;
+                  resolve(result);
+                } catch {
+                  reject(new Error('Invalid JSON response'));
+                }
+              };
+              reader.onerror = () => reject(reader.error);
+              reader.readAsText(response.body as Blob);
+            })
+          );
+        })
+      );
   }
 
   completeTask(id: number): Observable<Task> {
@@ -127,7 +133,7 @@ export class TaskService {
     const formData = new FormData();
     formData.append('username', username);
     formData.append('password', password);
-    
+
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/token`, formData);
   }
 

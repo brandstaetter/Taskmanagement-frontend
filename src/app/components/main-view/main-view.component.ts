@@ -22,8 +22,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatDialogModule,
     MatTooltipModule,
     TaskViewComponent,
-    PlanItComponent
-  ]
+    PlanItComponent,
+  ],
 })
 export class MainViewComponent {
   currentView: 'do-it' | 'plan-it' = 'do-it';
@@ -36,7 +36,7 @@ export class MainViewComponent {
   onTabChange(index: number): void {
     this.selectedIndex = index;
     this.currentView = index === 0 ? 'do-it' : 'plan-it';
-    
+
     // Refresh the data of the selected tab
     if (index === 0 && this.taskView) {
       this.taskView.loadDueTasks();
@@ -47,7 +47,7 @@ export class MainViewComponent {
 
   openAddTaskDialog(): void {
     const dialogRef = this.dialog.open(TaskFormComponent, {
-      width: '500px'
+      width: '500px',
     });
 
     dialogRef.afterClosed().subscribe(result => {

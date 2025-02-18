@@ -16,10 +16,10 @@ import { MatChipsModule } from '@angular/material/chips';
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    MatChipsModule
+    MatChipsModule,
   ],
   templateUrl: './task-card.component.html',
-  styleUrls: ['./task-card.component.scss']
+  styleUrls: ['./task-card.component.scss'],
 })
 export class TaskCardComponent {
   @Input() task!: Task;
@@ -40,7 +40,7 @@ export class TaskCardComponent {
       month: 'short',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 
@@ -49,7 +49,7 @@ export class TaskCardComponent {
     const now = new Date();
     const targetDate = new Date(date);
     const diffMs = targetDate.getTime() - now.getTime();
-    
+
     // Convert to absolute values for calculations
     const absDiffMs = Math.abs(diffMs);
     const absDiffSecs = Math.floor(absDiffMs / 1000);
