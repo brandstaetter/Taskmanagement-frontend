@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  actions: read  # For downloading artifacts
+  checks: write  # For test results
+  deployments: write  # For deployment status
+  pull-requests: write  # For providing PR feedback
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest

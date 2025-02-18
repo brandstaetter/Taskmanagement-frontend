@@ -5,6 +5,12 @@ on:
       - main
   pull_request:
     types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read  # Needed for PR analysis
+  security-events: write  # If you're also using for security analysis
+
 jobs:
   sonarqube:
     name: SonarQube
@@ -14,6 +20,6 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
+        uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
