@@ -16,13 +16,10 @@ import { MatTabsModule } from '@angular/material/tabs';
 
 // Components
 import { AppComponent } from './app.component';
-import { TaskViewComponent } from './components/task-view/task-view.component';
-import { TaskFormComponent } from './components/task-form/task-form.component';
-import { PlanItComponent } from './components/plan-it/plan-it.component';
 import { routes } from './app.routes';
 
 @NgModule({
-  declarations: [AppComponent, TaskViewComponent, TaskFormComponent, PlanItComponent],
+  declarations: [AppComponent],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
