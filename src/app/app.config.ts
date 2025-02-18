@@ -1,4 +1,4 @@
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, LOCALE_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -9,7 +9,6 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatTimepickerModule } from '@angular/material/timepicker';
 import { registerLocaleData } from '@angular/common';
 import localeEnGb from '@angular/common/locales/en-GB';
-import { LOCALE_ID } from '@angular/core';
 
 registerLocaleData(localeEnGb);
 
