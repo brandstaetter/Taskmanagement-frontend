@@ -158,6 +158,51 @@ describe('TaskService', () => {
     });
   });
 
+  describe('updateTaskState', () => {
+    it('should call the correct endpoint for todo state', () => {
+      const taskId = 1;
+      service.updateTaskState(taskId, 'todo').subscribe();
+      const req = httpMock.expectOne(`${apiUrl}/tasks/${taskId}/reset-to-todo`);
+      expect(req.request.method).toBe('PATCH');
+      req.flush({});
+    });
+
+    it('should call the correct endpoint for in_progress state', () => {
+      const taskId = 1;
+      service.updateTaskState(taskId, 'in_progress').subscribe();
+      const req = httpMock.expectOne(`${apiUrl}/tasks/${taskId}/start`);
+      expect(req.request.method).toBe('POST');
+      req.flush({});
+    });
+
+    it('should call the correct endpoint for done state', () => {
+      const taskId = 1;
+      service.updateTaskState(taskId, 'done').subscribe();
+      const req = httpMock.expectOne(`${apiUrl}/tasks/${taskId}/complete`);
+      expect(req.request.method).toBe('POST');
+      req.flush({});
+    });
+
+    it('should call the correct endpoint for archived state', () => {
+      const taskId = 1;
+      service.updateTaskState(taskId, 'archived').subscribe();
+      const req = httpMock.expectOne(`${apiUrl}/tasks/${taskId}/archive`);
+      expect(req.request.method).toBe('POST');
+      req.flush({});
+    });
+
+    it('should throw error for unsupported state', done => {
+      const taskId = 1;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      service.updateTaskState(taskId, 'invalid_state' as any).subscribe({
+        error: error => {
+          expect(error.message).toBe('Unsupported state transition: invalid_state');
+          done();
+        },
+      });
+    });
+  });
+
   describe('authentication', () => {
     it('should handle login', () => {
       const mockResponse = {

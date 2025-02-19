@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, from, of } from 'rxjs';
+import { Observable, from, of, throwError } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
@@ -130,25 +130,17 @@ export class TaskService {
     taskId: number,
     state: 'todo' | 'in_progress' | 'done' | 'archived'
   ): Observable<Task> {
-    if (state === 'todo') {
-      return this.http.patch<Task>(`${this.apiUrl}/tasks/${taskId}/reset-to-todo`, {});
-    }
-    return this.http.post<Task>(
-      `${this.apiUrl}/tasks/${taskId}/${this.getStateEndpoint(state)}`,
-      {}
-    );
-  }
-
-  private getStateEndpoint(state: string): string {
     switch (state) {
+      case 'todo':
+        return this.http.patch<Task>(`${this.apiUrl}/tasks/${taskId}/reset-to-todo`, {});
       case 'in_progress':
-        return 'start';
+        return this.http.post<Task>(`${this.apiUrl}/tasks/${taskId}/start`, {});
       case 'done':
-        return 'complete';
+        return this.http.post<Task>(`${this.apiUrl}/tasks/${taskId}/complete`, {});
       case 'archived':
-        return 'archive';
+        return this.http.post<Task>(`${this.apiUrl}/tasks/${taskId}/archive`, {});
       default:
-        throw new Error(`Unsupported state transition: ${state}`);
+        return throwError(() => new Error(`Unsupported state transition: ${state}`));
     }
   }
 
