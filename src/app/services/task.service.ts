@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, from, of } from 'rxjs';
+import { Observable, from, of, throwError } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
@@ -109,7 +109,8 @@ export class TaskService {
                   reject(new Error('Invalid JSON response'));
                 }
               };
-              reader.onerror = () => reject(new Error(reader.error?.message ?? 'Error reading file'));
+              reader.onerror = () =>
+                reject(new Error(reader.error?.message ?? 'Error reading file'));
               reader.readAsText(response.body as Blob);
             })
           );
@@ -121,8 +122,26 @@ export class TaskService {
     return this.http.post<Task>(`${this.apiUrl}/tasks/${id}/complete`, {});
   }
 
-  archiveTask(id: number): Observable<Task> {
-    return this.http.delete<Task>(`${this.apiUrl}/tasks/${id}`);
+  archiveTask(taskId: number): Observable<Task> {
+    return this.http.delete<Task>(`${this.apiUrl}/tasks/${taskId}`);
+  }
+
+  updateTaskState(
+    taskId: number,
+    state: 'todo' | 'in_progress' | 'done' | 'archived'
+  ): Observable<Task> {
+    switch (state) {
+      case 'todo':
+        return this.http.patch<Task>(`${this.apiUrl}/tasks/${taskId}/reset-to-todo`, {});
+      case 'in_progress':
+        return this.http.post<Task>(`${this.apiUrl}/tasks/${taskId}/start`, {});
+      case 'done':
+        return this.http.post<Task>(`${this.apiUrl}/tasks/${taskId}/complete`, {});
+      case 'archived':
+        return this.http.post<Task>(`${this.apiUrl}/tasks/${taskId}/archive`, {});
+      default:
+        return throwError(() => new Error(`Unsupported state transition: ${state}`));
+    }
   }
 
   triggerMaintenance(): Observable<Record<string, unknown>> {

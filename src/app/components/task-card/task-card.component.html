@@ -1,42 +1,63 @@
 <mat-card class="task-card" [ngClass]="getTaskClass()">
   <mat-card-header>
     <mat-card-title>{{ task.title }}</mat-card-title>
-    <mat-card-subtitle>
-      <ng-container *ngIf="task.due_date">
-        <span *ngIf="isOverdue(task)">⚠️ Overdue: </span>
-        <span *ngIf="!isOverdue(task)">Due: </span>
-        {{ formatDate(task.due_date) }}
-        <br />
-        <span class="timespan">{{ getTimespan(task.due_date) }}</span>
-      </ng-container>
-      <ng-container *ngIf="task.started_at && task.state === 'in_progress'">
-        <br />
-        <span class="started-info">
-          🚀 Started: {{ formatDate(task.started_at) }}
-          <br />
-          <span class="timespan">{{ getTimespan(task.started_at) }}</span>
-        </span>
-      </ng-container>
-    </mat-card-subtitle>
+    <button mat-icon-button [matMenuTriggerFor]="menu" class="more-actions" *ngIf="showActions">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item *ngIf="task.state !== 'todo'" (click)="reopenTask.emit(task)">
+        <mat-icon>replay</mat-icon>
+        <span>Reopen Task</span>
+      </button>
+      <button mat-menu-item *ngIf="task.state === 'todo'" (click)="archiveTask.emit(task)">
+        <mat-icon>archive</mat-icon>
+        <span>Archive Task</span>
+      </button>
+    </mat-menu>
   </mat-card-header>
 
   <mat-card-content>
+    <ng-container *ngIf="task.due_date">
+      <div class="due-date">
+        <mat-icon
+          *ngIf="isOverdue(task) && task.state !== 'done' && task.state !== 'archived'"
+          class="warning-icon"
+          >warning</mat-icon
+        >
+        <mat-icon>schedule</mat-icon>
+        Due: {{ formatDate(task.due_date) }}
+        <br />
+        <span class="timespan">{{ getTimespan(task.due_date) }}</span>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="task.started_at && task.state === 'in_progress'">
+      <div class="started-info">
+        <mat-icon>rocket_launch</mat-icon>
+        Started: {{ formatDate(task.started_at) }}
+        <br />
+        <span class="timespan">{{ getTimespan(task.started_at) }}</span>
+      </div>
+    </ng-container>
     <div class="description-container">
       <mat-icon class="info-icon">info</mat-icon>
       <p class="description">{{ task.description }}</p>
     </div>
-    <p *ngIf="task.completed_at" class="completion-time">
-      ✅ Completed: {{ formatDate(task.completed_at) }}
+    <div *ngIf="task.completed_at" class="completion-info">
+      <mat-icon>task_alt</mat-icon>
+      Completed: {{ formatDate(task.completed_at) }}
       <br />
       <span class="timespan">{{ getTimespan(task.completed_at) }}</span>
-    </p>
+    </div>
   </mat-card-content>
 
   <mat-card-footer>
     <div class="card-footer-content">
       <div class="footer-left">
         <mat-chip-set *ngIf="task.reward">
-          <mat-chip highlighted color="accent"> 🎁 {{ task.reward }} </mat-chip>
+          <mat-chip highlighted color="accent">
+            <mat-icon>redeem</mat-icon>
+            {{ task.reward }}
+          </mat-chip>
         </mat-chip-set>
       </div>
       <div
