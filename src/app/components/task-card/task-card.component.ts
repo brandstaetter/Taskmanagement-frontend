@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-task-card',
@@ -17,6 +18,7 @@ import { MatChipsModule } from '@angular/material/chips';
     MatIconModule,
     MatTooltipModule,
     MatChipsModule,
+    MatMenuModule,
   ],
   templateUrl: './task-card.component.html',
   styleUrls: ['./task-card.component.scss'],
@@ -30,6 +32,7 @@ export class TaskCardComponent {
   @Output() completeTask = new EventEmitter<Task>();
   @Output() printTask = new EventEmitter<Task>();
   @Output() archiveTask = new EventEmitter<Task>();
+  @Output() reopenTask = new EventEmitter<Task>();
 
   private readonly SOON_THRESHOLD_HOURS = 12;
 

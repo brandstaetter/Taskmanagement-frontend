@@ -29,6 +29,7 @@
           (startTask)="onStartTask($event)"
           (completeTask)="onCompleteTask($event)"
           (archiveTask)="onArchiveTask($event)"
+          (reopenTask)="onReopenTask($event)"
         >
         </app-task-card>
       </div>
@@ -46,6 +47,7 @@
           (startTask)="onStartTask($event)"
           (completeTask)="onCompleteTask($event)"
           (archiveTask)="onArchiveTask($event)"
+          (reopenTask)="onReopenTask($event)"
         >
         </app-task-card>
       </div>
@@ -61,6 +63,7 @@
           *ngFor="let task of doneTasks"
           [task]="task"
           (archiveTask)="onArchiveTask($event)"
+          (reopenTask)="onReopenTask($event)"
         >
         </app-task-card>
       </div>

@@ -109,7 +109,8 @@ export class TaskService {
                   reject(new Error('Invalid JSON response'));
                 }
               };
-              reader.onerror = () => reject(new Error(reader.error?.message ?? 'Error reading file'));
+              reader.onerror = () =>
+                reject(new Error(reader.error?.message ?? 'Error reading file'));
               reader.readAsText(response.body as Blob);
             })
           );
@@ -121,8 +122,34 @@ export class TaskService {
     return this.http.post<Task>(`${this.apiUrl}/tasks/${id}/complete`, {});
   }
 
-  archiveTask(id: number): Observable<Task> {
-    return this.http.delete<Task>(`${this.apiUrl}/tasks/${id}`);
+  archiveTask(taskId: number): Observable<Task> {
+    return this.http.delete<Task>(`${this.apiUrl}/tasks/${taskId}`);
+  }
+
+  updateTaskState(
+    taskId: number,
+    state: 'todo' | 'in_progress' | 'done' | 'archived'
+  ): Observable<Task> {
+    if (state === 'todo') {
+      return this.http.patch<Task>(`${this.apiUrl}/tasks/${taskId}/reset-to-todo`, {});
+    }
+    return this.http.post<Task>(
+      `${this.apiUrl}/tasks/${taskId}/${this.getStateEndpoint(state)}`,
+      {}
+    );
+  }
+
+  private getStateEndpoint(state: string): string {
+    switch (state) {
+      case 'in_progress':
+        return 'start';
+      case 'done':
+        return 'complete';
+      case 'archived':
+        return 'archive';
+      default:
+        throw new Error(`Unsupported state transition: ${state}`);
+    }
   }
 
   triggerMaintenance(): Observable<Record<string, unknown>> {

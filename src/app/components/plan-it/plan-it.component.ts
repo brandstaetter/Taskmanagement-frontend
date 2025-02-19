@@ -101,6 +101,12 @@ export class PlanItComponent implements OnInit {
     });
   }
 
+  onReopenTask(task: Task): void {
+    this.taskService.updateTaskState(task.id, 'todo').subscribe(() => {
+      this.loadTasks();
+    });
+  }
+
   toggleArchivedTasks(): void {
     this.showArchived = !this.showArchived;
     this.loadTasks();
