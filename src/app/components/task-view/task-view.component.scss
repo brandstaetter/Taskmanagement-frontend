@@ -127,3 +127,12 @@
     }
   }
 }
+
+::ng-deep .error-snackbar {
+  background-color: #f44336;
+  color: white;
+
+  .mat-simple-snackbar-action {
+    color: white;
+  }
+}

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, from, of, throwError } from 'rxjs';
-import { mergeMap } from 'rxjs/operators';
+import { mergeMap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface Task {
@@ -60,7 +60,16 @@ export class TaskService {
   }
 
   getRandomTask(): Observable<Task> {
-    return this.http.get<Task>(`${this.apiUrl}/tasks/random/`);
+    return this.http.get<Task>(`${this.apiUrl}/tasks/random/`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 404) {
+          return throwError(
+            () => new Error('No tasks available to select from. Please create some tasks first.')
+          );
+        }
+        return throwError(() => new Error('Failed to get random task. Please try again later.'));
+      })
+    );
   }
 
   searchTasks(query: string, includeArchived = false): Observable<Task[]> {

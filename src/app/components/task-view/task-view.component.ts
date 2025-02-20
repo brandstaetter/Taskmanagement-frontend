@@ -5,12 +5,20 @@ import { TaskService } from '../../services/task.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TaskCardComponent } from '../task-card/task-card.component';
 
 @Component({
   selector: 'app-task-view',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatTooltipModule, TaskCardComponent],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatSnackBarModule,
+    TaskCardComponent,
+  ],
   templateUrl: './task-view.component.html',
   styleUrls: ['./task-view.component.scss'],
 })
@@ -19,7 +27,10 @@ export class TaskViewComponent implements OnInit {
   isLoadingRandom = false;
   showArchived = false;
 
-  constructor(private taskService: TaskService) {}
+  constructor(
+    private taskService: TaskService,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
     this.loadDueTasks();
@@ -100,7 +111,13 @@ export class TaskViewComponent implements OnInit {
           });
         }
       },
-      error: error => console.error('Error printing task:', error),
+      error: error => {
+        console.error('Error printing task:', error);
+        this.snackBar.open(error.message, 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+        });
+      },
     });
   }
 
@@ -110,7 +127,14 @@ export class TaskViewComponent implements OnInit {
     this.isLoadingRandom = true;
     this.taskService.getRandomTask().subscribe({
       next: task => this.onPrintTask(task),
-      error: error => console.error('Error getting random task:', error),
+      error: error => {
+        console.error('Error getting random task:', error);
+        this.snackBar.open(error.message, 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+        });
+        this.isLoadingRandom = false;
+      },
       complete: () => (this.isLoadingRandom = false),
     });
   }

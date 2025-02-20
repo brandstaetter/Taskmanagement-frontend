@@ -203,6 +203,53 @@ describe('TaskService', () => {
     });
   });
 
+  describe('getRandomTask', () => {
+    it('should return a random task', () => {
+      const mockTask: Task = {
+        id: 1,
+        title: 'Random Task',
+        description: 'Random Description',
+        state: 'todo',
+      };
+
+      service.getRandomTask().subscribe(task => {
+        expect(task).toEqual(mockTask);
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/tasks/random/`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockTask);
+    });
+
+    it('should handle 404 error when no tasks are available', done => {
+      service.getRandomTask().subscribe({
+        error: error => {
+          expect(error.message).toBe(
+            'No tasks available to select from. Please create some tasks first.'
+          );
+          done();
+        },
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/tasks/random/`);
+      expect(req.request.method).toBe('GET');
+      req.flush('Not Found', { status: 404, statusText: 'Not Found' });
+    });
+
+    it('should handle other errors with a generic message', done => {
+      service.getRandomTask().subscribe({
+        error: error => {
+          expect(error.message).toBe('Failed to get random task. Please try again later.');
+          done();
+        },
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/tasks/random/`);
+      expect(req.request.method).toBe('GET');
+      req.flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
+    });
+  });
+
   describe('authentication', () => {
     it('should handle login', () => {
       const mockResponse = {

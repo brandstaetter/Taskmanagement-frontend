@@ -21,6 +21,7 @@
     *ngFor="let task of dueTasks"
     [task]="task"
     mode="print-only"
+    [showActions]="false"
     (printTask)="onPrintTask($event)"
   >
   </app-task-card>
