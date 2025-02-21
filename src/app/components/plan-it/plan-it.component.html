@@ -30,6 +30,7 @@
           (completeTask)="onCompleteTask($event)"
           (archiveTask)="onArchiveTask($event)"
           (reopenTask)="onReopenTask($event)"
+          (printTask)="onPrintTask($event)"
         >
         </app-task-card>
       </div>
@@ -48,6 +49,7 @@
           (completeTask)="onCompleteTask($event)"
           (archiveTask)="onArchiveTask($event)"
           (reopenTask)="onReopenTask($event)"
+          (printTask)="onPrintTask($event)"
         >
         </app-task-card>
       </div>
@@ -64,6 +66,7 @@
           [task]="task"
           (archiveTask)="onArchiveTask($event)"
           (reopenTask)="onReopenTask($event)"
+          (printTask)="onPrintTask($event)"
         >
         </app-task-card>
       </div>
@@ -75,7 +78,12 @@
         <div *ngIf="archivedTasks.length === 0" class="empty-column-message">
           <p>No archived tasks</p>
         </div>
-        <app-task-card *ngFor="let task of archivedTasks" [task]="task" [showActions]="false">
+        <app-task-card
+          *ngFor="let task of archivedTasks"
+          [task]="task"
+          [showActions]="false"
+          (printTask)="onPrintTask($event)"
+        >
         </app-task-card>
       </div>
     </div>

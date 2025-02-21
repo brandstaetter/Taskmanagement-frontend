@@ -101,6 +101,22 @@ export class PlanItComponent implements OnInit {
     });
   }
 
+  onPrintTask(task: Task): void {
+    this.taskService.printTask(task.id).subscribe({
+      next: response => {
+        // Create a blob URL and open it in a new window
+        const blob = new Blob([response as Blob], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        window.open(url);
+        this.snackBar.open('Task printed successfully', 'Close', { duration: 3000 });
+      },
+      error: error => {
+        console.error('Error printing task:', error);
+        this.snackBar.open('Error printing task', 'Close', { duration: 3000 });
+      },
+    });
+  }
+
   onReopenTask(task: Task): void {
     this.taskService.updateTaskState(task.id, 'todo').subscribe(() => {
       this.loadTasks();
