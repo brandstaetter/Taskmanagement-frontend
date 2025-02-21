@@ -5,27 +5,33 @@
   </button>
 
   <div class="task-content" *ngIf="task$ | async as task">
-    <mat-card>
+    <mat-card [ngClass]="getTaskClasses(task)">
       <mat-card-header>
         <mat-card-title>{{ task.title }}</mat-card-title>
-        <div class="status-badge" [ngClass]="task.state">{{ task.state }}</div>
+        <mat-card-subtitle>
+          <span class="due-date" *ngIf="task.due_date">
+            <mat-icon
+              *ngIf="isOverdue(task) && task.state !== 'done' && task.state !== 'archived'"
+              class="warning-icon"
+              >warning</mat-icon
+            >
+            <mat-icon>schedule</mat-icon>
+            {{ formatDate(task.due_date) }}
+            <span class="timespan" *ngIf="getTimespan(task.due_date)">
+              ({{ getTimespan(task.due_date) }})
+            </span>
+          </span>
+        </mat-card-subtitle>
+        <div class="status-chip" [ngClass]="task.state">{{ task.state }}</div>
       </mat-card-header>
 
       <mat-card-content>
-        <div class="detail-section">
-          <h3>Description</h3>
+        <div class="detail-section description">
           <p>{{ task.description }}</p>
         </div>
 
-        <mat-divider *ngIf="task.due_date || task.reward"></mat-divider>
-
-        <div class="detail-section" *ngIf="task.due_date">
-          <h3>Due Date</h3>
-          <p>{{ task.due_date | date: 'short' }}</p>
-        </div>
-
-        <div class="detail-section" *ngIf="task.reward">
-          <h3>Reward</h3>
+        <div class="detail-section reward" *ngIf="task.reward">
+          <mat-icon>redeem</mat-icon>
           <p>{{ task.reward }}</p>
         </div>
 
@@ -33,19 +39,49 @@
 
         <div class="timestamps">
           <div class="timestamp-item" *ngIf="task.created_at">
-            <div class="timestamp-label">Created</div>
-            <div class="timestamp-value">{{ task.created_at | date: 'short' }}</div>
+            <mat-icon>add_circle_outline</mat-icon>
+            <div class="timestamp-content">
+              <div class="timestamp-label">Created</div>
+              <div class="timestamp-value">{{ task.created_at | date: 'short' }}</div>
+            </div>
           </div>
           <div class="timestamp-item" *ngIf="task.started_at">
-            <div class="timestamp-label">Started</div>
-            <div class="timestamp-value">{{ task.started_at | date: 'short' }}</div>
+            <mat-icon>play_circle_outline</mat-icon>
+            <div class="timestamp-content">
+              <div class="timestamp-label">Started</div>
+              <div class="timestamp-value">{{ task.started_at | date: 'short' }}</div>
+            </div>
           </div>
           <div class="timestamp-item" *ngIf="task.completed_at">
-            <div class="timestamp-label">Completed</div>
-            <div class="timestamp-value">{{ task.completed_at | date: 'short' }}</div>
+            <mat-icon>check_circle_outline</mat-icon>
+            <div class="timestamp-content">
+              <div class="timestamp-label">Completed</div>
+              <div class="timestamp-value">{{ task.completed_at | date: 'short' }}</div>
+            </div>
           </div>
         </div>
       </mat-card-content>
+
+      <mat-card-footer>
+        <div class="card-footer-content">
+          <button
+            mat-button
+            *ngIf="task.state !== 'todo' && task.state !== 'archived'"
+            (click)="reopenTask(task)"
+          >
+            <mat-icon>replay</mat-icon>
+            Reopen Task
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            *ngIf="task.state === 'todo' || task.state === 'in_progress'"
+            (click)="onActionButtonClick(task)"
+          >
+            {{ getActionButtonText(task) }}
+          </button>
+        </div>
+      </mat-card-footer>
     </mat-card>
   </div>
 </div>
