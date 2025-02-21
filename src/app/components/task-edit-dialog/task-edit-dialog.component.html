@@ -1,0 +1,42 @@
+<h2 mat-dialog-title>Edit Task</h2>
+<mat-dialog-content>
+  <form [formGroup]="editForm">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Title</mat-label>
+      <input matInput formControlName="title" required />
+      <mat-error *ngIf="editForm.get('title')?.hasError('required')">Title is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="4"></textarea>
+    </mat-form-field>
+
+    <div class="datetime-container">
+      <mat-form-field appearance="fill">
+        <mat-label>Due Date</mat-label>
+        <input matInput [matDatepicker]="datepicker" formControlName="dueDate" />
+        <mat-datepicker-toggle matSuffix [for]="datepicker"></mat-datepicker-toggle>
+        <mat-datepicker #datepicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Due Time</mat-label>
+        <input matInput [matTimepicker]="timepicker" formControlName="dueTime" />
+        <mat-timepicker-toggle matSuffix [for]="timepicker"></mat-timepicker-toggle>
+        <mat-timepicker #timepicker></mat-timepicker>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Reward</mat-label>
+      <input matInput formControlName="reward" />
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!editForm.valid">
+    Save
+  </button>
+</mat-dialog-actions>

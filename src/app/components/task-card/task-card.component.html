@@ -9,6 +9,10 @@
         <mat-icon>replay</mat-icon>
         <span>Reopen Task</span>
       </button>
+      <button mat-menu-item *ngIf="task.state === 'todo'" (click)="editTask.emit(task)">
+        <mat-icon>edit</mat-icon>
+        <span>Edit Task</span>
+      </button>
       <button mat-menu-item *ngIf="task.state === 'todo'" (click)="archiveTask.emit(task)">
         <mat-icon>archive</mat-icon>
         <span>Archive Task</span>
