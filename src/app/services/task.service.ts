@@ -27,6 +27,13 @@ export interface TaskCreate {
   completed_at?: string;
 }
 
+export interface TaskUpdate {
+  title?: string;
+  description?: string;
+  due_date?: string;
+  reward?: string;
+}
+
 export interface AuthResponse {
   access_token: string;
   token_type: string;
@@ -151,6 +158,10 @@ export class TaskService {
       default:
         return throwError(() => new Error(`Unsupported state transition: ${state}`));
     }
+  }
+
+  updateTask(taskId: number, update: TaskUpdate): Observable<Task> {
+    return this.http.patch<Task>(`${this.apiUrl}/tasks/${taskId}`, update);
   }
 
   triggerMaintenance(): Observable<Record<string, unknown>> {

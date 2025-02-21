@@ -1,5 +1,5 @@
 <form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
-  <h2 mat-dialog-title>Add New Task</h2>
+  <h2 mat-dialog-title>{{ mode === 'create' ? 'Add New Task' : 'Edit Task' }}</h2>
 
   <mat-dialog-content>
     <div class="form-container">
@@ -60,7 +60,7 @@
   <mat-dialog-actions>
     <button mat-button type="button" (click)="onCancel()">Cancel</button>
     <button mat-raised-button color="primary" type="submit" [disabled]="!taskForm.valid">
-      Add Task
+      {{ mode === 'create' ? 'Add Task' : 'Save Changes' }}
     </button>
   </mat-dialog-actions>
 </form>

@@ -33,6 +33,7 @@ export class TaskCardComponent {
   @Output() printTask = new EventEmitter<Task>();
   @Output() archiveTask = new EventEmitter<Task>();
   @Output() reopenTask = new EventEmitter<Task>();
+  @Output() editTask = new EventEmitter<Task>();
 
   private readonly SOON_THRESHOLD_HOURS = 12;
 
