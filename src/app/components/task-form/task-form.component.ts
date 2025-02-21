@@ -1,7 +1,15 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  Input,
+  Output,
+  EventEmitter,
+  Optional,
+  Inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -12,8 +20,8 @@ import {
   MAT_DATE_LOCALE,
 } from '@angular/material/core';
 import { MatTimepickerModule } from '@angular/material/timepicker';
-import { TaskService, Task, TaskCreate } from '../../services/task.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Task, TaskService, TaskCreate } from '../../services/task.service';
 
 @Component({
   selector: 'app-task-form',
@@ -29,32 +37,53 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatNativeDateModule,
     MatTimepickerModule,
   ],
-  providers: [
-    provideNativeDateAdapter(),
-    { provide: MAT_DATE_LOCALE, useValue: 'en-GB' }, // This sets Monday as first day of week
-  ],
+  providers: [provideNativeDateAdapter(), { provide: MAT_DATE_LOCALE, useValue: 'en-GB' }],
   templateUrl: './task-form.component.html',
   styleUrls: ['./task-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TaskFormComponent {
-  taskForm: FormGroup;
-  private readonly MINUTES_INTERVAL = 30; // Match timepicker's 30-minute intervals
+  @Input() task?: Task;
+  @Input() mode: 'create' | 'edit' = 'create';
+  @Output() save = new EventEmitter<Task>();
+  @Output() cancelled = new EventEmitter<void>();
+
+  taskForm!: FormGroup;
+  private readonly MINUTES_INTERVAL = 30;
   private readonly END_OF_DAY_HOUR = 23;
   private readonly END_OF_DAY_MINUTE = 30;
 
   constructor(
     private fb: FormBuilder,
-    private dialogRef: MatDialogRef<TaskFormComponent>,
     private taskService: TaskService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    @Optional() private dialogRef?: MatDialogRef<TaskFormComponent>,
+    @Optional() @Inject(MAT_DIALOG_DATA) private dialogData?: Task
   ) {
+    // If used in a dialog without explicit inputs, use dialog data
+    if (dialogData) {
+      this.task = dialogData;
+      this.mode = 'edit';
+    }
+    this.initForm();
+  }
+
+  private initForm(): void {
+    let dueDate = null;
+    let dueTime = null;
+
+    if (this.task?.due_date) {
+      const date = new Date(this.task.due_date);
+      dueDate = date;
+      dueTime = this.roundUpToNextInterval(date);
+    }
+
     this.taskForm = this.fb.group({
-      title: ['', [Validators.required]],
-      description: ['', [Validators.required]],
-      due_date: [null],
-      due_time: [null],
-      reward: [''],
+      title: [this.task?.title || '', [Validators.required]],
+      description: [this.task?.description || '', [Validators.required]],
+      due_date: [dueDate],
+      due_time: [dueTime],
+      reward: [this.task?.reward || ''],
     });
 
     // Update time when date changes if time is already set
@@ -75,15 +104,11 @@ export class TaskFormComponent {
 
   private roundUpToNextInterval(date: Date): Date {
     const minutes = date.getMinutes();
-    // Calculate how many minutes to add to reach the next interval
     const minutesToAdd = this.MINUTES_INTERVAL - (minutes % this.MINUTES_INTERVAL);
     const roundedDate = new Date(date);
 
-    // Add the minutes
     roundedDate.setMinutes(minutes + minutesToAdd);
 
-    // If we're already at an exact interval and have seconds/milliseconds,
-    // bump to the next interval
     if (
       minutesToAdd === this.MINUTES_INTERVAL &&
       (date.getSeconds() > 0 || date.getMilliseconds() > 0)
@@ -104,10 +129,8 @@ export class TaskFormComponent {
       const roundedTime = this.roundUpToNextInterval(now);
       timeControl?.setValue(roundedTime);
 
-      // If date is not set, also set it to today
       const dateControl = this.taskForm.get('due_date');
       if (!dateControl?.value) {
-        // If rounding up pushed us to the next day, use that date
         dateControl?.setValue(roundedTime);
       }
     }
@@ -126,7 +149,6 @@ export class TaskFormComponent {
 
       dateControl?.setValue(today);
 
-      // Only set the time if it wasn't set before
       if (!timeControl?.value) {
         timeControl?.setValue(today);
       }
@@ -143,6 +165,7 @@ export class TaskFormComponent {
       combinedDate.setMinutes(time.getMinutes());
       combinedDate.setSeconds(0);
       combinedDate.setMilliseconds(0);
+      this.taskForm.get('due_date')?.setValue(combinedDate, { emitEvent: false });
     }
   }
 
@@ -162,30 +185,52 @@ export class TaskFormComponent {
       }
       delete formValue.due_time;
 
-      // Create task data object that matches TaskCreate interface
-      const taskData: TaskCreate = {
-        title: formValue.title,
-        description: formValue.description,
-        state: 'todo',
-        due_date: formValue.due_date,
-        reward: formValue.reward,
-      };
+      if (this.mode === 'create') {
+        const taskData: TaskCreate = {
+          ...formValue,
+          state: 'todo',
+        };
 
-      this.taskService.createTask(taskData).subscribe({
-        next: (task: Task) => {
-          this.dialogRef.close(task);
-          this.snackBar.open('Task added successfully', 'Close', { duration: 3000 });
-        },
-        error: error => {
-          console.error('Error adding task:', error);
-          this.snackBar.open('Error adding task', 'Close', { duration: 3000 });
-          // Keep the dialog open on error
-        },
-      });
+        this.taskService.createTask(taskData).subscribe({
+          next: (task: Task) => {
+            if (this.dialogRef) {
+              this.dialogRef.close(task);
+            } else {
+              this.save.emit(task);
+            }
+            this.snackBar.open('Task added successfully', 'Close', { duration: 3000 });
+          },
+          error: error => {
+            console.error('Error adding task:', error);
+            this.snackBar.open('Error adding task', 'Close', { duration: 3000 });
+          },
+        });
+      } else {
+        if (!this.task) return;
+
+        this.taskService.updateTask(this.task.id, formValue).subscribe({
+          next: (task: Task) => {
+            if (this.dialogRef) {
+              this.dialogRef.close(task);
+            } else {
+              this.save.emit(task);
+            }
+            this.snackBar.open('Task updated successfully', 'Close', { duration: 3000 });
+          },
+          error: error => {
+            console.error('Error updating task:', error);
+            this.snackBar.open('Error updating task', 'Close', { duration: 3000 });
+          },
+        });
+      }
     }
   }
 
   onCancel(): void {
-    this.dialogRef.close();
+    if (this.dialogRef) {
+      this.dialogRef.close();
+    } else {
+      this.cancelled.emit();
+    }
   }
 }

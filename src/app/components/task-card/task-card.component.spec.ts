@@ -37,6 +37,8 @@ describe('TaskCardComponent', () => {
       description: 'Test Description',
       state: 'todo',
     };
+    component.showActions = true;
+    component.mode = 'default';
 
     fixture.detectChanges();
   });
@@ -72,11 +74,15 @@ describe('TaskCardComponent', () => {
       fixture.detectChanges();
       tick();
 
-      const reopenButton = document.querySelector('button[mat-menu-item] span');
+      const menuItems = document.querySelectorAll('button[mat-menu-item] span');
+      const reopenButton = Array.from(menuItems).find(item =>
+        item.textContent?.includes('Reopen Task')
+      );
+      expect(reopenButton).toBeTruthy();
       expect(reopenButton?.textContent).toContain('Reopen Task');
     }));
 
-    it('should show "Archive Task" option when task is in todo state', fakeAsync(() => {
+    it('should show both "Edit Task" and "Archive Task" options when task is in todo state', fakeAsync(() => {
       component.task.state = 'todo';
       fixture.detectChanges();
 
@@ -86,8 +92,11 @@ describe('TaskCardComponent', () => {
       fixture.detectChanges();
       tick();
 
-      const archiveButton = document.querySelector('button[mat-menu-item] span');
-      expect(archiveButton?.textContent).toContain('Archive Task');
+      const menuItems = document.querySelectorAll('button[mat-menu-item] span');
+      const menuTexts = Array.from(menuItems).map(item => item.textContent?.trim());
+
+      expect(menuTexts).toContain('Edit Task');
+      expect(menuTexts).toContain('Archive Task');
     }));
 
     it('should emit reopenTask event when reopen button is clicked', fakeAsync(() => {
@@ -120,13 +129,78 @@ describe('TaskCardComponent', () => {
       fixture.detectChanges();
       tick();
 
-      const archiveButton = document.querySelector('button[mat-menu-item]') as HTMLElement;
+      const menuItems = document.querySelectorAll('button[mat-menu-item]');
+      const archiveButton = Array.from(menuItems).find(item =>
+        item.textContent?.includes('Archive Task')
+      ) as HTMLElement;
+
       archiveButton?.click();
       fixture.detectChanges();
       tick();
 
       expect(component.archiveTask.emit).toHaveBeenCalledWith(component.task);
     }));
+
+    it('should emit editTask event when edit button is clicked', fakeAsync(() => {
+      spyOn(component.editTask, 'emit');
+      component.task.state = 'todo';
+      fixture.detectChanges();
+
+      // Open the menu
+      const menuButton = fixture.debugElement.query(By.css('button[mat-icon-button]'));
+      menuButton.nativeElement.click();
+      fixture.detectChanges();
+      tick();
+
+      const menuItems = document.querySelectorAll('button[mat-menu-item]');
+      const editButton = Array.from(menuItems).find(item =>
+        item.textContent?.includes('Edit Task')
+      ) as HTMLElement;
+
+      editButton?.click();
+      fixture.detectChanges();
+      tick();
+
+      expect(component.editTask.emit).toHaveBeenCalledWith(component.task);
+    }));
+  });
+
+  describe('Action buttons', () => {
+    it('should show START button for todo tasks', () => {
+      component.task.state = 'todo';
+      fixture.detectChanges();
+      const startButton = fixture.debugElement.query(By.css('button[color="primary"]'));
+      expect(startButton?.nativeElement.textContent.trim()).toBe('START');
+    });
+
+    it('should emit startTask event when START button is clicked', () => {
+      spyOn(component.startTask, 'emit');
+      component.task.state = 'todo';
+      fixture.detectChanges();
+
+      const startButton = fixture.debugElement.query(By.css('button[color="primary"]'));
+      startButton.nativeElement.click();
+
+      expect(component.startTask.emit).toHaveBeenCalledWith(component.task);
+    });
+
+    it('should show COMPLETE button for in_progress tasks', () => {
+      component.task.state = 'in_progress';
+      fixture.detectChanges();
+      const completeButton = fixture.debugElement.query(By.css('button[color="accent"]'));
+      expect(completeButton?.nativeElement.textContent.trim()).toBe('COMPLETE');
+    });
+
+    it('should emit completeTask event when COMPLETE button is clicked', () => {
+      spyOn(component.completeTask, 'emit');
+      component.task.state = 'in_progress';
+      fixture.detectChanges();
+
+      const completeButton = fixture.debugElement.query(By.css('button[color="accent"]'));
+      completeButton.nativeElement.click();
+
+      expect(component.completeTask.emit).toHaveBeenCalledWith(component.task);
+    });
   });
 
   describe('Overdue warning', () => {

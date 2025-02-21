@@ -7,6 +7,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TaskCardComponent } from '../task-card/task-card.component';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
 
 @Component({
   selector: 'app-task-view',
@@ -18,6 +20,7 @@ import { TaskCardComponent } from '../task-card/task-card.component';
     MatTooltipModule,
     MatSnackBarModule,
     TaskCardComponent,
+    MatDialogModule,
   ],
   templateUrl: './task-view.component.html',
   styleUrls: ['./task-view.component.scss'],
@@ -29,7 +32,8 @@ export class TaskViewComponent implements OnInit {
 
   constructor(
     private taskService: TaskService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -82,6 +86,36 @@ export class TaskViewComponent implements OnInit {
   onArchiveTask(task: Task): void {
     this.taskService.archiveTask(task.id).subscribe(() => {
       this.loadDueTasks();
+    });
+  }
+
+  onReopenTask(task: Task): void {
+    this.taskService.updateTaskState(task.id, 'todo').subscribe(() => {
+      this.loadDueTasks();
+    });
+  }
+
+  onEditTask(task: Task): void {
+    const dialogRef = this.dialog.open(TaskEditDialogComponent, {
+      data: task,
+      width: '500px',
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.taskService.updateTask(task.id, result).subscribe({
+          next: () => {
+            this.loadDueTasks();
+            this.snackBar.open('Task updated successfully', 'Close', { duration: 3000 });
+          },
+          error: error => {
+            console.error('Error updating task:', error);
+            this.snackBar.open('Failed to update task. Please try again.', 'Close', {
+              duration: 3000,
+            });
+          },
+        });
+      }
     });
   }
 
