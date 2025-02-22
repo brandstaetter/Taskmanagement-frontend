@@ -6,6 +6,7 @@ import {
   EventEmitter,
   Optional,
   Inject,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -21,7 +22,7 @@ import {
 } from '@angular/material/core';
 import { MatTimepickerModule } from '@angular/material/timepicker';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Task, TaskService, TaskCreate } from '../../services/task.service';
+import { Task, TaskService, TaskCreate, TaskUpdate } from '../../services/task.service';
 
 @Component({
   selector: 'app-task-form',
@@ -42,7 +43,7 @@ import { Task, TaskService, TaskCreate } from '../../services/task.service';
   styleUrls: ['./task-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TaskFormComponent {
+export class TaskFormComponent implements OnInit {
   @Input() task?: Task;
   @Input() mode: 'create' | 'edit' = 'create';
   @Output() save = new EventEmitter<Task>();
@@ -65,6 +66,9 @@ export class TaskFormComponent {
       this.task = dialogData;
       this.mode = 'edit';
     }
+  }
+
+  ngOnInit(): void {
     this.initForm();
   }
 
@@ -83,7 +87,7 @@ export class TaskFormComponent {
       description: [this.task?.description || '', [Validators.required]],
       due_date: [dueDate],
       due_time: [dueTime],
-      reward: [this.task?.reward || ''],
+      reward: [this.task?.reward || null],
     });
 
     // Update time when date changes if time is already set
@@ -173,7 +177,7 @@ export class TaskFormComponent {
     if (this.taskForm.valid) {
       const formValue = this.taskForm.value;
 
-      // Combine date and time into a single date field
+      // Combine date and time if both are present
       if (formValue.due_date) {
         const date = new Date(formValue.due_date);
         if (formValue.due_time) {
@@ -183,45 +187,60 @@ export class TaskFormComponent {
         }
         formValue.due_date = date.toISOString();
       }
+
+      // Clean up form value
       delete formValue.due_time;
 
+      // Only include changed values in the update
+      const changes: Partial<TaskUpdate> = {};
+      if (this.mode === 'edit' && this.task) {
+        // Compare form values with original task
+        if (formValue['title'] !== this.task.title) {
+          changes['title'] = formValue['title'];
+        }
+        if (formValue['description'] !== this.task.description) {
+          changes['description'] = formValue['description'];
+        }
+        if (formValue['due_date'] !== this.task.due_date) {
+          changes['due_date'] = formValue['due_date'] || undefined;
+        }
+        if (formValue['reward'] !== this.task.reward) {
+          changes['reward'] = formValue['reward']?.trim() || undefined;
+        }
+      }
+
       if (this.mode === 'create') {
+        // For create, include all values
         const taskData: TaskCreate = {
           ...formValue,
           state: 'todo',
+          due_date: formValue.due_date || undefined,
+          reward: formValue.reward?.trim() || undefined,
         };
 
         this.taskService.createTask(taskData).subscribe({
-          next: (task: Task) => {
-            if (this.dialogRef) {
-              this.dialogRef.close(task);
-            } else {
-              this.save.emit(task);
-            }
-            this.snackBar.open('Task added successfully', 'Close', { duration: 3000 });
+          next: task => {
+            this.handleSuccess(task, 'Task added successfully');
           },
-          error: error => {
-            console.error('Error adding task:', error);
-            this.snackBar.open('Error adding task', 'Close', { duration: 3000 });
+          error: () => {
+            this.handleError('Error adding task');
           },
         });
       } else {
-        if (!this.task) return;
-
-        this.taskService.updateTask(this.task.id, formValue).subscribe({
-          next: (task: Task) => {
-            if (this.dialogRef) {
-              this.dialogRef.close(task);
-            } else {
-              this.save.emit(task);
-            }
-            this.snackBar.open('Task updated successfully', 'Close', { duration: 3000 });
-          },
-          error: error => {
-            console.error('Error updating task:', error);
-            this.snackBar.open('Error updating task', 'Close', { duration: 3000 });
-          },
-        });
+        // For update, only send changed values
+        if (Object.keys(changes).length > 0) {
+          this.taskService.updateTask(this.task!.id, changes as TaskUpdate).subscribe({
+            next: task => {
+              this.handleSuccess(task, 'Task updated successfully');
+            },
+            error: () => {
+              this.handleError('Error updating task');
+            },
+          });
+        } else {
+          // No changes, just close
+          this.handleSuccess(this.task!, 'No changes made');
+        }
       }
     }
   }
@@ -232,5 +251,19 @@ export class TaskFormComponent {
     } else {
       this.cancelled.emit();
     }
+  }
+
+  private handleSuccess(task: Task, message: string): void {
+    if (this.dialogRef) {
+      this.dialogRef.close(task);
+    } else {
+      this.save.emit(task);
+    }
+    this.snackBar.open(message, 'Close', { duration: 3000 });
+  }
+
+  private handleError(message: string): void {
+    console.error(message);
+    this.snackBar.open(message, 'Close', { duration: 3000 });
   }
 }

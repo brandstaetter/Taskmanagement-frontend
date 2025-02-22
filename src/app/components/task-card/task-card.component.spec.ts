@@ -110,7 +110,13 @@ describe('TaskCardComponent', () => {
       fixture.detectChanges();
       tick();
 
-      const reopenButton = document.querySelector('button[mat-menu-item]') as HTMLElement;
+      // Find the reopen button by its text content
+      const menuItems = document.querySelectorAll('button[mat-menu-item]');
+      const reopenButton = Array.from(menuItems).find(item =>
+        item.textContent?.includes('Reopen Task')
+      ) as HTMLElement;
+
+      expect(reopenButton).toBeTruthy('Reopen Task button should be present');
       reopenButton?.click();
       fixture.detectChanges();
       tick();
