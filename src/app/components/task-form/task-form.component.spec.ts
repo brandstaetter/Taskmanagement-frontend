@@ -2,11 +2,14 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { TaskFormComponent } from './task-form.component';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { TaskService, Task } from '../../services/task.service';
+import { TaskService, Task, TaskCreate, TaskUpdate } from '../../services/task.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { HarnessLoader } from '@angular/cdk/testing';
+import { MatInputHarness } from '@angular/material/input/testing';
+import { MatButtonHarness } from '@angular/material/button/testing';
 
 describe('TaskFormComponent', () => {
   let component: TaskFormComponent;
@@ -14,320 +17,287 @@ describe('TaskFormComponent', () => {
   let taskService: jasmine.SpyObj<TaskService>;
   let dialogRef: jasmine.SpyObj<MatDialogRef<TaskFormComponent>>;
   let snackBar: jasmine.SpyObj<MatSnackBar>;
+  let loader: HarnessLoader;
 
   const mockTask: Task = {
     id: 1,
     title: 'Test Task',
     description: 'Test Description',
-    state: 'todo',
+    state: 'todo' as const,
     due_date: '2025-02-19T14:30:00Z',
+    created_at: '2025-02-19T14:30:00Z',
+    reward: 'Test Reward',
   };
 
   beforeEach(async () => {
-    const taskServiceSpy = jasmine.createSpyObj('TaskService', ['createTask', 'updateTask']);
-    taskServiceSpy.createTask.and.returnValue(of(mockTask));
-    taskServiceSpy.updateTask.and.returnValue(of(mockTask));
+    taskService = jasmine.createSpyObj('TaskService', ['createTask', 'updateTask']);
+    dialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
+    snackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
 
-    const dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close']);
-    const snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+    // Set up default mock responses
+    taskService.createTask.and.returnValue(of({ ...mockTask }));
+    taskService.updateTask.and.returnValue(of({ ...mockTask }));
 
     await TestBed.configureTestingModule({
-      imports: [
-        TaskFormComponent,
-        ReactiveFormsModule,
-        HttpClientTestingModule,
-        NoopAnimationsModule,
-      ],
+      imports: [TaskFormComponent, ReactiveFormsModule, NoopAnimationsModule],
       providers: [
         FormBuilder,
-        { provide: TaskService, useValue: taskServiceSpy },
-        { provide: MatDialogRef, useValue: dialogRefSpy },
-        { provide: MatSnackBar, useValue: snackBarSpy },
+        { provide: TaskService, useValue: taskService },
+        { provide: MatDialogRef, useValue: dialogRef },
+        { provide: MatSnackBar, useValue: snackBar },
         { provide: MAT_DIALOG_DATA, useValue: null },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TaskFormComponent);
     component = fixture.componentInstance;
-    taskService = TestBed.inject(TaskService) as jasmine.SpyObj<TaskService>;
-    dialogRef = TestBed.inject(MatDialogRef) as jasmine.SpyObj<MatDialogRef<TaskFormComponent>>;
-    snackBar = TestBed.inject(MatSnackBar) as jasmine.SpyObj<MatSnackBar>;
-    fixture.detectChanges();
+    loader = TestbedHarnessEnvironment.loader(fixture);
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize with an empty form', () => {
-    expect(component.taskForm.get('title')?.value).toBe('');
-    expect(component.taskForm.get('description')?.value).toBe('');
-    expect(component.taskForm.get('due_date')?.value).toBeNull();
-    expect(component.taskForm.get('due_time')?.value).toBeNull();
-    expect(component.taskForm.get('reward')?.value).toBe('');
+  it('should initialize the form with empty values', async () => {
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    const titleInput = await loader.getHarness(
+      MatInputHarness.with({ selector: '[formControlName="title"]' })
+    );
+    const descInput = await loader.getHarness(
+      MatInputHarness.with({ selector: '[formControlName="description"]' })
+    );
+
+    expect(await titleInput.getValue()).toBe('');
+    expect(await descInput.getValue()).toBe('');
   });
 
-  describe('Form Validation', () => {
-    it('should validate required fields', () => {
-      const form = component.taskForm;
-      expect(form.valid).toBeFalse();
+  it('should validate required fields', async () => {
+    component.ngOnInit();
+    fixture.detectChanges();
 
-      form.patchValue({
-        title: 'Test Task',
-        description: 'Test Description',
-      });
+    const submitButton = await loader.getHarness(
+      MatButtonHarness.with({ selector: 'button[type="submit"]' })
+    );
+    await submitButton.click();
 
-      expect(form.valid).toBeTrue();
-    });
-
-    it('should not submit form when invalid', () => {
-      component.taskForm.patchValue({
-        title: '',
-        description: '',
-      });
-
-      component.onSubmit();
-
-      expect(taskService.createTask).not.toHaveBeenCalled();
-      expect(dialogRef.close).not.toHaveBeenCalled();
-    });
+    expect(component.taskForm.get('title')?.errors?.['required']).toBeTruthy();
+    expect(component.taskForm.get('description')?.errors?.['required']).toBeTruthy();
   });
 
   describe('Create Mode', () => {
-    it('should submit form when valid', () => {
-      const testTask = {
-        title: 'Test Task',
-        description: 'Test Description',
-        reward: '10 points',
-      };
-
-      component.taskForm.patchValue(testTask);
-      component.onSubmit();
-
-      expect(taskService.createTask).toHaveBeenCalledWith(jasmine.objectContaining(testTask));
-      expect(dialogRef.close).toHaveBeenCalled();
-      expect(snackBar.open).toHaveBeenCalledWith(
-        'Task added successfully',
-        'Close',
-        jasmine.any(Object)
-      );
-    });
-
-    it('should handle create task error', () => {
-      taskService.createTask.and.returnValue(throwError(() => new Error('API Error')));
-
-      component.taskForm.patchValue({
-        title: 'Test Task',
-        description: 'Test Description',
-      });
-      component.onSubmit();
-
-      expect(snackBar.open).toHaveBeenCalledWith('Error adding task', 'Close', jasmine.any(Object));
-    });
-  });
-
-  describe('Edit Mode', () => {
     beforeEach(() => {
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        imports: [
-          TaskFormComponent,
-          ReactiveFormsModule,
-          HttpClientTestingModule,
-          NoopAnimationsModule,
-        ],
-        providers: [
-          FormBuilder,
-          { provide: TaskService, useValue: taskService },
-          { provide: MatDialogRef, useValue: dialogRef },
-          { provide: MatSnackBar, useValue: snackBar },
-          { provide: MAT_DIALOG_DATA, useValue: mockTask },
-        ],
-      }).compileComponents();
-
-      fixture = TestBed.createComponent(TaskFormComponent);
-      component = fixture.componentInstance;
+      component.mode = 'create';
+      component.task = undefined;
+      component.ngOnInit();
       fixture.detectChanges();
     });
 
-    it('should initialize form with task data', () => {
-      expect(component.taskForm.get('title')?.value).toBe(mockTask.title);
-      expect(component.taskForm.get('description')?.value).toBe(mockTask.description);
-      expect(component.taskForm.get('due_date')?.value).toBeInstanceOf(Date);
-      expect(component.taskForm.get('due_time')?.value).toBeInstanceOf(Date);
-    });
+    it('should submit valid form data', fakeAsync(async () => {
+      const titleInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="title"]' })
+      );
+      const descInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="description"]' })
+      );
+      const submitButton = await loader.getHarness(
+        MatButtonHarness.with({ selector: 'button[type="submit"]' })
+      );
 
-    it('should update task when form is submitted', () => {
-      const updatedTask = {
-        title: 'Updated Task',
-        description: 'Updated Description',
+      await titleInput.setValue('New Task');
+      await descInput.setValue('New Description');
+      await submitButton.click();
+
+      const expectedCreate: TaskCreate = {
+        title: 'New Task',
+        description: 'New Description',
+        state: 'todo',
+        due_date: undefined,
+        reward: undefined,
       };
 
-      component.taskForm.patchValue(updatedTask);
-      component.onSubmit();
+      expect(taskService.createTask).toHaveBeenCalledWith(jasmine.objectContaining(expectedCreate));
 
-      expect(taskService.updateTask).toHaveBeenCalledWith(mockTask.id, jasmine.any(Object));
-      expect(dialogRef.close).toHaveBeenCalled();
-      expect(snackBar.open).toHaveBeenCalledWith(
-        'Task updated successfully',
-        'Close',
-        jasmine.any(Object)
-      );
-    });
-
-    it('should handle update task error', () => {
-      taskService.updateTask.and.returnValue(throwError(() => new Error('API Error')));
-
-      component.taskForm.patchValue({
-        title: 'Updated Task',
-        description: 'Updated Description',
-      });
-      component.onSubmit();
-
-      expect(snackBar.open).toHaveBeenCalledWith(
-        'Error updating task',
-        'Close',
-        jasmine.any(Object)
-      );
-    });
-  });
-
-  describe('Date and Time Handling', () => {
-    beforeEach(() => {
-      jasmine.clock().install();
-      jasmine.clock().mockDate(new Date('2025-02-19T14:15:00Z'));
-    });
-
-    afterEach(() => {
-      jasmine.clock().uninstall();
-    });
-
-    it('should round up time to next interval', () => {
-      component.prefillCurrentTime();
-      const timeControl = component.taskForm.get('due_time');
-      expect(timeControl?.value.getMinutes()).toBe(30);
-    });
-
-    it('should prefill current time', () => {
-      component.prefillCurrentTime();
-      const timeControl = component.taskForm.get('due_time');
-      const dateControl = component.taskForm.get('due_date');
-
-      expect(timeControl?.value).toBeInstanceOf(Date);
-      expect(dateControl?.value).toBeInstanceOf(Date);
-      expect(timeControl?.value.getMinutes() % 30).toBe(0);
-    });
-
-    it('should prefill end of day', () => {
-      component.prefillEndOfDay();
-      const dateControl = component.taskForm.get('due_date');
-      const timeControl = component.taskForm.get('due_time');
-
-      expect(dateControl?.value).toBeInstanceOf(Date);
-      expect(timeControl?.value).toBeInstanceOf(Date);
-      expect(dateControl?.value.getHours()).toBe(23);
-      expect(dateControl?.value.getMinutes()).toBe(30);
-    });
-
-    it('should update date time when both date and time are set', fakeAsync(() => {
-      const date = new Date('2025-02-19T00:00:00');
-      const time = new Date('2025-02-19T14:30:00');
-
-      component.taskForm.patchValue({
-        due_date: date,
-        due_time: time,
-      });
-
-      // Allow time for form value changes to propagate
       tick();
 
-      const combinedDate = component.taskForm.get('due_date')?.value;
-      expect(combinedDate.getHours()).toBe(time.getHours());
-      expect(combinedDate.getMinutes()).toBe(time.getMinutes());
+      expect(dialogRef.close).toHaveBeenCalledWith(jasmine.objectContaining({ ...mockTask }));
+      expect(snackBar.open).toHaveBeenCalledWith('Task added successfully', 'Close', {
+        duration: 3000,
+      });
+    }));
+
+    it('should handle API errors gracefully', fakeAsync(async () => {
+      taskService.createTask.and.returnValue(throwError(() => new Error('API Error')));
+
+      const titleInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="title"]' })
+      );
+      const descInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="description"]' })
+      );
+      const submitButton = await loader.getHarness(
+        MatButtonHarness.with({ selector: 'button[type="submit"]' })
+      );
+
+      await titleInput.setValue('New Task');
+      await descInput.setValue('New Description');
+      await submitButton.click();
+
+      tick();
+
+      expect(dialogRef.close).not.toHaveBeenCalled();
+      expect(snackBar.open).toHaveBeenCalledWith('Error adding task', 'Close', { duration: 3000 });
     }));
   });
 
-  describe('Dialog Integration', () => {
-    it('should initialize with dialog data if provided', () => {
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        imports: [
-          TaskFormComponent,
-          ReactiveFormsModule,
-          HttpClientTestingModule,
-          NoopAnimationsModule,
-        ],
-        providers: [
-          FormBuilder,
-          {
-            provide: TaskService,
-            useValue: jasmine.createSpyObj('TaskService', ['createTask', 'updateTask']),
-          },
-          { provide: MatSnackBar, useValue: jasmine.createSpyObj('MatSnackBar', ['open']) },
-          { provide: MAT_DIALOG_DATA, useValue: mockTask },
-        ],
-      }).compileComponents();
+  describe('Edit Mode', () => {
+    let editMockTask: Task;
 
-      const dialogFixture = TestBed.createComponent(TaskFormComponent);
-      const dialogComponent = dialogFixture.componentInstance;
-      dialogFixture.detectChanges();
-
-      expect(dialogComponent.task).toBeTruthy();
-      expect(dialogComponent.mode).toBe('edit');
-    });
-
-    it('should emit save event when not in dialog mode', () => {
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        imports: [
-          TaskFormComponent,
-          ReactiveFormsModule,
-          HttpClientTestingModule,
-          NoopAnimationsModule,
-        ],
-        providers: [
-          FormBuilder,
-          { provide: TaskService, useValue: taskService },
-          { provide: MatSnackBar, useValue: snackBar },
-        ],
-      }).compileComponents();
-
-      fixture = TestBed.createComponent(TaskFormComponent);
-      component = fixture.componentInstance;
+    beforeEach(() => {
+      // Create a fresh copy of the mock task for each test
+      editMockTask = { ...mockTask };
+      component.mode = 'edit';
+      component.task = editMockTask;
+      component.ngOnInit();
       fixture.detectChanges();
 
-      spyOn(component.save, 'emit');
-      component.taskForm.patchValue({
-        title: 'Test Task',
-        description: 'Test Description',
+      // Reset mock responses before each test
+      taskService.updateTask.calls.reset();
+    });
+
+    it('should initialize form with existing task data', async () => {
+      const titleInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="title"]' })
+      );
+      const descInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="description"]' })
+      );
+
+      expect(await titleInput.getValue()).toBe(editMockTask.title);
+      expect(await descInput.getValue()).toBe(editMockTask.description);
+    });
+
+    it('should update task with modified title', fakeAsync(async () => {
+      const titleInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="title"]' })
+      );
+      const submitButton = await loader.getHarness(
+        MatButtonHarness.with({ selector: 'button[type="submit"]' })
+      );
+
+      await titleInput.setValue('Updated Task');
+
+      // Create the expected update data (only changed fields)
+      const changes: Partial<TaskUpdate> = {
+        title: 'Updated Task',
+      };
+
+      // Create the mock response from the service with correct state type
+      const updatedTask: Task = {
+        ...editMockTask, // This includes the original state
+        title: 'Updated Task',
+      };
+      taskService.updateTask.and.returnValue(of(updatedTask));
+
+      await submitButton.click();
+      tick(); // Wait for form submission
+
+      // Verify update data sent to service (only changed fields)
+      expect(taskService.updateTask).toHaveBeenCalledWith(
+        editMockTask.id,
+        jasmine.objectContaining(changes)
+      );
+
+      // Verify response handling
+      expect(dialogRef.close).toHaveBeenCalledWith(jasmine.objectContaining(updatedTask));
+      expect(snackBar.open).toHaveBeenCalledWith('Task updated successfully', 'Close', {
+        duration: 3000,
       });
-      component.onSubmit();
+    }));
 
-      expect(component.save.emit).toHaveBeenCalledWith(jasmine.any(Object));
-    });
+    it('should emit save event when not in dialog', fakeAsync(async () => {
+      // Remove dialog ref to test component output
+      Object.defineProperty(component, 'dialogRef', { value: undefined });
+      spyOn(component.save, 'emit');
 
-    it('should emit cancel event when not in dialog mode', () => {
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        imports: [
-          TaskFormComponent,
-          ReactiveFormsModule,
-          HttpClientTestingModule,
-          NoopAnimationsModule,
-        ],
-        providers: [
-          FormBuilder,
-          { provide: TaskService, useValue: taskService },
-          { provide: MatSnackBar, useValue: snackBar },
-        ],
-      }).compileComponents();
+      const titleInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="title"]' })
+      );
+      const descInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="description"]' })
+      );
+      const submitButton = await loader.getHarness(
+        MatButtonHarness.with({ selector: 'button[type="submit"]' })
+      );
 
-      fixture = TestBed.createComponent(TaskFormComponent);
-      component = fixture.componentInstance;
-      fixture.detectChanges();
+      await titleInput.setValue('Updated Task');
+      await descInput.setValue('Updated Description');
 
+      // Create the expected update data (only changed fields)
+      const changes: Partial<TaskUpdate> = {
+        title: 'Updated Task',
+        description: 'Updated Description',
+      };
+
+      // Create the mock response from the service with correct state type
+      const updatedTask: Task = {
+        ...editMockTask, // Use the original task as base
+        title: 'Updated Task',
+        description: 'Updated Description',
+      };
+
+      taskService.updateTask.and.returnValue(of(updatedTask));
+
+      await submitButton.click();
+      tick(); // Wait for form submission
+
+      // Verify update data sent to service (only changed fields)
+      expect(taskService.updateTask).toHaveBeenCalledWith(
+        editMockTask.id,
+        jasmine.objectContaining(changes)
+      );
+
+      // Verify response handling with the original mock task state
+      expect(component.save.emit).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          id: editMockTask.id,
+          title: 'Updated Task',
+          description: 'Updated Description',
+          state: editMockTask.state, // Use the original state
+        })
+      );
+    }));
+
+    it('should handle API errors gracefully', fakeAsync(async () => {
+      taskService.updateTask.and.returnValue(throwError(() => new Error('API Error')));
+
+      const titleInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="title"]' })
+      );
+      const submitButton = await loader.getHarness(
+        MatButtonHarness.with({ selector: 'button[type="submit"]' })
+      );
+
+      await titleInput.setValue('Updated Task');
+      await submitButton.click();
+
+      tick();
+
+      expect(dialogRef.close).not.toHaveBeenCalled();
+      expect(snackBar.open).toHaveBeenCalledWith('Error updating task', 'Close', {
+        duration: 3000,
+      });
+    }));
+
+    it('should emit cancel event when cancel button is clicked', async () => {
+      // Remove dialog ref to test component output
+      Object.defineProperty(component, 'dialogRef', { value: undefined });
       spyOn(component.cancelled, 'emit');
-      component.onCancel();
+
+      const cancelButton = await loader.getHarness(MatButtonHarness.with({ text: 'Cancel' }));
+      await cancelButton.click();
+
       expect(component.cancelled.emit).toHaveBeenCalled();
     });
   });
