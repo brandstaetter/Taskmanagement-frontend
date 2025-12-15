@@ -43,21 +43,20 @@ jobs:
         name: dist
         path: dist/frontend
 
-  # deploy-to-lan:
-  #   needs: build-and-test
-  #   if: github.ref == 'refs/heads/main'
-  #   runs-on: self-hosted
+  deploy-to-lan:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, lan, nginx]
+  
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist-artifact
     
-  #   steps:
-  #   - name: Download build artifacts
-  #     uses: actions/download-artifact@v4
-  #     with:
-  #       name: dist
-  #       path: dist/frontend
-    
-  #   - name: Deploy to local Nginx
-  #     run: |
-  #       sudo cp -r dist/frontend/* /var/www/taskmanagement/
-  #       sudo chown -R www-data:www-data /var/www/taskmanagement
-  #       sudo chmod -R 755 /var/www/taskmanagement
-  #       sudo nginx -t && sudo systemctl reload nginx
+    - name: Deploy to local Nginx
+      run: |
+        rsync -av --delete dist-artifact/ /var/www/taskmanagement/
+        sudo nginx -t
+        sudo systemctl reload nginx
