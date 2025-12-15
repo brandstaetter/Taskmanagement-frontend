@@ -1,13 +1,64 @@
-1. backend is in python, frontend is in angular 19. This is the frontend.
-2. for both, use recommended best practices
-3. for both, use recommended development workflows
-4. for both, use recommended testing strategies
-5. for both, use recommended deployment strategies
-6. for both, use recommended security best practices
-7. for both, use recommended logging and monitoring strategies
-8. for both, use recommended continuous integration strategies for github
-9. We are in windows, so use powershell commands in terminal
-10. Do not assume anyhthing about the implementation. Always look at the relevant source files. 
-11. When searching for problems, do not simply follow the first possibility you identify. Always check first if there are alternative causes and weigh the likelihood of each cause
-12. We use nvm for managing node versions, so use nvm commands in terminal to ensure that the latest lts version is active
-13. We use standalone components, so do not use inline templates or styles
+# Taskmanagement-frontend (.windsurfrules)
+
+## Project identity
+
+- Frontend only: Angular 19 app. Backend is Python and is out of scope for this repo.
+- Angular style: standalone bootstrap (src/main.ts) + ApplicationConfig providers (src/app/app.config.ts).
+- UI library: Angular Material (prebuilt theme azure-blue, SCSS).
+- Testing: Karma + Jasmine.
+- TypeScript: strict true.
+
+## Quick commands (use these exact scripts)
+
+- Dev: npm run start:dev (or npm start)
+- Build: npm run build / npm run build:prod
+- Lint: npm run lint (fix: npm run lint:fix)
+- Format: npm run format (check: npm run format:check)
+- Unit tests: npm test (CI: npm run test:ci, coverage: npm run test:coverage)
+
+## Repo map (edit the right files)
+
+- Bootstrap: src/main.ts uses bootstrapApplication(AppComponent, appConfig).
+- App shell: src/app/app.component.* contains `<router-outlet>`.
+- Global providers: src/app/app.config.ts (Router, Animations, HttpClientModule, Material modules, locale).
+- Top-level routing: src/app/app.routes.ts.
+- Feature routing: lazy-loaded *.module.ts under src/app/components/** using RouterModule.forChild(...).
+- API base URL: src/environments/environment.ts and src/environments/environment.prod.ts (environment.apiUrl).
+- HTTP / API access: src/app/services/task.service.ts.
+- API contract reference: src/app/api/openapi.json.
+- Global styles: src/styles.scss (Material + .error-snackbar).
+
+## Existing architectural conventions (follow these)
+
+- Standalone components: most components are standalone: true and declare their own Angular Material imports.
+- Lazy loading pattern: routes load a feature NgModule (e.g. main-view.module.ts) that wires a path to a standalone component.
+- HTTP pattern:
+  - Use HttpClient + RxJS Observable.
+  - Base URL is environment.apiUrl and versioned routes are built as `${environment.apiUrl}/v1`.
+- Error/toast UX: use MatSnackBar for user-visible errors/success. For “hard” errors, prefer panelClass: ['error-snackbar'].
+
+## Formatting & linting rules
+
+- Indentation: 2 spaces.
+- Quotes: single quotes.
+- Prettier: print width 100; trailing commas (es5).
+- Keep imports clean; do not introduce unused imports (TS/ESLint is strict).
+- Avoid adding comments unless explicitly requested.
+
+## Safe change rules for agents
+
+- Do not edit backend code or assume backend behavior beyond openapi.json.
+- Do not add new dependencies (npm packages) unless explicitly requested.
+- Do not change environment URLs unless explicitly asked; use environment*.ts when you must.
+- Prefer small, localized patches in existing files over large refactors.
+- When adding a UI feature:
+  - Use Angular Material components already used in the repo.
+  - Add required Mat*Module imports to the standalone component imports array.
+  - If creating a new route/page, add a lazy-loaded entry in app.routes.ts and a new feature *.module.ts under src/app/components/`<feature>`/.
+
+## “How to proceed” checklist (agent workflow)
+
+- First: search for existing patterns/components/services before creating new ones.
+- Second: implement changes following the patterns in TaskService, TaskViewComponent, PlanItComponent, and dialogs.
+- Third: run npm run lint and npm test (or at minimum npm run lint) after code changes.
+- Finally: ensure builds stay strict-TS compatible and no new lint violations are introduced.
