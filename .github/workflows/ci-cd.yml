@@ -57,6 +57,7 @@ jobs:
     
     - name: Deploy to local Nginx
       run: |
+        set -e
         rsync -av --delete dist-artifact/ /var/www/taskmanagement/
         sudo nginx -t
         sudo systemctl reload nginx
