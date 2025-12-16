@@ -32,16 +32,16 @@ export class AuthService {
   setAccessToken(token: string): void {
     try {
       localStorage.setItem(this.tokenStorageKey, token);
-    } catch {
-      void 0;
+    } catch (e) {
+      console.error('Failed to set access token in localStorage:', e);
     }
   }
 
   clearAccessToken(): void {
     try {
       localStorage.removeItem(this.tokenStorageKey);
-    } catch {
-      void 0;
+    } catch (e) {
+      console.error('Failed to clear access token from localStorage:', e);
     }
   }
 
