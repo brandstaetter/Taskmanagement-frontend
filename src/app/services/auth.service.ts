@@ -44,6 +44,8 @@ export class AuthService {
   private extractUserFromToken(token: string): void {
     const payload = decodeJwt(token);
     if (payload) {
+      // user_id might not be in the token, we'll use 0 as placeholder
+      // The real ID should come from a proper user profile endpoint
       const user: User = {
         id: payload.user_id ?? 0,
         email: payload.sub,
@@ -51,7 +53,9 @@ export class AuthService {
         is_admin: payload.is_admin ?? false,
         avatar_url: null,
         last_login: null,
-        created_at: new Date().toISOString(),
+        // These timestamps are placeholders since they're not in the JWT
+        // In a real app, they should come from a /users/me endpoint
+        created_at: new Date(payload.iat ? payload.iat * 1000 : Date.now()).toISOString(),
         updated_at: new Date().toISOString(),
       };
       this.setStoredUser(user);

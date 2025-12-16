@@ -95,10 +95,15 @@ export class UserProfileComponent implements OnInit {
           this.isLoadingPassword = false;
         },
         error: err => {
-          this.snackBar.open(err.error?.detail || 'Failed to update password', 'Close', {
-            duration: 5000,
-            panelClass: ['error-snackbar'],
-          });
+          this.snackBar.open(
+            err.error?.detail ||
+              'Failed to update password. Please check your current password and try again.',
+            'Close',
+            {
+              duration: 5000,
+              panelClass: ['error-snackbar'],
+            }
+          );
           this.isLoadingPassword = false;
         },
       });
