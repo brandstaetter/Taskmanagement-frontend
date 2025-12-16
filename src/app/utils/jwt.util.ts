@@ -1,8 +1,8 @@
 export interface JwtPayload {
-  sub: string; // email
+  sub: string; // username = email
   exp: number;
   iat?: number;
-  is_admin?: boolean;
+  role?: 'user' | 'admin' | 'superadmin';
   user_id?: number;
 }
 

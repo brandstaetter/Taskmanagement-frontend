@@ -10,16 +10,16 @@
           <strong>{{ currentUser?.email }}</strong>
         </div>
         <mat-divider></mat-divider>
-        <button mat-menu-item (click)="openProfile()">
-          <mat-icon>person</mat-icon>
-          <span>Profile</span>
-        </button>
         @if (isAdmin) {
           <button mat-menu-item (click)="openAdmin()">
             <mat-icon>admin_panel_settings</mat-icon>
             <span>Admin Dashboard</span>
           </button>
         }
+        <button mat-menu-item (click)="openProfile()">
+          <mat-icon>person</mat-icon>
+          <span>Profile</span>
+        </button>
         <mat-divider></mat-divider>
         <button mat-menu-item (click)="logout()">
           <mat-icon>logout</mat-icon>

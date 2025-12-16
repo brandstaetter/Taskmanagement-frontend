@@ -45,6 +45,7 @@ describe('UserService', () => {
       email: 'test@example.com',
       is_active: true,
       is_admin: false,
+      is_superadmin: false,
       avatar_url: 'https://example.com/avatar.jpg',
       created_at: '2023-01-01',
       updated_at: '2023-01-01',

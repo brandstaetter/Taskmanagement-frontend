@@ -40,6 +40,7 @@ describe('UserProfileComponent', () => {
       email: 'test@example.com',
       is_active: true,
       is_admin: false,
+      is_superadmin: false,
       created_at: '2023-01-01',
       updated_at: '2023-01-01',
     });
@@ -96,6 +97,7 @@ describe('UserProfileComponent', () => {
       email: 'test@example.com',
       is_active: true,
       is_admin: false,
+      is_superadmin: false,
       avatar_url: 'https://example.com/avatar.jpg',
       created_at: '2023-01-01',
       updated_at: '2023-01-01',
@@ -111,5 +113,22 @@ describe('UserProfileComponent', () => {
     expect(userService.updateAvatar).toHaveBeenCalledWith({
       avatar_url: 'https://example.com/avatar.jpg',
     });
+  });
+
+  it('should hide password and avatar tabs when user is superadmin', () => {
+    authService.getCurrentUser.and.returnValue({
+      id: 1,
+      email: 'test@example.com',
+      is_active: true,
+      is_admin: true,
+      is_superadmin: true,
+      created_at: '2023-01-01',
+      updated_at: '2023-01-01',
+    });
+
+    component.loadUserProfile();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('mat-tab-group')).toBeNull();
   });
 });

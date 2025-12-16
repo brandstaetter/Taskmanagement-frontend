@@ -46,6 +46,7 @@ describe('AuthService', () => {
         email: 'stored@example.com',
         is_active: true,
         is_admin: true,
+        is_superadmin: false,
         avatar_url: null,
         last_login: null,
         created_at: '2024-01-01T00:00:00.000Z',
@@ -81,6 +82,68 @@ describe('AuthService', () => {
 
     it('should return false for isAdmin when no user exists', () => {
       expect(service.isAdmin()).toBe(false);
+    });
+
+    describe('isSuperAdmin', () => {
+      it('should return true for superadmin users', () => {
+        const storedUser = {
+          id: 123,
+          email: 'superadmin@example.com',
+          is_active: true,
+          is_admin: true,
+          is_superadmin: true,
+          avatar_url: null,
+          last_login: null,
+          created_at: '2024-01-01T00:00:00.000Z',
+          updated_at: '2024-01-01T00:00:00.000Z',
+        };
+        localStorage.setItem('taskman_user', JSON.stringify(storedUser));
+
+        const http = TestBed.inject(HttpClient);
+        const newService = new AuthService(http);
+
+        expect(newService.isSuperAdmin()).toBe(true);
+      });
+
+      it('should return false for admin users', () => {
+        const storedUser = {
+          id: 123,
+          email: 'admin@example.com',
+          is_active: true,
+          is_admin: true,
+          is_superadmin: false,
+          avatar_url: null,
+          last_login: null,
+          created_at: '2024-01-01T00:00:00.000Z',
+          updated_at: '2024-01-01T00:00:00.000Z',
+        };
+        localStorage.setItem('taskman_user', JSON.stringify(storedUser));
+
+        const http = TestBed.inject(HttpClient);
+        const newService = new AuthService(http);
+
+        expect(newService.isSuperAdmin()).toBe(false);
+      });
+
+      it('should return false for regular users', () => {
+        const storedUser = {
+          id: 123,
+          email: 'user@example.com',
+          is_active: true,
+          is_admin: false,
+          is_superadmin: false,
+          avatar_url: null,
+          last_login: null,
+          created_at: '2024-01-01T00:00:00.000Z',
+          updated_at: '2024-01-01T00:00:00.000Z',
+        };
+        localStorage.setItem('taskman_user', JSON.stringify(storedUser));
+
+        const http = TestBed.inject(HttpClient);
+        const newService = new AuthService(http);
+
+        expect(newService.isSuperAdmin()).toBe(false);
+      });
     });
   });
 
@@ -251,7 +314,7 @@ describe('AuthService', () => {
         sub: 'jwtuser@example.com',
         exp: 999999,
         iat: 2,
-        is_admin: true,
+        role: 'admin',
         user_id: 5,
       });
 
@@ -263,13 +326,46 @@ describe('AuthService', () => {
           id: number;
           email: string;
           is_admin: boolean;
+          is_superadmin: boolean;
           created_at: string;
         };
         expect(storedUser.id).toBe(5);
         expect(storedUser.email).toBe('jwtuser@example.com');
         expect(storedUser.is_admin).toBe(true);
+        expect(storedUser.is_superadmin).toBe(false);
         expect(storedUser.created_at).toBe(new Date(2 * 1000).toISOString());
         expect(service.isAdmin()).toBe(true);
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
+      req.flush({ access_token: token, token_type: 'bearer' } as AuthResponse);
+    });
+
+    it("should set both is_admin and is_superadmin when JWT role is 'superadmin'", () => {
+      const token = createJwtToken({
+        sub: 'superadmin@example.com',
+        exp: 999999,
+        iat: 2,
+        role: 'superadmin',
+        user_id: 7,
+      });
+
+      service.login('user', 'pass').subscribe(() => {
+        const storedUserStr = localStorage.getItem('taskman_user');
+        expect(storedUserStr).not.toBeNull();
+
+        const storedUser = JSON.parse(storedUserStr as string) as {
+          id: number;
+          email: string;
+          is_admin: boolean;
+          is_superadmin: boolean;
+        };
+        expect(storedUser.id).toBe(7);
+        expect(storedUser.email).toBe('superadmin@example.com');
+        expect(storedUser.is_admin).toBe(true);
+        expect(storedUser.is_superadmin).toBe(true);
+        expect(service.isAdmin()).toBe(true);
+        expect(service.isSuperAdmin()).toBe(true);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
@@ -293,11 +389,13 @@ describe('AuthService', () => {
             id: number;
             email: string;
             is_admin: boolean;
+            is_superadmin: boolean;
             created_at: string;
           };
           expect(storedUser.id).toBe(0);
           expect(storedUser.email).toBe('defaults@example.com');
           expect(storedUser.is_admin).toBe(false);
+          expect(storedUser.is_superadmin).toBe(false);
           expect(storedUser.created_at).toBe(new Date(10_000).toISOString());
           expect(service.isAdmin()).toBe(false);
         });
@@ -323,7 +421,7 @@ describe('AuthService', () => {
       const token = createJwtToken({
         sub: 'storageerror@example.com',
         exp: 999999,
-        is_admin: true,
+        role: 'admin',
       });
 
       const originalSetItem = localStorage.setItem.bind(localStorage);
@@ -378,6 +476,7 @@ describe('AuthService', () => {
           email: 'user@example.com',
           is_active: true,
           is_admin: false,
+          is_superadmin: false,
           created_at: '2024-01-01T00:00:00.000Z',
           updated_at: '2024-01-01T00:00:00.000Z',
         })
