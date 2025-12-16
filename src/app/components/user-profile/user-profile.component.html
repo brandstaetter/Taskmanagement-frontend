@@ -84,7 +84,11 @@
             <form [formGroup]="avatarForm" (ngSubmit)="updateAvatar()">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Avatar URL</mat-label>
-                <input matInput formControlName="avatarUrl" placeholder="https://example.com/avatar.jpg" />
+                <input
+                  matInput
+                  formControlName="avatarUrl"
+                  placeholder="https://example.com/avatar.jpg"
+                />
                 <mat-error *ngIf="avatarForm.controls.avatarUrl.hasError('required')">
                   Avatar URL is required
                 </mat-error>

@@ -67,14 +67,10 @@ export class AdminDashboardComponent {
       })
       .subscribe({
         next: user => {
-          this.snackBar.open(
-            `User created successfully: ${user.email} (ID: ${user.id})`,
-            'Close',
-            {
-              duration: 5000,
-              panelClass: ['success-snackbar'],
-            }
-          );
+          this.snackBar.open(`User created successfully: ${user.email} (ID: ${user.id})`, 'Close', {
+            duration: 5000,
+            panelClass: ['success-snackbar'],
+          });
           this.createUserForm.reset({ isAdmin: false });
           this.isCreatingUser = false;
         },
@@ -123,7 +119,9 @@ export class AdminDashboardComponent {
   initializeDatabase(): void {
     if (this.isInitializingDb) return;
 
-    if (!confirm('Are you sure you want to initialize the database? This will create all tables.')) {
+    if (
+      !confirm('Are you sure you want to initialize the database? This will create all tables.')
+    ) {
       return;
     }
 
