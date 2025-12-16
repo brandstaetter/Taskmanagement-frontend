@@ -277,31 +277,36 @@ describe('AuthService', () => {
     });
 
     it('should use default values when JWT has no user_id, is_admin, or iat', () => {
-      spyOn(Date, 'now').and.returnValue(10_000);
+      jasmine.clock().install();
+      jasmine.clock().mockDate(new Date(10_000));
       const token = createJwtToken({
         sub: 'defaults@example.com',
         exp: 999999,
       });
 
-      service.login('user', 'pass').subscribe(() => {
-        const storedUserStr = localStorage.getItem('taskman_user');
-        expect(storedUserStr).not.toBeNull();
+      try {
+        service.login('user', 'pass').subscribe(() => {
+          const storedUserStr = localStorage.getItem('taskman_user');
+          expect(storedUserStr).not.toBeNull();
 
-        const storedUser = JSON.parse(storedUserStr as string) as {
-          id: number;
-          email: string;
-          is_admin: boolean;
-          created_at: string;
-        };
-        expect(storedUser.id).toBe(0);
-        expect(storedUser.email).toBe('defaults@example.com');
-        expect(storedUser.is_admin).toBe(false);
-        expect(storedUser.created_at).toBe(new Date(10_000).toISOString());
-        expect(service.isAdmin()).toBe(false);
-      });
+          const storedUser = JSON.parse(storedUserStr as string) as {
+            id: number;
+            email: string;
+            is_admin: boolean;
+            created_at: string;
+          };
+          expect(storedUser.id).toBe(0);
+          expect(storedUser.email).toBe('defaults@example.com');
+          expect(storedUser.is_admin).toBe(false);
+          expect(storedUser.created_at).toBe(new Date(10_000).toISOString());
+          expect(service.isAdmin()).toBe(false);
+        });
 
-      const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
-      req.flush({ access_token: token, token_type: 'bearer' } as AuthResponse);
+        const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
+        req.flush({ access_token: token, token_type: 'bearer' } as AuthResponse);
+      } finally {
+        jasmine.clock().uninstall();
+      }
     });
 
     it('should not store user when token is not a valid JWT', () => {
