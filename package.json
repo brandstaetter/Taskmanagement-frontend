@@ -59,7 +59,7 @@
     "@angular/cli": "^19.2.4",
     "@angular/compiler-cli": "^19.1.0",
     "@types/jasmine": "~5.1.7",
-    "angular-eslint": "19.3.0",
+    "angular-eslint": "19.8.1",
     "esbuild": ">=0.25.0",
     "eslint": "^9.20.0",
     "eslint-config-prettier": "^10.0.1",
