@@ -25,7 +25,7 @@ TASKMAN is a task management application frontend built with Angular 19. This is
 - **Development build**: `npm run build`
 - **Production build**: `npm run build:prod`
 - Build output is placed in `dist/` directory
-- Production builds are optimized for performance
+- Production builds are optimized with tree-shaking, minification, and bundling optimizations
 
 ### Testing
 - **Run tests**: `npm test` (watch mode)
@@ -47,7 +47,7 @@ TASKMAN is a task management application frontend built with Angular 19. This is
 - Use **single quotes** for strings
 - **Semicolons** are required
 - **2 spaces** for indentation (no tabs)
-- Arrow functions should use `avoid` parens style: `x => x`
+- Arrow functions should avoid unnecessary parentheses for single parameters: `x => x` (not `(x) => x`)
 - Max line length: 100 characters
 - Trailing commas: ES5 style
 - Use strict typing - avoid `any` when possible
@@ -139,6 +139,11 @@ describe('ComponentName', () => {
 - Initial bundle: max 1MB (warning at 800kB)
 - Component styles: max 16kB (warning at 8kB)
 - Keep bundle sizes within limits
+- If budgets are exceeded, consider:
+  - Lazy loading modules/components
+  - Code splitting strategies
+  - Removing unused dependencies
+  - Using dynamic imports for large libraries
 
 ## Additional Notes
 - Project uses Angular Material with azure-blue prebuilt theme
