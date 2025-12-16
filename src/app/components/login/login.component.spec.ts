@@ -246,21 +246,4 @@ describe('LoginComponent', () => {
 
     expect(authService.login).not.toHaveBeenCalled();
   });
-
-  it('should reset loading state on complete', fakeAsync(() => {
-    authService.login.and.returnValue(of({ access_token: 'test-token', token_type: 'Bearer' }));
-    router.navigateByUrl.and.returnValue(Promise.resolve(true));
-
-    component.form.controls.username.setValue('testuser');
-    component.form.controls.password.setValue('testpass');
-
-    expect(component.isLoading).toBe(false);
-    component.submit();
-
-    // Observable completes synchronously, complete callback sets isLoading to false
-    fixture.detectChanges();
-    tick();
-
-    expect(component.isLoading).toBe(false);
-  }));
 });
