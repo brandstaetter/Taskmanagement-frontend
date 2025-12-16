@@ -6,8 +6,10 @@
       <mat-form-field appearance="outline">
         <mat-label>Title</mat-label>
         <input matInput formControlName="title" placeholder="Enter task title" />
-        <mat-error *ngIf="taskForm.get('title')?.hasError('required')">
-          Title is required
+        <mat-error>
+          @if (taskForm.get('title')?.hasError('required')) {
+            Title is required
+          }
         </mat-error>
       </mat-form-field>
 
@@ -19,8 +21,10 @@
           placeholder="Enter task description"
           rows="3"
         ></textarea>
-        <mat-error *ngIf="taskForm.get('description')?.hasError('required')">
-          Description is required
+        <mat-error>
+          @if (taskForm.get('description')?.hasError('required')) {
+            Description is required
+          }
         </mat-error>
       </mat-form-field>
 
