@@ -36,6 +36,7 @@ describe('AdminService', () => {
       email: 'newuser@example.com',
       is_active: true,
       is_admin: false,
+      is_superadmin: false,
       created_at: '2023-01-01',
       updated_at: '2023-01-01',
     };

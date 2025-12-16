@@ -3,6 +3,7 @@ export interface User {
   email: string;
   is_active: boolean;
   is_admin: boolean;
+  is_superadmin: boolean;
   avatar_url?: string | null;
   last_login?: string | null;
   created_at: string;

@@ -44,13 +44,18 @@ export class AuthService {
   private extractUserFromToken(token: string): void {
     const payload = decodeJwt(token);
     if (payload) {
+      const role = payload.role ?? 'user';
+      const isSuperAdmin = role === 'superadmin';
+      const isAdmin = role === 'admin' || isSuperAdmin;
+
       // user_id might not be in the token, we'll use 0 as placeholder
       // The real ID should come from a proper user profile endpoint
       const user: User = {
         id: payload.user_id ?? 0,
         email: payload.sub,
         is_active: true,
-        is_admin: payload.is_admin ?? false,
+        is_admin: isAdmin,
+        is_superadmin: isSuperAdmin,
         avatar_url: null,
         last_login: null,
         // These timestamps are placeholders since they're not in the JWT
@@ -78,6 +83,11 @@ export class AuthService {
   isAdmin(): boolean {
     const user = this.getCurrentUser();
     return user?.is_admin ?? false;
+  }
+
+  isSuperAdmin(): boolean {
+    const user = this.getCurrentUser();
+    return user?.is_superadmin ?? false;
   }
 
   getAccessToken(): string | null {
