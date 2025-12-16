@@ -1,125 +1,125 @@
 <mat-card class="task-card" [ngClass]="getTaskClass()">
   <mat-card-header>
     <mat-card-title>{{ task.title }}</mat-card-title>
-    <button mat-icon-button [matMenuTriggerFor]="menu" class="more-actions" *ngIf="showActions">
-      <mat-icon>more_vert</mat-icon>
-    </button>
+    @if (showActions) {
+      <button mat-icon-button [matMenuTriggerFor]="menu" class="more-actions">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+    }
     <mat-menu #menu="matMenu">
       <button mat-menu-item (click)="printTask.emit(task)">
         <mat-icon>print</mat-icon>
         <span>Print Task</span>
       </button>
-      <button mat-menu-item *ngIf="task.state !== 'todo'" (click)="reopenTask.emit(task)">
-        <mat-icon>replay</mat-icon>
-        <span>Reopen Task</span>
-      </button>
-      <button mat-menu-item *ngIf="task.state === 'todo'" (click)="editTask.emit(task)">
-        <mat-icon>edit</mat-icon>
-        <span>Edit Task</span>
-      </button>
-      <button mat-menu-item *ngIf="task.state === 'todo'" (click)="archiveTask.emit(task)">
-        <mat-icon>archive</mat-icon>
-        <span>Archive Task</span>
-      </button>
+      @if (task.state !== 'todo') {
+        <button mat-menu-item (click)="reopenTask.emit(task)">
+          <mat-icon>replay</mat-icon>
+          <span>Reopen Task</span>
+        </button>
+      }
+      @if (task.state === 'todo') {
+        <button mat-menu-item (click)="editTask.emit(task)">
+          <mat-icon>edit</mat-icon>
+          <span>Edit Task</span>
+        </button>
+      }
+      @if (task.state === 'todo') {
+        <button mat-menu-item (click)="archiveTask.emit(task)">
+          <mat-icon>archive</mat-icon>
+          <span>Archive Task</span>
+        </button>
+      }
     </mat-menu>
   </mat-card-header>
 
   <mat-card-content>
-    <ng-container *ngIf="task.due_date">
+    @if (task.due_date) {
       <div class="due-date">
-        <mat-icon
-          *ngIf="isOverdue(task) && task.state !== 'done' && task.state !== 'archived'"
-          class="warning-icon"
-          >warning</mat-icon
-        >
+        @if (isOverdue(task) && task.state !== 'done' && task.state !== 'archived') {
+          <mat-icon class="warning-icon">warning</mat-icon>
+        }
         <mat-icon>schedule</mat-icon>
         Due: {{ formatDate(task.due_date) }}
         <br />
         <span class="timespan">{{ getTimespan(task.due_date) }}</span>
       </div>
-    </ng-container>
-    <ng-container *ngIf="task.started_at && task.state === 'in_progress'">
+    }
+    @if (task.started_at && task.state === 'in_progress') {
       <div class="started-info">
         <mat-icon>rocket_launch</mat-icon>
         Started: {{ formatDate(task.started_at) }}
         <br />
         <span class="timespan">{{ getTimespan(task.started_at) }}</span>
       </div>
-    </ng-container>
+    }
     <div class="description-container">
       <mat-icon class="info-icon">info</mat-icon>
       <p class="description">{{ task.description }}</p>
     </div>
-    <div *ngIf="task.completed_at" class="completion-info">
-      <mat-icon>task_alt</mat-icon>
-      Completed: {{ formatDate(task.completed_at) }}
-      <br />
-      <span class="timespan">{{ getTimespan(task.completed_at) }}</span>
-    </div>
+    @if (task.completed_at) {
+      <div class="completion-info">
+        <mat-icon>task_alt</mat-icon>
+        Completed: {{ formatDate(task.completed_at) }}
+        <br />
+        <span class="timespan">{{ getTimespan(task.completed_at) }}</span>
+      </div>
+    }
   </mat-card-content>
 
   <mat-card-footer>
     <div class="card-footer-content">
       <div class="footer-left">
-        <mat-chip-set *ngIf="task.reward">
-          <mat-chip highlighted color="accent">
-            <mat-icon>redeem</mat-icon>
-            {{ task.reward }}
-          </mat-chip>
-        </mat-chip-set>
+        @if (task.reward) {
+          <mat-chip-set>
+            <mat-chip highlighted color="accent">
+              <mat-icon>redeem</mat-icon>
+              {{ task.reward }}
+            </mat-chip>
+          </mat-chip-set>
+        }
       </div>
-      <div
-        class="footer-right"
-        *ngIf="mode === 'print-only' || (showActions && mode === 'default')"
-      >
-        <ng-container *ngIf="mode === 'print-only'">
-          <button
-            *ngIf="task.state === 'todo'"
-            mat-icon-button
-            (click)="printTask.emit(task)"
-            matTooltip="Print task"
-          >
-            <mat-icon>print</mat-icon>
-          </button>
-        </ng-container>
+      @if (mode === 'print-only' || (showActions && mode === 'default')) {
+        <div class="footer-right">
+          @if (mode === 'print-only') {
+            @if (task.state === 'todo') {
+              <button mat-icon-button (click)="printTask.emit(task)" matTooltip="Print task">
+                <mat-icon>print</mat-icon>
+              </button>
+            }
+          }
 
-        <ng-container *ngIf="mode === 'default'">
-          <button
-            *ngIf="showPrintButton"
-            mat-icon-button
-            (click)="printTask.emit(task)"
-            matTooltip="Print task"
-          >
-            <mat-icon>print</mat-icon>
-          </button>
-          <button
-            *ngIf="task.state === 'todo'"
-            mat-raised-button
-            color="primary"
-            (click)="startTask.emit(task)"
-          >
-            START
-          </button>
-          <button
-            *ngIf="task.state === 'in_progress'"
-            mat-raised-button
-            color="accent"
-            (click)="completeTask.emit(task)"
-          >
-            COMPLETE
-          </button>
-          <button
-            *ngIf="task.state === 'done' && !task.state.includes('archived')"
-            mat-icon-button
-            color="warn"
-            (click)="archiveTask.emit(task)"
-            matTooltip="Archive task"
-          >
-            <mat-icon>archive</mat-icon>
-          </button>
-          <mat-chip *ngIf="task.state === 'archived'" color="warn" selected>Archived</mat-chip>
-        </ng-container>
-      </div>
+          @if (mode === 'default') {
+            @if (showPrintButton) {
+              <button mat-icon-button (click)="printTask.emit(task)" matTooltip="Print task">
+                <mat-icon>print</mat-icon>
+              </button>
+            }
+            @if (task.state === 'todo') {
+              <button mat-raised-button color="primary" (click)="startTask.emit(task)">
+                START
+              </button>
+            }
+            @if (task.state === 'in_progress') {
+              <button mat-raised-button color="accent" (click)="completeTask.emit(task)">
+                COMPLETE
+              </button>
+            }
+            @if (task.state === 'done' && !task.state.includes('archived')) {
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="archiveTask.emit(task)"
+                matTooltip="Archive task"
+              >
+                <mat-icon>archive</mat-icon>
+              </button>
+            }
+            @if (task.state === 'archived') {
+              <mat-chip color="warn" selected>Archived</mat-chip>
+            }
+          }
+        </div>
+      }
     </div>
   </mat-card-footer>
 </mat-card>

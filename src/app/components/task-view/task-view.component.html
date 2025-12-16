@@ -12,17 +12,20 @@
     </button>
   </div>
 
-  <div *ngIf="dueTasks.length === 0" class="no-tasks">
-    <mat-icon>check_circle</mat-icon>
-    <p>No upcoming urgent tasks</p>
-  </div>
+  @if (dueTasks.length === 0) {
+    <div class="no-tasks">
+      <mat-icon>check_circle</mat-icon>
+      <p>No upcoming urgent tasks</p>
+    </div>
+  }
 
-  <app-task-card
-    *ngFor="let task of dueTasks"
-    [task]="task"
-    mode="print-only"
-    [showActions]="false"
-    (printTask)="onPrintTask($event)"
-  >
-  </app-task-card>
+  @for (task of dueTasks; track task.id) {
+    <app-task-card
+      [task]="task"
+      mode="print-only"
+      [showActions]="false"
+      (printTask)="onPrintTask($event)"
+    >
+    </app-task-card>
+  }
 </div>

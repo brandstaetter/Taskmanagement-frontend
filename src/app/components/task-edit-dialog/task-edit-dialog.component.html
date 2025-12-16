@@ -4,7 +4,11 @@
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Title</mat-label>
       <input matInput formControlName="title" required />
-      <mat-error *ngIf="editForm.get('title')?.hasError('required')">Title is required</mat-error>
+      <mat-error>
+        @if (editForm.get('title')?.hasError('required')) {
+          Title is required
+        }
+      </mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="fill" class="full-width">

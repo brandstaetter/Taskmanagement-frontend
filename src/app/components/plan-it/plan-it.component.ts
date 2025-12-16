@@ -127,7 +127,7 @@ export class PlanItComponent implements OnInit {
       },
     });
   }
-      
+
   onEditTask(task: Task): void {
     const dialogRef = this.dialog.open(TaskEditDialogComponent, {
       data: task,
