@@ -263,7 +263,8 @@ describe('TaskService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/auth/token`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body instanceof FormData).toBe(true);
+      expect(req.request.headers.get('Content-Type')).toBe('application/x-www-form-urlencoded');
+      expect(req.request.body).toBe('username=username&password=password');
       req.flush(mockResponse);
     });
   });

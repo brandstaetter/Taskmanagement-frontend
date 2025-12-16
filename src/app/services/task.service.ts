@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, from, of, throwError } from 'rxjs';
 import { mergeMap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -169,11 +169,12 @@ export class TaskService {
   }
 
   login(username: string, password: string): Observable<AuthResponse> {
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('password', password);
+    const body = new HttpParams().set('username', username).set('password', password);
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded',
+    });
 
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/token`, formData);
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/token`, body.toString(), { headers });
   }
 
   // Admin endpoints - these require authentication

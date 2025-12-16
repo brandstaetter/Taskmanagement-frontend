@@ -1,0 +1,58 @@
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
+
+const OPENAPI_URL =
+  process.env.TASKMAN_OPENAPI_URL ??
+  'https://github.com/brandstaetter/Taskmanagement-App/releases/latest/download/openapi.json';
+
+const TARGET_FILE = resolve('src/app/api/openapi.json');
+const TARGET_DIR = dirname(TARGET_FILE);
+
+const isCi = String(process.env.CI ?? '').toLowerCase() === 'true';
+const failOnError = isCi || String(process.env.FAIL_OPENAPI_SYNC ?? '') === '1';
+
+async function main() {
+  try {
+    const response = await fetch(OPENAPI_URL, {
+      redirect: 'follow',
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to download openapi.json: ${response.status} ${response.statusText}`);
+    }
+
+    const text = await response.text();
+    const parsed = JSON.parse(text);
+    const formatted = JSON.stringify(parsed, null, 2) + '\n';
+
+    await mkdir(TARGET_DIR, { recursive: true });
+
+    let previous = null;
+    try {
+      previous = await readFile(TARGET_FILE, 'utf8');
+    } catch {
+      previous = null;
+    }
+
+    if (previous === formatted) {
+      process.stdout.write('openapi.json is already up to date.\n');
+      return;
+    }
+
+    await writeFile(TARGET_FILE, formatted, 'utf8');
+    process.stdout.write(`Updated ${TARGET_FILE} from ${OPENAPI_URL}\n`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (failOnError) {
+      process.stderr.write(`${message}\n`);
+      process.exit(1);
+    }
+
+    process.stderr.write(`${message} (skipping; using existing openapi.json)\n`);
+  }
+}
+
+await main();
