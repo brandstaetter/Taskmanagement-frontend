@@ -29,7 +29,7 @@ describe('UserService', () => {
     const passwordUpdate = { current_password: 'old123', new_password: 'new123' };
 
     service.updatePassword(passwordUpdate).subscribe(response => {
-      expect(response).toBeUndefined();
+      expect(response).toBeNull();
     });
 
     const req = httpMock.expectOne(`${apiUrl}/users/me/password`);

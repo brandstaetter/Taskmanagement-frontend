@@ -124,7 +124,7 @@ describe('AuthService', () => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/auth/token`);
+      const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
       expect(req.request.method).toBe('POST');
       expect(req.request.headers.get('Content-Type')).toBe('application/x-www-form-urlencoded');
       expect(req.request.body).toBe('username=testuser&password=testpass');
@@ -141,7 +141,7 @@ describe('AuthService', () => {
         expect(localStorage.getItem('taskman_access_token')).toBe('new-token-456');
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/auth/token`);
+      const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
       req.flush(mockResponse);
     });
 
@@ -151,7 +151,7 @@ describe('AuthService', () => {
 
       service.login(username, password).subscribe();
 
-      const req = httpMock.expectOne(`${apiUrl}/auth/token`);
+      const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
       expect(req.request.body).toBe('username=user@example.com&password=p@ss%26word=123');
       req.flush({ access_token: 'token', token_type: 'bearer' });
     });
@@ -164,7 +164,7 @@ describe('AuthService', () => {
 
       service.login('user', 'pass').subscribe();
 
-      const req = httpMock.expectOne(`${apiUrl}/auth/token`);
+      const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
       req.flush(mockResponse);
 
       expect(localStorage.getItem('taskman_access_token')).toBeNull();
@@ -178,7 +178,7 @@ describe('AuthService', () => {
         },
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/auth/token`);
+      const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
       req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
     });
   });

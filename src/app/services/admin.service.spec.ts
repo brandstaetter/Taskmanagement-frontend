@@ -55,7 +55,7 @@ describe('AdminService', () => {
     const passwordReset = { new_password: 'newpassword123' };
 
     service.resetUserPassword(userId, passwordReset).subscribe(response => {
-      expect(response).toBeUndefined();
+      expect(response).toBeNull();
     });
 
     const req = httpMock.expectOne(`${apiUrl}/admin/users/${userId}/reset-password`);
