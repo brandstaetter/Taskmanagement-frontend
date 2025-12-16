@@ -1,0 +1,116 @@
+<div class="profile-container">
+  <mat-card class="profile-card">
+    <mat-card-header>
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <mat-card-title>User Profile</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (user) {
+        <div class="user-info">
+          <p><strong>Email:</strong> {{ user.email }}</p>
+          <p><strong>Role:</strong> {{ user.is_admin ? 'Administrator' : 'User' }}</p>
+          @if (user.avatar_url) {
+            <p class="avatar-preview">
+              <strong>Current Avatar:</strong>
+              <img [src]="user.avatar_url" alt="User avatar" />
+            </p>
+          }
+        </div>
+      }
+
+      <mat-tab-group>
+        <mat-tab label="Change Password">
+          <div class="tab-content">
+            <form [formGroup]="passwordForm" (ngSubmit)="updatePassword()">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Current Password</mat-label>
+                <input
+                  matInput
+                  type="password"
+                  formControlName="currentPassword"
+                  autocomplete="current-password"
+                />
+                @if (passwordForm.controls.currentPassword.hasError('required')) {
+                  <mat-error> Current password is required </mat-error>
+                }
+                @if (passwordForm.controls.currentPassword.hasError('minlength')) {
+                  <mat-error> Password must be at least 8 characters </mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>New Password</mat-label>
+                <input
+                  matInput
+                  type="password"
+                  formControlName="newPassword"
+                  autocomplete="new-password"
+                />
+                @if (passwordForm.controls.newPassword.hasError('required')) {
+                  <mat-error> New password is required </mat-error>
+                }
+                @if (passwordForm.controls.newPassword.hasError('minlength')) {
+                  <mat-error> Password must be at least 8 characters </mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Confirm New Password</mat-label>
+                <input
+                  matInput
+                  type="password"
+                  formControlName="confirmPassword"
+                  autocomplete="new-password"
+                />
+                @if (passwordForm.controls.confirmPassword.hasError('required')) {
+                  <mat-error> Please confirm your password </mat-error>
+                }
+              </mat-form-field>
+
+              <button
+                mat-raised-button
+                color="primary"
+                type="submit"
+                class="full-width"
+                [disabled]="passwordForm.invalid || isLoadingPassword"
+              >
+                {{ isLoadingPassword ? 'Updating...' : 'Update Password' }}
+              </button>
+            </form>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Change Avatar">
+          <div class="tab-content">
+            <form [formGroup]="avatarForm" (ngSubmit)="updateAvatar()">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Avatar URL</mat-label>
+                <input
+                  matInput
+                  formControlName="avatarUrl"
+                  placeholder="https://example.com/avatar.jpg"
+                />
+                @if (avatarForm.controls.avatarUrl.hasError('required')) {
+                  <mat-error> Avatar URL is required </mat-error>
+                }
+              </mat-form-field>
+
+              <button
+                mat-raised-button
+                color="primary"
+                type="submit"
+                class="full-width"
+                [disabled]="avatarForm.invalid || isLoadingAvatar"
+              >
+                {{ isLoadingAvatar ? 'Updating...' : 'Update Avatar' }}
+              </button>
+            </form>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+</div>

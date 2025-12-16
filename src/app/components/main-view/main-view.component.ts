@@ -1,13 +1,17 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
+import { Router } from '@angular/router';
 import { TaskViewComponent } from '../task-view/task-view.component';
 import { PlanItComponent } from '../plan-it/plan-it.component';
 import { TaskFormComponent } from '../task-form/task-form.component';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-main-view',
@@ -21,6 +25,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatIconModule,
     MatDialogModule,
     MatTooltipModule,
+    MatMenuModule,
+    MatDividerModule,
     TaskViewComponent,
     PlanItComponent,
   ],
@@ -31,7 +37,17 @@ export class MainViewComponent {
   @ViewChild(TaskViewComponent) taskView!: TaskViewComponent;
   @ViewChild(PlanItComponent) planIt!: PlanItComponent;
 
-  constructor(private dialog: MatDialog) {}
+  private dialog = inject(MatDialog);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
+  get currentUser() {
+    return this.authService.getCurrentUser();
+  }
 
   onTabChange(index: number): void {
     this.selectedIndex = index;
@@ -57,5 +73,18 @@ export class MainViewComponent {
         this.planIt.loadTasks();
       }
     });
+  }
+
+  openProfile(): void {
+    void this.router.navigate(['/profile']);
+  }
+
+  openAdmin(): void {
+    void this.router.navigate(['/admin']);
+  }
+
+  logout(): void {
+    this.authService.logout();
+    void this.router.navigate(['/login']);
   }
 }
