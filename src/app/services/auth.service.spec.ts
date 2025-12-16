@@ -152,7 +152,6 @@ describe('AuthService', () => {
       service.login(username, password).subscribe();
 
       const req = httpMock.expectOne(`${apiUrl}/auth/token`);
-      // HttpParams encodes & but not @ or = in URL encoding
       expect(req.request.body).toBe('username=user@example.com&password=p@ss%26word=123');
       req.flush({ access_token: 'token', token_type: 'bearer' });
     });
