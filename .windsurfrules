@@ -62,3 +62,83 @@
 - Second: implement changes following the patterns in TaskService, TaskViewComponent, PlanItComponent, and dialogs.
 - Third: run npm run lint and npm test (or at minimum npm run lint) after code changes.
 - Finally: ensure builds stay strict-TS compatible and no new lint violations are introduced.
+
+## MCP usage (when and how)
+
+This environment provides MCP servers (notably `sequential-thinking` and `memory`).
+Use them deliberately:
+
+### `sequential-thinking` (structured reasoning)
+
+Use when:
+
+- the task is ambiguous, multi-step, or high-risk (debugging, design changes, refactors)
+- you need to form multiple hypotheses and verify them against repo evidence
+- you need a clear milestone plan and validation strategy
+
+Do not use when:
+
+- the task is straightforward (single-file tweak, obvious fix)
+- the next best action is to inspect the repo (prefer search + file reads first)
+
+Rule:
+
+- Prefer evidence-first (search/read files) and use `sequential-thinking` to organize/verify reasoning, not to replace inspection.
+
+### `memory` (persist stable facts/preferences)
+
+Use when saving:
+
+- stable project invariants (e.g., “backend is FastAPI in [taskmanagement_app/](cci:7://file:///c:/Users/micro/CascadeProjects/Taskmanagement-App/taskmanagement_app:0:0-0:0)”, “Poetry commands”, “Windows PowerShell”)
+- user preferences and non-negotiable rules (quality gates, no hallucinated paths, minimal diffs)
+- decisions that should persist across tasks (chosen patterns, conventions)
+
+Do not store:
+
+- secrets or credentials (API keys, passwords, tokens, `.env` contents)
+- transient state (temporary logs, current failing output, branch-specific details) unless explicitly requested and safe
+
+Rule:
+
+- Only store information that will still be true/valuable in future sessions.
+
+### `git` (local repo operations)
+
+Use for:
+
+- read-only repo inspection: status, diff, log, blame, show, branch listing
+- generating accurate summaries of changes and identifying impacted files
+
+Safety rules:
+
+- Prefer read-only operations by default.
+- Any write action (add/commit/branch/checkout/reset) requires explicit user confirmation.
+- Never rewrite history unless explicitly requested (no force-push, no rebase/amend by default).
+- Before proposing a commit, ensure quality gates are expected to pass (black/isort/flake8/mypy/pytest).
+
+### `github-mcp-server` (remote GitHub operations)
+
+Use for:
+
+- reading PRs/issues, release notes, CI status, reviewing diffs on GitHub
+- drafting PR descriptions aligned with repo conventions and CI checks
+
+Safety rules:
+
+- Treat all network/remote actions as potentially sensitive.
+- Do not create/modify issues, PRs, labels, branches, or secrets unless explicitly requested.
+- Never paste tokens into chat, files, logs, or generated examples.
+- Prefer least-privilege: only read what is needed to solve the task.
+
+### `postman-api` (API collections/workspaces)
+
+Use for:
+
+- understanding existing API collections, examples, and test flows
+- cross-checking request/response shapes against actual endpoints
+
+Safety rules:
+
+- Do not send secrets/tokens or real customer data in requests.
+- Default to local URLs (localhost) for calls; ask before hitting non-local environments.
+- If an API key is required, use environment variables and avoid writing it into repo files.
