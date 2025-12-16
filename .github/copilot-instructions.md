@@ -1,10 +1,10 @@
 # GitHub Copilot Instructions for TASKMAN Frontend
 
 ## Project Overview
-TASKMAN is a task management application frontend built with Angular 19. This is a TypeScript-based single-page application (SPA) that provides a modern UI for managing tasks and projects.
+TASKMAN is a task management application frontend built with Angular 20. This is a TypeScript-based single-page application (SPA) that provides a modern UI for managing tasks and projects.
 
 ## Technology Stack
-- **Framework**: Angular 19.1.x
+- **Framework**: Angular 20.x
 - **Language**: TypeScript 5.8.x
 - **Styling**: SCSS with Angular Material (azure-blue theme)
 - **State Management**: RxJS 7.8.x
