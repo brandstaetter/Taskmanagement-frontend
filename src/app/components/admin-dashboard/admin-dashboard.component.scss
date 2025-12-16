@@ -1,0 +1,65 @@
+.admin-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: #f5f5f5;
+}
+
+.admin-card {
+  width: 100%;
+  max-width: 700px;
+}
+
+mat-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  .back-button {
+    margin-right: 0.5rem;
+  }
+}
+
+.tab-content {
+  padding: 1.5rem 0;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.admin-checkbox {
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+.db-operations {
+  h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .warning-text {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #f44336;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem;
+    background-color: #ffebee;
+    border-radius: 4px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .db-button {
+    margin-bottom: 1rem;
+  }
+}

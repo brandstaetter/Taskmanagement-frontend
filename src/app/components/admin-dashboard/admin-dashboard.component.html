@@ -1,0 +1,131 @@
+<div class="admin-container">
+  <mat-card class="admin-card">
+    <mat-card-header>
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <mat-card-title>Admin Dashboard</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <mat-tab-group>
+        <mat-tab label="Create User">
+          <div class="tab-content">
+            <form [formGroup]="createUserForm" (ngSubmit)="createUser()">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Email</mat-label>
+                <input matInput type="email" formControlName="email" placeholder="user@example.com" />
+                <mat-error *ngIf="createUserForm.controls.email.hasError('required')">
+                  Email is required
+                </mat-error>
+                <mat-error *ngIf="createUserForm.controls.email.hasError('email')">
+                  Please enter a valid email
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Password</mat-label>
+                <input matInput type="password" formControlName="password" autocomplete="new-password" />
+                <mat-error *ngIf="createUserForm.controls.password.hasError('required')">
+                  Password is required
+                </mat-error>
+                <mat-error *ngIf="createUserForm.controls.password.hasError('minlength')">
+                  Password must be at least 8 characters
+                </mat-error>
+              </mat-form-field>
+
+              <mat-checkbox formControlName="isAdmin" class="admin-checkbox">
+                Administrator
+              </mat-checkbox>
+
+              <button
+                mat-raised-button
+                color="primary"
+                type="submit"
+                class="full-width"
+                [disabled]="createUserForm.invalid || isCreatingUser"
+              >
+                {{ isCreatingUser ? 'Creating...' : 'Create User' }}
+              </button>
+            </form>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Reset Password">
+          <div class="tab-content">
+            <form [formGroup]="resetPasswordForm" (ngSubmit)="resetPassword()">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>User ID</mat-label>
+                <input matInput formControlName="userId" placeholder="Enter user ID" />
+                <mat-error *ngIf="resetPasswordForm.controls.userId.hasError('required')">
+                  User ID is required
+                </mat-error>
+                <mat-error *ngIf="resetPasswordForm.controls.userId.hasError('pattern')">
+                  User ID must be a number
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>New Password</mat-label>
+                <input
+                  matInput
+                  type="password"
+                  formControlName="newPassword"
+                  autocomplete="new-password"
+                />
+                <mat-error *ngIf="resetPasswordForm.controls.newPassword.hasError('required')">
+                  New password is required
+                </mat-error>
+                <mat-error *ngIf="resetPasswordForm.controls.newPassword.hasError('minlength')">
+                  Password must be at least 8 characters
+                </mat-error>
+              </mat-form-field>
+
+              <button
+                mat-raised-button
+                color="primary"
+                type="submit"
+                class="full-width"
+                [disabled]="resetPasswordForm.invalid || isResettingPassword"
+              >
+                {{ isResettingPassword ? 'Resetting...' : 'Reset Password' }}
+              </button>
+            </form>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Database">
+          <div class="tab-content">
+            <div class="db-operations">
+              <h3>Database Operations</h3>
+              <p class="warning-text">
+                <mat-icon>warning</mat-icon>
+                Warning: These operations can affect the entire database. Use with caution.
+              </p>
+
+              <button
+                mat-raised-button
+                color="accent"
+                class="full-width db-button"
+                (click)="initializeDatabase()"
+                [disabled]="isInitializingDb"
+              >
+                {{ isInitializingDb ? 'Initializing...' : 'Initialize Database' }}
+              </button>
+
+              <button
+                mat-raised-button
+                color="accent"
+                class="full-width db-button"
+                (click)="migrateDatabase()"
+                [disabled]="isMigratingDb"
+              >
+                {{ isMigratingDb ? 'Migrating...' : 'Migrate Database' }}
+              </button>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+</div>

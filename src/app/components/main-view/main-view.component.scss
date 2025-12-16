@@ -3,10 +3,38 @@
   height: 100%;
   overflow: hidden;
 
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #3f51b5;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    .app-title {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+
+    .user-menu {
+      button {
+        color: white;
+      }
+    }
+  }
+
   ::ng-deep .mat-mdc-tab-body-wrapper {
-    height: calc(100vh - 49px);
+    height: calc(100vh - 49px - 60px);
     overflow-y: auto;
   }
+}
+
+.user-info {
+  padding: 0.5rem 1rem;
+  cursor: default;
+  opacity: 1 !important;
 }
 
 .add-task-button {
