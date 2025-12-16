@@ -8,14 +8,18 @@
     </mat-card-header>
 
     <mat-card-content>
-      <div class="user-info" *ngIf="user">
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <p><strong>Role:</strong> {{ user.is_admin ? 'Administrator' : 'User' }}</p>
-        <p *ngIf="user.avatar_url" class="avatar-preview">
-          <strong>Current Avatar:</strong>
-          <img [src]="user.avatar_url" alt="User avatar" />
-        </p>
-      </div>
+      @if (user) {
+        <div class="user-info">
+          <p><strong>Email:</strong> {{ user.email }}</p>
+          <p><strong>Role:</strong> {{ user.is_admin ? 'Administrator' : 'User' }}</p>
+          @if (user.avatar_url) {
+            <p class="avatar-preview">
+              <strong>Current Avatar:</strong>
+              <img [src]="user.avatar_url" alt="User avatar" />
+            </p>
+          }
+        </div>
+      }
 
       <mat-tab-group>
         <mat-tab label="Change Password">
@@ -29,12 +33,12 @@
                   formControlName="currentPassword"
                   autocomplete="current-password"
                 />
-                <mat-error *ngIf="passwordForm.controls.currentPassword.hasError('required')">
-                  Current password is required
-                </mat-error>
-                <mat-error *ngIf="passwordForm.controls.currentPassword.hasError('minlength')">
-                  Password must be at least 8 characters
-                </mat-error>
+                @if (passwordForm.controls.currentPassword.hasError('required')) {
+                  <mat-error> Current password is required </mat-error>
+                }
+                @if (passwordForm.controls.currentPassword.hasError('minlength')) {
+                  <mat-error> Password must be at least 8 characters </mat-error>
+                }
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="full-width">
@@ -45,12 +49,12 @@
                   formControlName="newPassword"
                   autocomplete="new-password"
                 />
-                <mat-error *ngIf="passwordForm.controls.newPassword.hasError('required')">
-                  New password is required
-                </mat-error>
-                <mat-error *ngIf="passwordForm.controls.newPassword.hasError('minlength')">
-                  Password must be at least 8 characters
-                </mat-error>
+                @if (passwordForm.controls.newPassword.hasError('required')) {
+                  <mat-error> New password is required </mat-error>
+                }
+                @if (passwordForm.controls.newPassword.hasError('minlength')) {
+                  <mat-error> Password must be at least 8 characters </mat-error>
+                }
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="full-width">
@@ -61,9 +65,9 @@
                   formControlName="confirmPassword"
                   autocomplete="new-password"
                 />
-                <mat-error *ngIf="passwordForm.controls.confirmPassword.hasError('required')">
-                  Please confirm your password
-                </mat-error>
+                @if (passwordForm.controls.confirmPassword.hasError('required')) {
+                  <mat-error> Please confirm your password </mat-error>
+                }
               </mat-form-field>
 
               <button
@@ -89,9 +93,9 @@
                   formControlName="avatarUrl"
                   placeholder="https://example.com/avatar.jpg"
                 />
-                <mat-error *ngIf="avatarForm.controls.avatarUrl.hasError('required')">
-                  Avatar URL is required
-                </mat-error>
+                @if (avatarForm.controls.avatarUrl.hasError('required')) {
+                  <mat-error> Avatar URL is required </mat-error>
+                }
               </mat-form-field>
 
               <button
