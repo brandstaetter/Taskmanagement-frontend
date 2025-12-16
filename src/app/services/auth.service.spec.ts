@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpClient } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { AuthService, AuthResponse } from './auth.service';
 import { environment } from '../../environments/environment';
@@ -27,6 +28,60 @@ describe('AuthService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
+  });
+
+  function createJwtToken(payload: Record<string, unknown>): string {
+    const header = 'e30';
+    const payloadStr = btoa(JSON.stringify(payload))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/g, '');
+    return `${header}.${payloadStr}.sig`;
+  }
+
+  describe('User State and Storage', () => {
+    it('should initialize current user from localStorage when user JSON exists', () => {
+      const storedUser = {
+        id: 123,
+        email: 'stored@example.com',
+        is_active: true,
+        is_admin: true,
+        avatar_url: null,
+        last_login: null,
+        created_at: '2024-01-01T00:00:00.000Z',
+        updated_at: '2024-01-01T00:00:00.000Z',
+      };
+      localStorage.setItem('taskman_user', JSON.stringify(storedUser));
+
+      const http = TestBed.inject(HttpClient);
+      const newService = new AuthService(http);
+
+      expect(newService.getCurrentUser()).toEqual(storedUser);
+      expect(newService.isAdmin()).toBe(true);
+    });
+
+    it('should handle invalid JSON stored for user gracefully', () => {
+      localStorage.setItem('taskman_user', '{invalid json');
+
+      const http = TestBed.inject(HttpClient);
+      const newService = new AuthService(http);
+
+      expect(newService.getCurrentUser()).toBeNull();
+      expect(newService.isAdmin()).toBe(false);
+    });
+
+    it('should handle localStorage errors when reading stored user gracefully', () => {
+      spyOn(localStorage, 'getItem').and.throwError('Storage error');
+
+      const http = TestBed.inject(HttpClient);
+      const newService = new AuthService(http);
+
+      expect(newService.getCurrentUser()).toBeNull();
+    });
+
+    it('should return false for isAdmin when no user exists', () => {
+      expect(service.isAdmin()).toBe(false);
+    });
   });
 
   describe('Token Storage and Retrieval', () => {
@@ -181,6 +236,116 @@ describe('AuthService', () => {
       const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
       req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
     });
+
+    it('should not store token when response is null', () => {
+      service.login('user', 'pass').subscribe();
+
+      const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
+      req.flush(null);
+
+      expect(localStorage.getItem('taskman_access_token')).toBeNull();
+    });
+
+    it('should extract and store user from a valid JWT token on login', () => {
+      const token = createJwtToken({
+        sub: 'jwtuser@example.com',
+        exp: 999999,
+        iat: 2,
+        is_admin: true,
+        user_id: 5,
+      });
+
+      service.login('user', 'pass').subscribe(() => {
+        const storedUserStr = localStorage.getItem('taskman_user');
+        expect(storedUserStr).not.toBeNull();
+
+        const storedUser = JSON.parse(storedUserStr as string) as {
+          id: number;
+          email: string;
+          is_admin: boolean;
+          created_at: string;
+        };
+        expect(storedUser.id).toBe(5);
+        expect(storedUser.email).toBe('jwtuser@example.com');
+        expect(storedUser.is_admin).toBe(true);
+        expect(storedUser.created_at).toBe(new Date(2 * 1000).toISOString());
+        expect(service.isAdmin()).toBe(true);
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
+      req.flush({ access_token: token, token_type: 'bearer' } as AuthResponse);
+    });
+
+    it('should use default values when JWT has no user_id, is_admin, or iat', () => {
+      jasmine.clock().install();
+      jasmine.clock().mockDate(new Date(10_000));
+      const token = createJwtToken({
+        sub: 'defaults@example.com',
+        exp: 999999,
+      });
+
+      try {
+        service.login('user', 'pass').subscribe(() => {
+          const storedUserStr = localStorage.getItem('taskman_user');
+          expect(storedUserStr).not.toBeNull();
+
+          const storedUser = JSON.parse(storedUserStr as string) as {
+            id: number;
+            email: string;
+            is_admin: boolean;
+            created_at: string;
+          };
+          expect(storedUser.id).toBe(0);
+          expect(storedUser.email).toBe('defaults@example.com');
+          expect(storedUser.is_admin).toBe(false);
+          expect(storedUser.created_at).toBe(new Date(10_000).toISOString());
+          expect(service.isAdmin()).toBe(false);
+        });
+
+        const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
+        req.flush({ access_token: token, token_type: 'bearer' } as AuthResponse);
+      } finally {
+        jasmine.clock().uninstall();
+      }
+    });
+
+    it('should not store user when token is not a valid JWT', () => {
+      service.login('user', 'pass').subscribe(() => {
+        expect(localStorage.getItem('taskman_access_token')).toBe('not-a-jwt');
+        expect(localStorage.getItem('taskman_user')).toBeNull();
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
+      req.flush({ access_token: 'not-a-jwt', token_type: 'bearer' } as AuthResponse);
+    });
+
+    it('should handle localStorage errors when storing user gracefully', () => {
+      const token = createJwtToken({
+        sub: 'storageerror@example.com',
+        exp: 999999,
+        is_admin: true,
+      });
+
+      const originalSetItem = localStorage.setItem.bind(localStorage);
+      spyOn(localStorage, 'setItem').and.callFake((key: string, value: string) => {
+        if (key === 'taskman_user') {
+          throw new Error('Storage error');
+        }
+        originalSetItem(key, value);
+      });
+      spyOn(console, 'error');
+
+      service.login('user', 'pass').subscribe(() => {
+        expect(localStorage.getItem('taskman_access_token')).toBe(token);
+        expect(console.error).toHaveBeenCalledWith(
+          'Failed to store user in localStorage:',
+          jasmine.any(Error)
+        );
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/auth/user/token`);
+      req.flush({ access_token: token, token_type: 'bearer' } as AuthResponse);
+    });
   });
 
   describe('logout', () => {
@@ -193,6 +358,38 @@ describe('AuthService', () => {
     it('should clear token even if none exists', () => {
       service.logout();
       expect(localStorage.getItem('taskman_access_token')).toBeNull();
+    });
+
+    it('should handle localStorage errors when clearing stored user gracefully', () => {
+      const originalRemoveItem = localStorage.removeItem.bind(localStorage);
+      spyOn(localStorage, 'removeItem').and.callFake((key: string) => {
+        if (key === 'taskman_user') {
+          throw new Error('Storage error');
+        }
+        originalRemoveItem(key);
+      });
+      spyOn(console, 'error');
+
+      localStorage.setItem('taskman_access_token', 'test-token');
+      localStorage.setItem(
+        'taskman_user',
+        JSON.stringify({
+          id: 1,
+          email: 'user@example.com',
+          is_active: true,
+          is_admin: false,
+          created_at: '2024-01-01T00:00:00.000Z',
+          updated_at: '2024-01-01T00:00:00.000Z',
+        })
+      );
+
+      service.logout();
+
+      expect(localStorage.getItem('taskman_access_token')).toBeNull();
+      expect(console.error).toHaveBeenCalledWith(
+        'Failed to clear user from localStorage:',
+        jasmine.any(Error)
+      );
     });
   });
 });
