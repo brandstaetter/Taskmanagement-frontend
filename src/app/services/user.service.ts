@@ -1,23 +1,54 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, from } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { User, PasswordUpdate, AvatarUpdate } from '../models/user.model';
+import {
+  UserPasswordChange,
+  UserAvatarUpdate,
+  changePasswordApiV1UsersMePasswordPut,
+  updateAvatarApiV1UsersMeAvatarPut,
+} from '../generated';
+import { User } from '../models/user.model';
+import { AuthService } from './auth.service';
+
+// Re-export types for backward compatibility
+export type { UserPasswordChange, UserAvatarUpdate };
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  private readonly apiUrl = `${environment.apiUrl}/v1`;
+  constructor(private authService: AuthService) {}
 
-  constructor(private http: HttpClient) {}
-
-  // Note: These endpoints may need to be implemented in the backend
-  updatePassword(passwordUpdate: PasswordUpdate): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/users/me/password`, passwordUpdate);
+  updatePassword(passwordUpdate: UserPasswordChange): Observable<void> {
+    return from(
+      changePasswordApiV1UsersMePasswordPut({
+        baseUrl: environment.apiUrl,
+        body: passwordUpdate,
+      })
+    ).pipe(
+      map(() => undefined) // Convert to void
+    );
   }
 
-  updateAvatar(avatarUpdate: AvatarUpdate): Observable<User> {
-    return this.http.put<User>(`${this.apiUrl}/users/me/avatar`, avatarUpdate);
+  updateAvatar(avatarUpdate: UserAvatarUpdate): Observable<User> {
+    return from(
+      updateAvatarApiV1UsersMeAvatarPut({
+        baseUrl: environment.apiUrl,
+        body: avatarUpdate,
+      })
+    ).pipe(
+      map(response => {
+        // Merge generated response with current user data to include is_superadmin
+        const currentUser = this.authService.getCurrentUser();
+        if (currentUser) {
+          return {
+            ...response.data,
+            is_superadmin: currentUser.is_superadmin,
+          } as User;
+        }
+        return response.data as User;
+      })
+    );
   }
 }
