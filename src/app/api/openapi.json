@@ -3,7 +3,7 @@
   "info": {
     "title": "Task Management API",
     "description": "API for managing tasks with printing capabilities",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "paths": {
     "/api/v1/auth/user/token": {
@@ -53,7 +53,7 @@
           "tasks"
         ],
         "summary": "Read Tasks",
-        "description": "Retrieve tasks.\n\nArgs:\n    skip: Number of records to skip\n    limit: Maximum number of records to return\n    include_archived: Whether to include archived tasks in the result\n    state: Optional state to filter tasks by (todo, in_progress, done, archived)\n    db: Database session",
+        "description": "Retrieve tasks.\n\nArgs:\n    skip: Number of records to skip\n    limit: Maximum number of records to return\n    include_archived: Whether to include archived tasks in the result\n    state: Optional state to filter tasks by (todo, in_progress, done, archived)\n    include_created: Whether to include tasks created by the current user\n    db: Database session\n    current_user: Current authenticated user",
         "operationId": "read_tasks_api_v1_tasks_get",
         "security": [
           {
@@ -108,6 +108,18 @@
               "title": "State"
             },
             "description": "Filter tasks by state"
+          },
+          {
+            "name": "include_created",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include tasks created by the user",
+              "default": true,
+              "title": "Include Created"
+            },
+            "description": "Include tasks created by the user"
           }
         ],
         "responses": {
@@ -247,7 +259,7 @@
           "tasks"
         ],
         "summary": "Search Tasks",
-        "description": "Search tasks by title or description.\n\nArgs:\n    q: Search query\n    include_archived: Whether to include archived tasks in the result\n    db: Database session",
+        "description": "Search tasks by title or description.\n\nArgs:\n    q: Search query\n    include_archived: Whether to include archived tasks in the result\n    db: Database session\n    current_user: Current authenticated user",
         "operationId": "search_tasks_api_v1_tasks_search__get",
         "security": [
           {
@@ -1215,6 +1227,52 @@
             ],
             "title": "Completed At"
           },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "assignment_type": {
+            "type": "string",
+            "enum": [
+              "any",
+              "some",
+              "one"
+            ],
+            "title": "Assignment Type",
+            "default": "any"
+          },
+          "assigned_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To"
+          },
+          "assigned_user_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned User Ids"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -1303,12 +1361,52 @@
               }
             ],
             "title": "Completed At"
+          },
+          "created_by": {
+            "type": "integer",
+            "title": "Created By"
+          },
+          "assignment_type": {
+            "type": "string",
+            "enum": [
+              "any",
+              "some",
+              "one"
+            ],
+            "title": "Assignment Type",
+            "default": "any"
+          },
+          "assigned_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To"
+          },
+          "assigned_user_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned User Ids"
           }
         },
         "type": "object",
         "required": [
           "title",
-          "description"
+          "description",
+          "created_by"
         ],
         "title": "TaskCreate"
       },
@@ -1376,6 +1474,47 @@
               }
             ],
             "title": "Reward"
+          },
+          "assignment_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "any",
+                  "some",
+                  "one"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignment Type"
+          },
+          "assigned_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To"
+          },
+          "assigned_user_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned User Ids"
           }
         },
         "type": "object",

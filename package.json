@@ -58,6 +58,7 @@
     "@angular-devkit/build-angular": "^21.0.0",
     "@angular/cli": "^21.0.0",
     "@angular/compiler-cli": "^21.0.0",
+    "@hey-api/openapi-ts": "^0.90.1",
     "@types/jasmine": "~5.1.7",
     "angular-eslint": "^21.0.0",
     "esbuild": ">=0.25.0",

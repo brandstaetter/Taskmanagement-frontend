@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
+import { execSync } from 'node:child_process';
 
 const OPENAPI_URL =
   process.env.TASKMAN_OPENAPI_URL ??
@@ -44,6 +45,13 @@ async function main() {
 
     await writeFile(TARGET_FILE, formatted, 'utf8');
     process.stdout.write(`Updated ${TARGET_FILE} from ${OPENAPI_URL}\n`);
+    
+    // Generate services from the updated OpenAPI spec
+    process.stdout.write('Generating services from updated OpenAPI spec...\n');
+    execSync('node scripts/generate-services.mjs', {
+      stdio: 'inherit',
+      cwd: process.cwd(),
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (failOnError) {
