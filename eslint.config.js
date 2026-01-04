@@ -42,5 +42,8 @@ module.exports = tseslint.config(
     rules: {
       "@angular-eslint/template/prefer-control-flow": "error",
     },
+  },
+  {
+    ignores: ["src/app/generated/**/*"],
   }
 );

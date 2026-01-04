@@ -3,7 +3,7 @@
   "info": {
     "title": "Task Management API",
     "description": "API for managing tasks with printing capabilities",
-    "version": "0.4.0"
+    "version": "0.4.1"
   },
   "paths": {
     "/api/v1/auth/user/token": {
@@ -641,9 +641,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Trigger Maintenance Api V1 Tasks Maintenance Post"
+                  "$ref": "#/components/schemas/MaintenanceResponse"
                 }
               }
             }
@@ -718,9 +716,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Init Db Api V1 Admin Db Init Post"
+                  "$ref": "#/components/schemas/DbOperationResponse"
                 }
               }
             }
@@ -747,9 +743,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Run Migrations Api V1 Admin Db Migrate Post"
+                  "$ref": "#/components/schemas/MigrationResponse"
                 }
               }
             }
@@ -837,9 +831,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Reset Password Api V1 Admin Users  User Id  Reset Password Post"
+                  "$ref": "#/components/schemas/PasswordResetResponse"
                 }
               }
             }
@@ -1007,9 +999,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Root  Get"
+                  "$ref": "#/components/schemas/RootResponse"
                 }
               }
             }
@@ -1104,6 +1094,31 @@
         ],
         "title": "Body_login_user_for_access_token_api_v1_auth_user_token_post"
       },
+      "DbOperationResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "DbOperationResponse",
+        "description": "Response for database operations."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1116,6 +1131,58 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "MaintenanceResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "MaintenanceResponse",
+        "description": "Response for maintenance operations."
+      },
+      "MigrationResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "type": "string",
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "details"
+        ],
+        "title": "MigrationResponse",
+        "description": "Response for database migration operations."
+      },
+      "PasswordResetResponse": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "new_password": {
+            "type": "string",
+            "title": "New Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "new_password"
+        ],
+        "title": "PasswordResetResponse",
+        "description": "Response for password reset operations."
       },
       "PrintRequest": {
         "properties": {
@@ -1150,6 +1217,20 @@
         ],
         "title": "PrintRequest",
         "description": "Model for print requests."
+      },
+      "RootResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "RootResponse",
+        "description": "Response for root endpoint."
       },
       "Task": {
         "properties": {

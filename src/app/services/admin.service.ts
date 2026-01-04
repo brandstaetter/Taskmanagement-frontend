@@ -1,33 +1,52 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { from } from 'rxjs';
+import { map } from 'rxjs/operators';
+import {
+  createNewUserApiV1AdminUsersPost,
+  resetPasswordApiV1AdminUsersUserIdResetPasswordPost,
+  initDbApiV1AdminDbInitPost,
+  runMigrationsApiV1AdminDbMigratePost,
+  PasswordResetResponse,
+} from '../generated';
 import { environment } from '../../environments/environment';
-import { User, UserCreate, PasswordReset } from '../models/user.model';
+import { User, UserCreate } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AdminService {
-  private readonly apiUrl = `${environment.apiUrl}/v1`;
-
-  constructor(private http: HttpClient) {}
-
   createUser(user: UserCreate): Observable<User> {
-    return this.http.post<User>(`${this.apiUrl}/admin/users`, user);
+    return from(
+      createNewUserApiV1AdminUsersPost({
+        baseUrl: environment.apiUrl,
+        body: user,
+      })
+    ).pipe(map(response => response.data as User));
   }
 
-  resetUserPassword(userId: number, passwordReset: PasswordReset): Observable<void> {
-    return this.http.post<void>(
-      `${this.apiUrl}/admin/users/${userId}/reset-password`,
-      passwordReset
-    );
+  resetUserPassword(userId: number): Observable<PasswordResetResponse> {
+    return from(
+      resetPasswordApiV1AdminUsersUserIdResetPasswordPost({
+        baseUrl: environment.apiUrl,
+        path: { user_id: userId },
+      })
+    ).pipe(map(response => response.data as PasswordResetResponse));
   }
 
   initDatabase(): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/db/init`, {});
+    return from(
+      initDbApiV1AdminDbInitPost({
+        baseUrl: environment.apiUrl,
+      })
+    ).pipe(map(response => response.data as { message: string }));
   }
 
   migrateDatabase(): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/db/migrate`, {});
+    return from(
+      runMigrationsApiV1AdminDbMigratePost({
+        baseUrl: environment.apiUrl,
+      })
+    ).pipe(map(response => response.data as { message: string }));
   }
 }

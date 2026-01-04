@@ -5,6 +5,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { AdminDashboardComponent } from './admin-dashboard.component';
 import { AdminService } from '../../services/admin.service';
+import { PasswordResetResponse } from '../../generated';
 import { of } from 'rxjs';
 
 describe('AdminDashboardComponent', () => {
@@ -79,7 +80,11 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should reset user password successfully', () => {
-    adminService.resetUserPassword.and.returnValue(of(undefined));
+    const mockResponse: PasswordResetResponse = {
+      email: 'test@example.com',
+      new_password: 'newpassword123',
+    };
+    adminService.resetUserPassword.and.returnValue(of(mockResponse));
 
     component.resetPasswordForm.patchValue({
       userId: '1',
@@ -88,9 +93,7 @@ describe('AdminDashboardComponent', () => {
 
     component.resetPassword();
 
-    expect(adminService.resetUserPassword).toHaveBeenCalledWith(1, {
-      new_password: 'newpassword123',
-    });
+    expect(adminService.resetUserPassword).toHaveBeenCalledWith(1);
   });
 
   it('should initialize database with confirmation', () => {
