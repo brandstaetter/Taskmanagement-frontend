@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, from, of, throwError } from 'rxjs';
-import { mergeMap, catchError } from 'rxjs/operators';
+import { HttpClient, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError, of, from } from 'rxjs';
+import { catchError, mergeMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { Token } from '../generated';
 
 export interface Task {
   id: number;
@@ -32,11 +33,6 @@ export interface TaskUpdate {
   description?: string;
   due_date?: string;
   reward?: string;
-}
-
-export interface AuthResponse {
-  access_token: string;
-  token_type: string;
 }
 
 @Injectable({
@@ -168,13 +164,13 @@ export class TaskService {
     return this.http.post<Record<string, unknown>>(`${this.apiUrl}/tasks/maintenance`, {});
   }
 
-  login(username: string, password: string): Observable<AuthResponse> {
+  login(username: string, password: string): Observable<Token> {
     const body = new HttpParams().set('username', username).set('password', password);
     const headers = new HttpHeaders({
       'Content-Type': 'application/x-www-form-urlencoded',
     });
 
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/token`, body.toString(), { headers });
+    return this.http.post<Token>(`${this.apiUrl}/auth/token`, body.toString(), { headers });
   }
 
   // Admin endpoints - these require authentication
