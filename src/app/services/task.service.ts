@@ -1,71 +1,72 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, of, from } from 'rxjs';
-import { catchError, mergeMap } from 'rxjs/operators';
+import { catchError, mergeMap, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { Token } from '../generated';
+import {
+  Task,
+  TaskCreate,
+  TaskUpdate,
+  readTasksApiV1TasksGet,
+  createNewTaskApiV1TasksPost,
+  readDueTasksApiV1TasksDueGet,
+  getRandomTaskApiV1TasksRandomGet,
+  searchTasksApiV1TasksSearchGet,
+  deleteTaskEndpointApiV1TasksTaskIdDelete,
+  readTaskApiV1TasksTaskIdGet,
+  updateTaskEndpointApiV1TasksTaskIdPatch,
+  startTaskApiV1TasksTaskIdStartPost,
+  completeTaskApiV1TasksTaskIdCompletePost,
+  printTaskApiV1TasksTaskIdPrintPost,
+  triggerMaintenanceApiV1TasksMaintenancePost,
+  resetTaskToTodoEndpointApiV1TasksTaskIdResetToTodoPatch,
+} from '../generated';
 
-export interface Task {
-  id: number;
-  title: string;
-  description: string;
-  state: 'todo' | 'in_progress' | 'done' | 'archived';
-  due_date?: string;
-  reward?: string;
-  created_at?: string;
-  started_at?: string;
-  completed_at?: string;
-}
-
-export interface TaskCreate {
-  title: string;
-  description: string;
-  state?: 'todo' | 'in_progress' | 'done' | 'archived';
-  due_date?: string;
-  reward?: string;
-  created_at?: string;
-  started_at?: string;
-  completed_at?: string;
-}
-
-export interface TaskUpdate {
-  title?: string;
-  description?: string;
-  due_date?: string;
-  reward?: string;
-}
+// Re-export types for backward compatibility
+export type { Task, TaskCreate, TaskUpdate };
 
 @Injectable({
   providedIn: 'root',
 })
 export class TaskService {
-  private apiBaseUrl = environment.apiUrl;
-  private apiUrl = `${this.apiBaseUrl}/v1`;
-
-  constructor(private http: HttpClient) {}
-
   getTasks(skip = 0, limit = 100, includeArchived = false): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.apiUrl}/tasks`, {
-      params: {
-        skip: skip.toString(),
-        limit: limit.toString(),
-        include_archived: includeArchived.toString(),
-      },
-    });
+    return from(
+      readTasksApiV1TasksGet({
+        baseUrl: environment.apiUrl,
+        query: {
+          skip,
+          limit,
+          include_archived: includeArchived,
+        },
+      })
+    ).pipe(map(response => response.data as Task[]));
   }
 
   getTask(id: number): Observable<Task> {
-    return this.http.get<Task>(`${this.apiUrl}/tasks/${id}`);
+    return from(
+      readTaskApiV1TasksTaskIdGet({
+        baseUrl: environment.apiUrl,
+        path: { task_id: id },
+      })
+    ).pipe(map(response => response.data as Task));
   }
 
   getDueTasks(): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.apiUrl}/tasks/due/`);
+    return from(
+      readDueTasksApiV1TasksDueGet({
+        baseUrl: environment.apiUrl,
+      })
+    ).pipe(map(response => response.data as Task[]));
   }
 
   getRandomTask(): Observable<Task> {
-    return this.http.get<Task>(`${this.apiUrl}/tasks/random/`).pipe(
-      catchError((error: HttpErrorResponse) => {
-        if (error.status === 404) {
+    return from(
+      getRandomTaskApiV1TasksRandomGet({
+        baseUrl: environment.apiUrl,
+      })
+    ).pipe(
+      map(response => response.data as Task),
+      catchError(error => {
+        if (error?.status === 404) {
           return throwError(
             () => new Error('No tasks available to select from. Please create some tasks first.')
           );
@@ -76,66 +77,71 @@ export class TaskService {
   }
 
   searchTasks(query: string, includeArchived = false): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.apiUrl}/tasks/search/`, {
-      params: {
-        q: query,
-        include_archived: includeArchived.toString(),
-      },
-    });
+    return from(
+      searchTasksApiV1TasksSearchGet({
+        baseUrl: environment.apiUrl,
+        query: {
+          q: query,
+          include_archived: includeArchived,
+        },
+      })
+    ).pipe(map(response => response.data as Task[]));
   }
 
   createTask(task: TaskCreate): Observable<Task> {
-    return this.http.post<Task>(`${this.apiUrl}/tasks`, task);
+    return from(
+      createNewTaskApiV1TasksPost({
+        baseUrl: environment.apiUrl,
+        body: task,
+      })
+    ).pipe(map(response => response.data as Task));
   }
 
   startTask(id: number): Observable<Task> {
-    return this.http.post<Task>(`${this.apiUrl}/tasks/${id}/start`, {});
+    return from(
+      startTaskApiV1TasksTaskIdStartPost({
+        baseUrl: environment.apiUrl,
+        path: { task_id: id },
+      })
+    ).pipe(map(response => response.data as Task));
   }
 
   printTask(id: number, printerType?: string): Observable<Blob | Record<string, unknown>> {
-    return this.http
-      .post(
-        `${this.apiUrl}/tasks/${id}/print`,
-        {},
-        {
-          params: printerType ? { printer_type: printerType } : {},
-          observe: 'response',
-          responseType: 'blob',
+    return from(
+      printTaskApiV1TasksTaskIdPrintPost({
+        baseUrl: environment.apiUrl,
+        path: { task_id: id },
+        query: printerType ? { printer_type: printerType } : undefined,
+      })
+    ).pipe(
+      mergeMap(response => {
+        const data = response.data as unknown;
+        // If it's a Blob, return it directly
+        if (data instanceof Blob) {
+          return of(data);
         }
-      )
-      .pipe(
-        mergeMap(response => {
-          const contentType = response.headers.get('content-type');
-          if (contentType?.includes('application/pdf')) {
-            return of(response.body as Blob);
-          }
-          // If it's not a PDF, convert the blob to JSON
-          return from(
-            new Promise<Record<string, unknown>>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => {
-                try {
-                  const result = JSON.parse(reader.result as string) as Record<string, unknown>;
-                  resolve(result);
-                } catch {
-                  reject(new Error('Invalid JSON response'));
-                }
-              };
-              reader.onerror = () =>
-                reject(new Error(reader.error?.message ?? 'Error reading file'));
-              reader.readAsText(response.body as Blob);
-            })
-          );
-        })
-      );
+        // Otherwise, treat it as JSON
+        return of(data as Record<string, unknown>);
+      })
+    );
   }
 
   completeTask(id: number): Observable<Task> {
-    return this.http.post<Task>(`${this.apiUrl}/tasks/${id}/complete`, {});
+    return from(
+      completeTaskApiV1TasksTaskIdCompletePost({
+        baseUrl: environment.apiUrl,
+        path: { task_id: id },
+      })
+    ).pipe(map(response => response.data as Task));
   }
 
   archiveTask(taskId: number): Observable<Task> {
-    return this.http.delete<Task>(`${this.apiUrl}/tasks/${taskId}`);
+    return from(
+      deleteTaskEndpointApiV1TasksTaskIdDelete({
+        baseUrl: environment.apiUrl,
+        path: { task_id: taskId },
+      })
+    ).pipe(map(response => response.data as Task));
   }
 
   updateTaskState(
@@ -144,41 +150,38 @@ export class TaskService {
   ): Observable<Task> {
     switch (state) {
       case 'todo':
-        return this.http.patch<Task>(`${this.apiUrl}/tasks/${taskId}/reset-to-todo`, {});
+        return from(
+          resetTaskToTodoEndpointApiV1TasksTaskIdResetToTodoPatch({
+            baseUrl: environment.apiUrl,
+            path: { task_id: taskId },
+          })
+        ).pipe(map(response => response.data as Task));
       case 'in_progress':
-        return this.http.post<Task>(`${this.apiUrl}/tasks/${taskId}/start`, {});
+        return this.startTask(taskId);
       case 'done':
-        return this.http.post<Task>(`${this.apiUrl}/tasks/${taskId}/complete`, {});
+        return this.completeTask(taskId);
       case 'archived':
-        return this.http.post<Task>(`${this.apiUrl}/tasks/${taskId}/archive`, {});
+        return this.archiveTask(taskId);
       default:
         return throwError(() => new Error(`Unsupported state transition: ${state}`));
     }
   }
 
   updateTask(taskId: number, update: TaskUpdate): Observable<Task> {
-    return this.http.patch<Task>(`${this.apiUrl}/tasks/${taskId}`, update);
+    return from(
+      updateTaskEndpointApiV1TasksTaskIdPatch({
+        baseUrl: environment.apiUrl,
+        path: { task_id: taskId },
+        body: update,
+      })
+    ).pipe(map(response => response.data as Task));
   }
 
   triggerMaintenance(): Observable<Record<string, unknown>> {
-    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/tasks/maintenance`, {});
-  }
-
-  login(username: string, password: string): Observable<Token> {
-    const body = new HttpParams().set('username', username).set('password', password);
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/x-www-form-urlencoded',
-    });
-
-    return this.http.post<Token>(`${this.apiUrl}/auth/token`, body.toString(), { headers });
-  }
-
-  // Admin endpoints - these require authentication
-  initDb(): Observable<Record<string, unknown>> {
-    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/admin/db/init`, {});
-  }
-
-  runMigrations(): Observable<Record<string, unknown>> {
-    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/admin/db/migrate`, {});
+    return from(
+      triggerMaintenanceApiV1TasksMaintenancePost({
+        baseUrl: environment.apiUrl,
+      })
+    ).pipe(map(response => response.data as Record<string, unknown>));
   }
 }

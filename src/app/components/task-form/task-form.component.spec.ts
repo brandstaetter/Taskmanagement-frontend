@@ -3,6 +3,7 @@ import { TaskFormComponent } from './task-form.component';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TaskService, Task, TaskCreate, TaskUpdate } from '../../services/task.service';
+import { AuthService } from '../../services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -14,10 +15,11 @@ import { MatButtonHarness } from '@angular/material/button/testing';
 describe('TaskFormComponent', () => {
   let component: TaskFormComponent;
   let fixture: ComponentFixture<TaskFormComponent>;
+  let loader: HarnessLoader;
   let taskService: jasmine.SpyObj<TaskService>;
+  let authService: jasmine.SpyObj<AuthService>;
   let dialogRef: jasmine.SpyObj<MatDialogRef<TaskFormComponent>>;
   let snackBar: jasmine.SpyObj<MatSnackBar>;
-  let loader: HarnessLoader;
 
   const mockTask: Task = {
     id: 1,
@@ -31,10 +33,22 @@ describe('TaskFormComponent', () => {
 
   beforeEach(async () => {
     taskService = jasmine.createSpyObj('TaskService', ['createTask', 'updateTask']);
+    authService = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
     dialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
     snackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
 
     // Set up default mock responses
+    authService.getCurrentUser.and.returnValue({
+      id: 1,
+      email: 'test@example.com',
+      is_active: true,
+      is_admin: false,
+      is_superadmin: false,
+      avatar_url: null,
+      last_login: null,
+      created_at: '2024-01-01T00:00:00.000Z',
+      updated_at: '2024-01-01T00:00:00.000Z',
+    });
     taskService.createTask.and.returnValue(of({ ...mockTask }));
     taskService.updateTask.and.returnValue(of({ ...mockTask }));
 
@@ -43,6 +57,7 @@ describe('TaskFormComponent', () => {
       providers: [
         FormBuilder,
         { provide: TaskService, useValue: taskService },
+        { provide: AuthService, useValue: authService },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: MatSnackBar, useValue: snackBar },
         { provide: MAT_DIALOG_DATA, useValue: null },
@@ -115,6 +130,7 @@ describe('TaskFormComponent', () => {
         state: 'todo',
         due_date: undefined,
         reward: undefined,
+        created_by: 1,
       };
 
       expect(taskService.createTask).toHaveBeenCalledWith(jasmine.objectContaining(expectedCreate));
