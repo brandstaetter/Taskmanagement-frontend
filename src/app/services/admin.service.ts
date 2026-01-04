@@ -8,15 +8,16 @@ import {
   initDbApiV1AdminDbInitPost,
   runMigrationsApiV1AdminDbMigratePost,
   PasswordResetResponse,
+  User,
+  AdminUserCreate,
 } from '../generated';
 import { environment } from '../../environments/environment';
-import { User, UserCreate } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AdminService {
-  createUser(user: UserCreate): Observable<User> {
+  createUser(user: AdminUserCreate): Observable<User> {
     return from(
       createNewUserApiV1AdminUsersPost({
         baseUrl: environment.apiUrl,

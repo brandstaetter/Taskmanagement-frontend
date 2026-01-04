@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { AdminService } from './admin.service';
-import { PasswordResetResponse } from '../generated';
-import { User } from '../models/user.model';
+import { PasswordResetResponse, User } from '../generated';
 import { of } from 'rxjs';
 
 describe('AdminService', () => {

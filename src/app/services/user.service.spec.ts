@@ -1,14 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { UserService } from './user.service';
-import { UserPasswordChange, UserAvatarUpdate } from '../generated';
+import { UserPasswordChange, UserAvatarUpdate, User } from '../generated';
 import { of } from 'rxjs';
-import { AuthService } from './auth.service';
 
 describe('UserService', () => {
   let service: UserService;
-  let authService: jasmine.SpyObj<AuthService>;
 
-  const mockUser = {
+  const mockUser: User = {
     id: 1,
     email: 'test@example.com',
     is_active: true,
@@ -21,10 +19,8 @@ describe('UserService', () => {
   };
 
   beforeEach(() => {
-    authService = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
-
     TestBed.configureTestingModule({
-      providers: [UserService, { provide: AuthService, useValue: authService }],
+      providers: [UserService],
     });
     service = TestBed.inject(UserService);
   });

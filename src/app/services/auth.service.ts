@@ -6,9 +6,9 @@ import {
   loginUserForAccessTokenApiV1AuthUserTokenPost,
   getCurrentUserInfoApiV1UsersMeGet,
   Token,
+  User,
 } from '../generated';
 import { environment } from '../../environments/environment';
-import { User } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root',
