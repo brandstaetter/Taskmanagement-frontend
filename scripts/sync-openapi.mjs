@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { execSync } from 'node:child_process';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
 
 const OPENAPI_URL =
   process.env.TASKMAN_OPENAPI_URL ??
@@ -11,6 +12,7 @@ const TARGET_DIR = dirname(TARGET_FILE);
 
 const isCi = String(process.env.CI ?? '').toLowerCase() === 'true';
 const failOnError = isCi || String(process.env.FAIL_OPENAPI_SYNC ?? '') === '1';
+const execAsync = promisify(exec);
 
 async function main() {
   try {
@@ -48,8 +50,7 @@ async function main() {
     
     // Generate services from the updated OpenAPI spec
     process.stdout.write('Generating services from updated OpenAPI spec...\n');
-    execSync('node scripts/generate-services.mjs', {
-      stdio: 'inherit',
+    await execAsync('node scripts/generate-services.mjs', {
       cwd: process.cwd(),
     });
   } catch (error) {

@@ -27,4 +27,4 @@ function main() {
   }
 }
 
-await main();
+main();
