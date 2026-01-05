@@ -20,6 +20,8 @@ import {
   triggerMaintenanceApiV1TasksMaintenancePost,
   resetTaskToTodoEndpointApiV1TasksTaskIdResetToTodoPatch,
 } from '../generated';
+import { createClient, createConfig, type Client } from '../generated/client';
+import { AuthService } from './auth.service';
 
 // Re-export types for backward compatibility
 export type { Task, TaskCreate, TaskUpdate };
@@ -28,10 +30,28 @@ export type { Task, TaskCreate, TaskUpdate };
   providedIn: 'root',
 })
 export class TaskService {
+  private baseUrl = environment.baseUrl;
+  private authenticatedClient: Client;
+
+  constructor(private authService: AuthService) {
+    // Create a base client
+    this.authenticatedClient = createClient(
+      createConfig({
+        baseUrl: this.baseUrl,
+      })
+    );
+  }
+
+  private getAuthSecurity() {
+    const token = this.authService.getAccessToken();
+    return token ? [{ scheme: 'bearer' as const, type: 'http' as const }] : undefined;
+  }
+
   getTasks(skip = 0, limit = 100, includeArchived = false): Observable<Task[]> {
     return from(
       readTasksApiV1TasksGet({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
         query: {
           skip,
           limit,
@@ -44,7 +64,8 @@ export class TaskService {
   getTask(id: number): Observable<Task> {
     return from(
       readTaskApiV1TasksTaskIdGet({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
         path: { task_id: id },
       })
     ).pipe(map(response => response.data as Task));
@@ -53,7 +74,8 @@ export class TaskService {
   getDueTasks(): Observable<Task[]> {
     return from(
       readDueTasksApiV1TasksDueGet({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
       })
     ).pipe(map(response => response.data as Task[]));
   }
@@ -61,7 +83,8 @@ export class TaskService {
   getRandomTask(): Observable<Task> {
     return from(
       getRandomTaskApiV1TasksRandomGet({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
       })
     ).pipe(
       map(response => response.data as Task),
@@ -79,7 +102,8 @@ export class TaskService {
   searchTasks(query: string, includeArchived = false): Observable<Task[]> {
     return from(
       searchTasksApiV1TasksSearchGet({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
         query: {
           q: query,
           include_archived: includeArchived,
@@ -91,7 +115,8 @@ export class TaskService {
   createTask(task: TaskCreate): Observable<Task> {
     return from(
       createNewTaskApiV1TasksPost({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
         body: task,
       })
     ).pipe(map(response => response.data as Task));
@@ -100,7 +125,8 @@ export class TaskService {
   startTask(id: number): Observable<Task> {
     return from(
       startTaskApiV1TasksTaskIdStartPost({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
         path: { task_id: id },
       })
     ).pipe(map(response => response.data as Task));
@@ -109,7 +135,8 @@ export class TaskService {
   printTask(id: number, printerType?: string): Observable<Blob | Record<string, unknown>> {
     return from(
       printTaskApiV1TasksTaskIdPrintPost({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
         path: { task_id: id },
         query: printerType ? { printer_type: printerType } : undefined,
       })
@@ -129,7 +156,8 @@ export class TaskService {
   completeTask(id: number): Observable<Task> {
     return from(
       completeTaskApiV1TasksTaskIdCompletePost({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
         path: { task_id: id },
       })
     ).pipe(map(response => response.data as Task));
@@ -138,7 +166,8 @@ export class TaskService {
   archiveTask(taskId: number): Observable<Task> {
     return from(
       deleteTaskEndpointApiV1TasksTaskIdDelete({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
         path: { task_id: taskId },
       })
     ).pipe(map(response => response.data as Task));
@@ -152,7 +181,8 @@ export class TaskService {
       case 'todo':
         return from(
           resetTaskToTodoEndpointApiV1TasksTaskIdResetToTodoPatch({
-            baseUrl: environment.baseUrl,
+            client: this.authenticatedClient,
+            security: this.getAuthSecurity(),
             path: { task_id: taskId },
           })
         ).pipe(map(response => response.data as Task));
@@ -170,7 +200,8 @@ export class TaskService {
   updateTask(taskId: number, update: TaskUpdate): Observable<Task> {
     return from(
       updateTaskEndpointApiV1TasksTaskIdPatch({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
         path: { task_id: taskId },
         body: update,
       })
@@ -180,7 +211,8 @@ export class TaskService {
   triggerMaintenance(): Observable<Record<string, unknown>> {
     return from(
       triggerMaintenanceApiV1TasksMaintenancePost({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
       })
     ).pipe(map(response => response.data as Record<string, unknown>));
   }

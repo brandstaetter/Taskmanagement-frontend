@@ -7,6 +7,9 @@ import {
   getCurrentUserInfoApiV1UsersMeGet,
   Token,
   User,
+  createClient,
+  createConfig,
+  type Client,
 } from '../generated';
 import { environment } from '../../environments/environment';
 
@@ -16,6 +19,22 @@ import { environment } from '../../environments/environment';
 export class AuthService {
   private readonly tokenStorageKey = 'taskman_access_token';
   private readonly userStorageKey = 'taskman_user';
+  private baseUrl = environment.baseUrl;
+  private authenticatedClient: Client;
+
+  constructor() {
+    // Create a base client
+    this.authenticatedClient = createClient(
+      createConfig({
+        baseUrl: this.baseUrl,
+      })
+    );
+  }
+
+  private getAuthSecurity() {
+    const token = this.getAccessToken();
+    return token ? [{ scheme: 'bearer' as const, type: 'http' as const }] : undefined;
+  }
 
   private currentUserSubject = new BehaviorSubject<User | null>(this.getStoredUser());
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -41,7 +60,8 @@ export class AuthService {
   private fetchCurrentUser(): Observable<User> {
     return from(
       getCurrentUserInfoApiV1UsersMeGet({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
       })
     ).pipe(
       map(response => response.data as User),
@@ -105,7 +125,7 @@ export class AuthService {
   login(username: string, password: string): Observable<Token> {
     return from(
       loginUserForAccessTokenApiV1AuthUserTokenPost({
-        baseUrl: environment.baseUrl,
+        client: this.authenticatedClient,
         body: {
           username,
           password,
