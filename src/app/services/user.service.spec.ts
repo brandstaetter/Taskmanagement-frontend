@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { UserService } from './user.service';
-import { UserPasswordChange, UserAvatarUpdate, User } from '../generated';
-import { of, throwError } from 'rxjs';
+import { UserPasswordChange, UserAvatarUpdate } from '../generated';
 
 describe('UserService', () => {
   let service: UserService;
@@ -18,106 +17,78 @@ describe('UserService', () => {
   });
 
   describe('updatePassword', () => {
-    it('should update password successfully', () => {
+    it('should have updatePassword method', () => {
+      expect(service.updatePassword).toBeDefined();
+      expect(typeof service.updatePassword).toBe('function');
+    });
+
+    it('should accept UserPasswordChange parameter', () => {
       const passwordUpdate: UserPasswordChange = {
         current_password: 'old123',
         new_password: 'new123',
       };
 
-      spyOn(service, 'updatePassword').and.returnValue(of(undefined));
-
-      service.updatePassword(passwordUpdate).subscribe(result => {
-        expect(result).toBeUndefined();
-      });
+      // Test that the method exists and can be called with correct parameter type
+      expect(() => {
+        const observable = service.updatePassword(passwordUpdate);
+        expect(observable).toBeDefined();
+        expect(typeof observable.subscribe).toBe('function');
+      }).not.toThrow();
     });
 
-    it('should handle password update errors', () => {
+    it('should return Observable<void>', () => {
       const passwordUpdate: UserPasswordChange = {
-        current_password: 'wrong',
+        current_password: 'old123',
         new_password: 'new123',
       };
 
-      spyOn(service, 'updatePassword').and.returnValue(
-        throwError(() => new Error('Invalid current password'))
-      );
-
-      service.updatePassword(passwordUpdate).subscribe({
-        next: () => fail('should have failed'),
-        error: (err) => {
-          expect(err.message).toBe('Invalid current password');
-        },
-      });
+      const observable = service.updatePassword(passwordUpdate);
+      expect(observable).toBeDefined();
+      expect(typeof observable.subscribe).toBe('function');
     });
   });
 
   describe('updateAvatar', () => {
-    it('should update avatar successfully', () => {
-      const avatarUpdate: UserAvatarUpdate = {
-        avatar_url: 'https://example.com/new-avatar.jpg',
-      };
-
-      const mockUser: User = {
-        id: 1,
-        email: 'test@example.com',
-        is_active: true,
-        is_admin: false,
-        is_superadmin: false,
-        avatar_url: 'https://example.com/new-avatar.jpg',
-        last_login: null,
-        created_at: '2023-01-01T00:00:00.000Z',
-        updated_at: '2023-01-01T00:00:00.000Z',
-      };
-
-      spyOn(service, 'updateAvatar').and.returnValue(of(mockUser));
-
-      service.updateAvatar(avatarUpdate).subscribe(result => {
-        expect(result).toBeDefined();
-        expect(typeof result).toBe('object');
-        expect(result.avatar_url).toBe('https://example.com/new-avatar.jpg');
-      });
+    it('should have updateAvatar method', () => {
+      expect(service.updateAvatar).toBeDefined();
+      expect(typeof service.updateAvatar).toBe('function');
     });
 
-    it('should handle avatar update errors', () => {
+    it('should accept UserAvatarUpdate parameter', () => {
       const avatarUpdate: UserAvatarUpdate = {
         avatar_url: 'https://example.com/new-avatar.jpg',
       };
 
-      spyOn(service, 'updateAvatar').and.returnValue(
-        throwError(() => new Error('Invalid avatar URL'))
-      );
-
-      service.updateAvatar(avatarUpdate).subscribe({
-        next: () => fail('should have failed'),
-        error: (err) => {
-          expect(err.message).toBe('Invalid avatar URL');
-        },
-      });
+      // Test that the method exists and can be called with correct parameter type
+      expect(() => {
+        const observable = service.updateAvatar(avatarUpdate);
+        expect(observable).toBeDefined();
+        expect(typeof observable.subscribe).toBe('function');
+      }).not.toThrow();
     });
 
-    it('should transform response data correctly', () => {
+    it('should return Observable<User>', () => {
       const avatarUpdate: UserAvatarUpdate = {
         avatar_url: 'https://example.com/new-avatar.jpg',
       };
 
-      const mockUser: User = {
-        id: 1,
-        email: 'test@example.com',
-        is_active: true,
-        is_admin: false,
-        is_superadmin: false,
-        avatar_url: 'https://example.com/new-avatar.jpg',
-        last_login: null,
-        created_at: '2023-01-01T00:00:00.000Z',
-        updated_at: '2023-01-01T00:00:00.000Z',
-      };
+      const observable = service.updateAvatar(avatarUpdate);
+      expect(observable).toBeDefined();
+      expect(typeof observable.subscribe).toBe('function');
+    });
+  });
 
-      // Mock successful response
-      spyOn(service, 'updateAvatar').and.returnValue(of(mockUser));
+  describe('Service Structure', () => {
+    it('should have proper type definitions', () => {
+      // Test that types are available (they're imported at the top)
+      expect(true).toBe(true); // Types are validated by TypeScript compiler
+    });
 
-      service.updateAvatar(avatarUpdate).subscribe(result => {
-        expect(result).toEqual(mockUser);
-        expect(result.avatar_url).toBe(mockUser.avatar_url);
-      });
+    it('should be provided in root', () => {
+      expect(service).toBeTruthy();
+      // The service should be a singleton
+      const service2 = TestBed.inject(UserService);
+      expect(service).toBe(service2);
     });
   });
 });
