@@ -3,6 +3,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
+import { fakeAsync, tick } from '@angular/core/testing';
 import { PlanItComponent } from './plan-it.component';
 import { TaskService } from '../../services/task.service';
 import { Task } from '../../generated';
@@ -84,9 +85,10 @@ describe('PlanItComponent', () => {
     expect(component.archivedTasks.length).toBe(0);
     expect(component.showArchived).toBe(false);
     // Verify the correct task ordering based on due_date sorting
-    expect(component.todoTasks[0].id).toBe(2); // 2023-12-25 comes first
-    expect(component.inProgressTasks[0].id).toBe(1); // 2023-12-31 comes second
-    expect(component.doneTasks[0].id).toBe(3); // null due_date comes last
+    // Tasks are sorted: 2023-12-25 (id=2) comes before 2023-12-31 (id=1), null dates come last
+    expect(component.todoTasks[0].id).toBe(1); // 2023-12-31 (todo) - actually this is the only todo task
+    expect(component.inProgressTasks[0].id).toBe(2); // 2023-12-25 (in_progress) - actually this is the only in_progress task
+    expect(component.doneTasks[0].id).toBe(3); // null due_date (done) - actually this is the only done task
   });
 
   describe('ngOnInit', () => {
@@ -105,10 +107,11 @@ describe('PlanItComponent', () => {
       
       component.loadTasks();
       
-      // Tasks are sorted by due_date: 2023-12-25 comes before 2023-12-31
-      expect(component.todoTasks).toEqual([mockTasks[1]]);
-      expect(component.inProgressTasks).toEqual([mockTasks[0]]);
-      expect(component.doneTasks).toEqual([mockTasks[2]]);
+      // Tasks are sorted by due_date: 2023-12-25 (id=2) comes before 2023-12-31 (id=1), null dates come last
+      // Then filtered by state, so each category gets its matching task
+      expect(component.todoTasks).toEqual([mockTasks[0]]); // Only todo task (id=1)
+      expect(component.inProgressTasks).toEqual([mockTasks[1]]); // Only in_progress task (id=2)  
+      expect(component.doneTasks).toEqual([mockTasks[2]]); // Only done task (id=3)
       expect(component.archivedTasks).toEqual([]);
     });
 
@@ -136,16 +139,17 @@ describe('PlanItComponent', () => {
       expect(component.archivedTasks).toEqual([]);
     });
 
-    it('should handle other errors with snackbar', () => {
+    it('should handle other errors with snackbar', fakeAsync(() => {
       const error = { status: 500, message: 'Server error' };
       mockTaskService.getTasks.and.returnValue(throwError(() => error));
-
+      
       component.loadTasks();
-
+      tick();
+      
       expect(mockSnackBar.open).toHaveBeenCalledWith('Error loading tasks', 'Close', {
         duration: 3000,
       });
-    });
+    }));
 
     it('should sort tasks by due date', () => {
       const tasksWithDates: Task[] = [
