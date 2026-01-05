@@ -40,7 +40,7 @@ describe('AdminService', () => {
       mockAuthService.getAccessToken.and.returnValue('test-token');
 
       // Access private method through type assertion for testing
-      const authSecurity = (service as any).getAuthSecurity();
+      const authSecurity = (service as unknown as { getAuthSecurity(): { scheme: string; type: string; }[] | undefined }).getAuthSecurity();
 
       expect(authSecurity).toEqual([{ scheme: 'bearer', type: 'http' }]);
       expect(mockAuthService.getAccessToken).toHaveBeenCalled();
@@ -49,7 +49,7 @@ describe('AdminService', () => {
     it('should return undefined when no token is available', () => {
       mockAuthService.getAccessToken.and.returnValue(null);
 
-      const authSecurity = (service as any).getAuthSecurity();
+      const authSecurity = (service as unknown as { getAuthSecurity(): { scheme: string; type: string; }[] | undefined }).getAuthSecurity();
 
       expect(authSecurity).toBeUndefined();
       expect(mockAuthService.getAccessToken).toHaveBeenCalled();
@@ -60,7 +60,7 @@ describe('AdminService', () => {
     it('should return data when response is successful', () => {
       const response = { data: mockUser, response: new Response() };
 
-      const result = (service as any).handleApiResponse(response);
+      const result = (service as unknown as { handleApiResponse<T>(response: { data?: T; error?: unknown; response: Response }): T }).handleApiResponse(response);
 
       expect(result).toEqual(mockUser);
     });
@@ -70,7 +70,7 @@ describe('AdminService', () => {
       const response = { error, response: new Response() };
 
       expect(() => {
-        (service as any).handleApiResponse(response);
+        (service as unknown as { handleApiResponse<T>(response: { data?: T; error?: unknown; response: Response }): T }).handleApiResponse(response);
       }).toThrow(error);
     });
   });
