@@ -77,12 +77,16 @@ describe('PlanItComponent', () => {
   });
 
   it('should initialize with default values', () => {
-    // After ngOnInit, tasks are loaded and categorized
+    // After ngOnInit, tasks are loaded and categorized (sorted by due_date)
     expect(component.todoTasks.length).toBe(1);
     expect(component.inProgressTasks.length).toBe(1);
     expect(component.doneTasks.length).toBe(1);
     expect(component.archivedTasks.length).toBe(0);
     expect(component.showArchived).toBe(false);
+    // Verify the correct task ordering based on due_date sorting
+    expect(component.todoTasks[0].id).toBe(2); // 2023-12-25 comes first
+    expect(component.inProgressTasks[0].id).toBe(1); // 2023-12-31 comes second
+    expect(component.doneTasks[0].id).toBe(3); // null due_date comes last
   });
 
   describe('ngOnInit', () => {
@@ -98,11 +102,12 @@ describe('PlanItComponent', () => {
   describe('loadTasks', () => {
     it('should load and categorize tasks correctly', () => {
       mockTaskService.getTasks.and.returnValue(of(mockTasks));
-
+      
       component.loadTasks();
-
-      expect(component.todoTasks).toEqual([mockTasks[0]]);
-      expect(component.inProgressTasks).toEqual([mockTasks[1]]);
+      
+      // Tasks are sorted by due_date: 2023-12-25 comes before 2023-12-31
+      expect(component.todoTasks).toEqual([mockTasks[1]]);
+      expect(component.inProgressTasks).toEqual([mockTasks[0]]);
       expect(component.doneTasks).toEqual([mockTasks[2]]);
       expect(component.archivedTasks).toEqual([]);
     });
@@ -132,7 +137,7 @@ describe('PlanItComponent', () => {
     });
 
     it('should handle other errors with snackbar', () => {
-      const error = { status: 500 };
+      const error = { status: 500, message: 'Server error' };
       mockTaskService.getTasks.and.returnValue(throwError(() => error));
 
       component.loadTasks();
@@ -331,6 +336,13 @@ describe('PlanItComponent', () => {
 
   describe('hasAnyTasks', () => {
     it('should return false when no tasks', () => {
+      // Clear all task arrays
+      component.todoTasks = [];
+      component.inProgressTasks = [];
+      component.doneTasks = [];
+      component.archivedTasks = [];
+      component.showArchived = false;
+      
       expect(component.hasAnyTasks()).toBe(false);
     });
 
@@ -348,6 +360,11 @@ describe('PlanItComponent', () => {
     it('should return false when there are archived tasks but showArchived is false', () => {
       component.showArchived = false;
       component.archivedTasks = [mockTasks[0]];
+      // Clear other task arrays
+      component.todoTasks = [];
+      component.inProgressTasks = [];
+      component.doneTasks = [];
+      
       expect(component.hasAnyTasks()).toBe(false);
     });
   });

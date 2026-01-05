@@ -72,10 +72,24 @@ describe('TaskViewComponent', () => {
     taskServiceSpy.getRandomTask.and.returnValue(of(mockTasks[0]));
 
     mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
-    // Initialize the open spy to return a proper mock
-    mockDialog.open.and.returnValue({
-      afterClosed: () => of(null)
-    } as unknown as MatDialogRef<unknown, unknown>);
+    // Initialize the open spy to return a proper mock with all required properties
+    const mockDialogRef = {
+      afterClosed: () => of(null),
+      close: () => { return; },
+      componentInstance: null,
+      id: 'test-dialog',
+      getState: () => ({}),
+      updatePosition: () => { return; },
+      updateSize: () => { return; },
+      addPanelClass: () => { return; },
+      removePanelClass: () => { return; },
+      beforeClosed: () => of(null),
+      backdropClick: () => of(null),
+      keydownEvents: () => of(null),
+      disableClose: false,
+      hasBackdrop: false,
+    } as unknown as MatDialogRef<unknown, unknown>;
+    mockDialog.open.and.returnValue(mockDialogRef);
 
     mockSnackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
 

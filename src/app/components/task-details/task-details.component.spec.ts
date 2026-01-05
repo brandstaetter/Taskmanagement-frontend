@@ -130,7 +130,8 @@ describe('TaskDetailsComponent', () => {
 
     it('should format valid date', () => {
       const result = component.formatDate('2023-12-31T23:59:59.000Z');
-      expect(result).toContain('2023');
+      expect(result).toContain('Dec 31'); // toLocaleString format
+      expect(result).toContain('11:59'); // Should include time
     });
 
     it('should return empty string for null', () => {
@@ -219,10 +220,10 @@ describe('TaskDetailsComponent', () => {
       expect(classes).toEqual({
         'task-card': true,
         todo: true,
-        in_progress: false,
+        'in_progress': false,
         done: false,
         archived: false,
-        overdue: false,
+        overdue: true, // 2023-12-31 is in the past, so it should be overdue
         'due-soon': false,
       });
     });
