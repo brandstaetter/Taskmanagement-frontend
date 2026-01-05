@@ -57,6 +57,13 @@ export class AuthService {
     }
   }
 
+  private handleApiResponse<T>(response: { data?: T; error?: unknown; response: Response }): T {
+    if (response.error) {
+      throw response.error;
+    }
+    return response.data as T;
+  }
+
   private fetchCurrentUser(): Observable<User> {
     return from(
       getCurrentUserInfoApiV1UsersMeGet({
@@ -64,7 +71,7 @@ export class AuthService {
         security: this.getAuthSecurity(),
       })
     ).pipe(
-      map(response => response.data as User),
+      map(response => this.handleApiResponse(response)),
       tap((user: User) => {
         this.setStoredUser(user);
       })
@@ -133,7 +140,7 @@ export class AuthService {
         },
       })
     ).pipe(
-      map(response => response.data as Token),
+      map(response => this.handleApiResponse(response)),
       tap((response: Token) => {
         if (response?.access_token) {
           this.setAccessToken(response.access_token);

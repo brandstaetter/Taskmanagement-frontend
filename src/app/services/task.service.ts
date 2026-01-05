@@ -47,6 +47,13 @@ export class TaskService {
     return token ? [{ scheme: 'bearer' as const, type: 'http' as const }] : undefined;
   }
 
+  private handleApiResponse<T>(response: { data?: T; error?: unknown; response: Response }): T {
+    if (response.error) {
+      throw response.error;
+    }
+    return response.data as T;
+  }
+
   getTasks(skip = 0, limit = 100, includeArchived = false): Observable<Task[]> {
     return from(
       readTasksApiV1TasksGet({
@@ -58,7 +65,7 @@ export class TaskService {
           include_archived: includeArchived,
         },
       })
-    ).pipe(map(response => response.data as Task[]));
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   getTask(id: number): Observable<Task> {
@@ -68,7 +75,7 @@ export class TaskService {
         security: this.getAuthSecurity(),
         path: { task_id: id },
       })
-    ).pipe(map(response => response.data as Task));
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   getDueTasks(): Observable<Task[]> {
@@ -77,7 +84,7 @@ export class TaskService {
         client: this.authenticatedClient,
         security: this.getAuthSecurity(),
       })
-    ).pipe(map(response => response.data as Task[]));
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   getRandomTask(): Observable<Task> {
@@ -87,9 +94,15 @@ export class TaskService {
         security: this.getAuthSecurity(),
       })
     ).pipe(
-      map(response => response.data as Task),
+      map(response => {
+        if (response.error) {
+          throw response.error;
+        }
+        return response.data as Task;
+      }),
       catchError(error => {
-        if (error?.status === 404) {
+        // Check if it's a 404 error from the response
+        if (error?.response?.status === 404 || error?.status === 404) {
           return throwError(
             () => new Error('No tasks available to select from. Please create some tasks first.')
           );
@@ -109,7 +122,7 @@ export class TaskService {
           include_archived: includeArchived,
         },
       })
-    ).pipe(map(response => response.data as Task[]));
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   createTask(task: TaskCreate): Observable<Task> {
@@ -119,7 +132,7 @@ export class TaskService {
         security: this.getAuthSecurity(),
         body: task,
       })
-    ).pipe(map(response => response.data as Task));
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   startTask(id: number): Observable<Task> {
@@ -129,7 +142,7 @@ export class TaskService {
         security: this.getAuthSecurity(),
         path: { task_id: id },
       })
-    ).pipe(map(response => response.data as Task));
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   printTask(id: number, printerType?: string): Observable<Blob | Record<string, unknown>> {
@@ -160,7 +173,7 @@ export class TaskService {
         security: this.getAuthSecurity(),
         path: { task_id: id },
       })
-    ).pipe(map(response => response.data as Task));
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   archiveTask(taskId: number): Observable<Task> {
@@ -170,7 +183,7 @@ export class TaskService {
         security: this.getAuthSecurity(),
         path: { task_id: taskId },
       })
-    ).pipe(map(response => response.data as Task));
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   updateTaskState(
@@ -185,7 +198,7 @@ export class TaskService {
             security: this.getAuthSecurity(),
             path: { task_id: taskId },
           })
-        ).pipe(map(response => response.data as Task));
+        ).pipe(map(response => this.handleApiResponse(response)));
       case 'in_progress':
         return this.startTask(taskId);
       case 'done':
@@ -205,7 +218,7 @@ export class TaskService {
         path: { task_id: taskId },
         body: update,
       })
-    ).pipe(map(response => response.data as Task));
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   triggerMaintenance(): Observable<Record<string, unknown>> {
@@ -214,6 +227,6 @@ export class TaskService {
         client: this.authenticatedClient,
         security: this.getAuthSecurity(),
       })
-    ).pipe(map(response => response.data as Record<string, unknown>));
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 }
