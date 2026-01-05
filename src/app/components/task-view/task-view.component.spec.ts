@@ -7,6 +7,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
 
 // Mock TaskCardComponent
 @Component({
@@ -94,7 +95,7 @@ describe('TaskViewComponent', () => {
     mockSnackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
 
     await TestBed.configureTestingModule({
-      imports: [TaskViewComponent, NoopAnimationsModule, MockTaskCardComponent],
+      imports: [TaskViewComponent, NoopAnimationsModule, MockTaskCardComponent, TaskEditDialogComponent],
       providers: [
         { provide: TaskService, useValue: taskServiceSpy },
         { provide: MatDialog, useValue: mockDialog },
@@ -225,7 +226,7 @@ describe('TaskViewComponent', () => {
 
     component.onEditTask(mockTasks[0]);
 
-    expect(mockDialog.open).toHaveBeenCalledWith(jasmine.any(Object), {
+    expect(mockDialog.open).toHaveBeenCalledWith(TaskEditDialogComponent, {
       data: mockTasks[0],
       width: '500px',
     });
