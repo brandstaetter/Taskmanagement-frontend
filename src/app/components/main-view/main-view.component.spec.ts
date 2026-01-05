@@ -26,22 +26,23 @@ describe('MainViewComponent', () => {
   };
 
   beforeEach(async () => {
-    mockAuthService = jasmine.createSpyObj('AuthService', ['isAdmin', 'getCurrentUser', 'logout', 'getAccessToken']);
+    mockAuthService = jasmine.createSpyObj('AuthService', [
+      'isAdmin',
+      'getCurrentUser',
+      'logout',
+      'getAccessToken',
+    ]);
     mockRouter = jasmine.createSpyObj('Router', ['navigate']);
     mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
 
     await TestBed.configureTestingModule({
-      imports: [
-        BrowserAnimationsModule,
-        MainViewComponent
-      ],
+      imports: [BrowserAnimationsModule, MainViewComponent],
       providers: [
         { provide: AuthService, useValue: mockAuthService },
         { provide: Router, useValue: mockRouter },
-        { provide: MatDialog, useValue: mockDialog }
-      ]
-    })
-    .compileComponents();
+        { provide: MatDialog, useValue: mockDialog },
+      ],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(MainViewComponent);
     component = fixture.componentInstance;
@@ -88,14 +89,14 @@ describe('MainViewComponent', () => {
   describe('onTabChange', () => {
     it('should switch to do-it view when index is 0', () => {
       component.onTabChange(0);
-      
+
       expect(component.selectedIndex).toBe(0);
       expect(component.currentView).toBe('do-it');
     });
 
     it('should switch to plan-it view when index is 1', () => {
       component.onTabChange(1);
-      
+
       expect(component.selectedIndex).toBe(1);
       expect(component.currentView).toBe('plan-it');
     });
@@ -103,18 +104,11 @@ describe('MainViewComponent', () => {
     it('should handle tab changes without child components', () => {
       component.taskView = null!;
       component.planIt = null!;
-      
+
       expect(() => {
         component.onTabChange(0);
         component.onTabChange(1);
       }).not.toThrow();
-    });
-  });
-
-  describe('openAddTaskDialog', () => {
-    it('should have openAddTaskDialog method', () => {
-      expect(component.openAddTaskDialog).toBeDefined();
-      expect(typeof component.openAddTaskDialog).toBe('function');
     });
   });
 
