@@ -50,58 +50,64 @@ describe('TaskService', () => {
 
   describe('getTasks', () => {
     it('should get tasks with default parameters', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue([mockTask]);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue([mockTask]);
       
       service.getTasks().subscribe(result => {
         expect(result).toEqual([mockTask]);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
 
     it('should get tasks with custom parameters', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue([mockTask]);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue([mockTask]);
       
       service.getTasks(10, 50, true).subscribe(result => {
         expect(result).toEqual([mockTask]);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
   });
 
   describe('getTask', () => {
     it('should get a single task', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue(mockTask);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue(mockTask);
       
       service.getTask(1).subscribe(result => {
         expect(result).toEqual(mockTask);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
   });
 
   describe('getDueTasks', () => {
     it('should get due tasks', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue([mockTask]);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue([mockTask]);
       
       service.getDueTasks().subscribe(result => {
         expect(result).toEqual([mockTask]);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
   });
 
   describe('getRandomTask', () => {
     it('should get random task successfully', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue(mockTask);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue(mockTask);
       
       service.getRandomTask().subscribe(result => {
         expect(result).toEqual(mockTask);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
 
     it('should handle 404 error for no tasks available', () => {
-      spyOn(service as any, 'handleApiResponse').and.callFake(() => {
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse') as jasmine.Spy;
+      handleApiResponseSpy.and.callFake(() => {
         const error = { response: { status: 404 } };
         throw error;
       });
@@ -115,7 +121,8 @@ describe('TaskService', () => {
     });
 
     it('should handle general error for random task', () => {
-      spyOn(service as any, 'handleApiResponse').and.callFake(() => {
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse') as jasmine.Spy;
+      handleApiResponseSpy.and.callFake(() => {
         const error = { status: 500 };
         throw error;
       });
@@ -131,64 +138,70 @@ describe('TaskService', () => {
 
   describe('searchTasks', () => {
     it('should search tasks', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue([mockTask]);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue([mockTask]);
       
       service.searchTasks('test').subscribe(result => {
         expect(result).toEqual([mockTask]);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
 
     it('should search tasks with archived option', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue([mockTask]);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue([mockTask]);
       
       service.searchTasks('test', true).subscribe(result => {
         expect(result).toEqual([mockTask]);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
   });
 
   describe('createTask', () => {
     it('should create a new task', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue(mockTask);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue(mockTask);
       
       service.createTask(mockTaskCreate).subscribe(result => {
         expect(result).toEqual(mockTask);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
   });
 
   describe('startTask', () => {
     it('should start a task', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue(mockTask);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue(mockTask);
       
       service.startTask(1).subscribe(result => {
         expect(result).toEqual(mockTask);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
   });
 
   describe('completeTask', () => {
     it('should complete a task', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue(mockTask);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue(mockTask);
       
       service.completeTask(1).subscribe(result => {
         expect(result).toEqual(mockTask);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
   });
 
   describe('archiveTask', () => {
     it('should archive a task', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue(mockTask);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue(mockTask);
       
       service.archiveTask(1).subscribe(result => {
         expect(result).toEqual(mockTask);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
   });
@@ -213,33 +226,36 @@ describe('TaskService', () => {
 
   describe('updateTask', () => {
     it('should update a task', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue(mockTask);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue(mockTask);
       
       service.updateTask(1, mockTaskUpdate).subscribe(result => {
         expect(result).toEqual(mockTask);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
   });
 
   describe('triggerMaintenance', () => {
     it('should trigger maintenance', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue({ message: 'Maintenance triggered' });
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue({ message: 'Maintenance triggered' });
       
       service.triggerMaintenance().subscribe(result => {
         expect(result).toEqual({ message: 'Maintenance triggered' });
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
   });
 
   describe('updateTaskState', () => {
     it('should reset task to todo state', () => {
-      spyOn(service as any, 'handleApiResponse').and.returnValue(mockTask);
+      const handleApiResponseSpy = spyOn(service as unknown as { handleApiResponse: jasmine.Spy }, 'handleApiResponse');
+      handleApiResponseSpy.and.returnValue(mockTask);
       
       service.updateTaskState(1, 'todo').subscribe(result => {
         expect(result).toEqual(mockTask);
-        expect((service as any).handleApiResponse).toHaveBeenCalled();
+        expect(handleApiResponseSpy).toHaveBeenCalled();
       });
     });
 
@@ -284,14 +300,14 @@ describe('TaskService', () => {
     it('should return security with token when token exists', () => {
       mockAuthService.getAccessToken.and.returnValue('test-token');
       
-      const security = (service as any).getAuthSecurity();
+      const security = (service as unknown as { getAuthSecurity: () => unknown }).getAuthSecurity();
       expect(security).toEqual([{ scheme: 'bearer', type: 'http' }]);
     });
 
     it('should return undefined when no token', () => {
       mockAuthService.getAccessToken.and.returnValue(null);
       
-      const security = (service as any).getAuthSecurity();
+      const security = (service as unknown as { getAuthSecurity: () => unknown }).getAuthSecurity();
       expect(security).toBeUndefined();
     });
   });
@@ -300,7 +316,7 @@ describe('TaskService', () => {
     it('should return data when response has data', () => {
       const response = { data: mockTask, response: {} as Response };
       
-      const result = (service as any).handleApiResponse(response);
+      const result = (service as unknown as { handleApiResponse: (response: unknown) => unknown }).handleApiResponse(response);
       expect(result).toEqual(mockTask);
     });
 
@@ -308,7 +324,7 @@ describe('TaskService', () => {
       const error = new Error('Test error');
       const response = { error, response: {} as Response };
       
-      expect(() => (service as any).handleApiResponse(response)).toThrow(error);
+      expect(() => (service as unknown as { handleApiResponse: (response: unknown) => unknown }).handleApiResponse(response)).toThrow(error);
     });
   });
 
