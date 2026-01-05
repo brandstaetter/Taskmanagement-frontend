@@ -30,27 +30,24 @@ describe('TaskDetailsComponent', () => {
     mockActivatedRoute.snapshot = jasmine.createSpyObj('snapshot', ['paramMap']);
     const paramMap = jasmine.createSpyObj('paramMap', ['get']);
     paramMap.get.and.returnValue('1');
-    (mockActivatedRoute.snapshot as any).paramMap = paramMap;
+    (mockActivatedRoute.snapshot as unknown as { paramMap: { get: jasmine.Spy } }).paramMap =
+      paramMap;
 
     await TestBed.configureTestingModule({
-      imports: [
-        BrowserAnimationsModule,
-        TaskDetailsComponent
-      ],
+      imports: [BrowserAnimationsModule, TaskDetailsComponent],
       providers: [
         { provide: TaskService, useValue: mockTaskService },
         { provide: Router, useValue: mockRouter },
-        { provide: ActivatedRoute, useValue: mockActivatedRoute }
-      ]
-    })
-    .compileComponents();
+        { provide: ActivatedRoute, useValue: mockActivatedRoute },
+      ],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(TaskDetailsComponent);
     component = fixture.componentInstance;
-    
+
     // Mock the task service to prevent actual API calls
     mockTaskService.getTask.and.returnValue(of(mockTask));
-    
+
     fixture.detectChanges();
   });
 
@@ -88,9 +85,9 @@ describe('TaskDetailsComponent', () => {
 
     it('should call taskService.updateTaskState and refresh', () => {
       mockTaskService.updateTaskState.and.returnValue(of(mockTask));
-      
+
       component.reopenTask(mockTask);
-      
+
       expect(mockTaskService.updateTaskState).toHaveBeenCalledWith(mockTask.id, 'todo');
     });
   });
@@ -103,9 +100,9 @@ describe('TaskDetailsComponent', () => {
 
     it('should call taskService.updateTaskState', () => {
       mockTaskService.updateTaskState.and.returnValue(of(mockTask));
-      
+
       component.startTask(mockTask);
-      
+
       expect(mockTaskService.updateTaskState).toHaveBeenCalledWith(mockTask.id, 'in_progress');
     });
   });
@@ -118,9 +115,9 @@ describe('TaskDetailsComponent', () => {
 
     it('should call taskService.updateTaskState', () => {
       mockTaskService.updateTaskState.and.returnValue(of(mockTask));
-      
+
       component.completeTask(mockTask);
-      
+
       expect(mockTaskService.updateTaskState).toHaveBeenCalledWith(mockTask.id, 'done');
     });
   });
@@ -203,7 +200,10 @@ describe('TaskDetailsComponent', () => {
     });
 
     it('should return true for tasks due within threshold', () => {
-      const soonTask = { ...mockTask, due_date: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString() };
+      const soonTask = {
+        ...mockTask,
+        due_date: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
+      };
       expect(component.isDueSoon(soonTask)).toBe(true);
     });
   });
@@ -219,7 +219,7 @@ describe('TaskDetailsComponent', () => {
       expect(classes).toEqual({
         'task-card': true,
         todo: true,
-        'in_progress': false,
+        in_progress: false,
         done: false,
         archived: false,
         overdue: false,
@@ -260,18 +260,18 @@ describe('TaskDetailsComponent', () => {
 
     it('should call startTask for todo tasks', () => {
       mockTaskService.updateTaskState.and.returnValue(of(mockTask));
-      
+
       component.onActionButtonClick(mockTask);
-      
+
       expect(mockTaskService.updateTaskState).toHaveBeenCalledWith(mockTask.id, 'in_progress');
     });
 
     it('should call completeTask for in_progress tasks', () => {
       const inProgressTask = { ...mockTask, state: 'in_progress' as const };
       mockTaskService.updateTaskState.and.returnValue(of(mockTask));
-      
+
       component.onActionButtonClick(inProgressTask);
-      
+
       expect(mockTaskService.updateTaskState).toHaveBeenCalledWith(inProgressTask.id, 'done');
     });
   });
@@ -279,9 +279,9 @@ describe('TaskDetailsComponent', () => {
   describe('ngOnInit', () => {
     it('should call refreshTask on initialization', () => {
       spyOn(component as unknown as { refreshTask: () => void }, 'refreshTask');
-      
+
       component.ngOnInit();
-      
+
       expect((component as unknown as { refreshTask: () => void }).refreshTask).toHaveBeenCalled();
     });
   });
