@@ -67,10 +67,14 @@ export class AdminDashboardComponent {
       })
       .subscribe({
         next: user => {
-          this.snackBar.open(`User created successfully: ${user.email} (ID: ${user.id})`, 'Close', {
-            duration: 5000,
-            panelClass: ['success-snackbar'],
-          });
+          this.snackBar.open(
+            `User created successfully: ${user?.email} (ID: ${user?.id})`,
+            'Close',
+            {
+              duration: 5000,
+              panelClass: ['success-snackbar'],
+            }
+          );
           this.createUserForm.reset({ isAdmin: false });
           this.isCreatingUser = false;
         },
@@ -96,7 +100,7 @@ export class AdminDashboardComponent {
     this.adminService.resetUserPassword(userId).subscribe({
       next: response => {
         const message = response?.new_password
-          ? `Password reset successfully for ${response.email}. New password: ${response.new_password}`
+          ? `Password reset successfully for ${response?.email}. New password: ${response?.new_password}`
           : 'Password reset successfully';
 
         this.snackBar.open(message, 'Close', {
@@ -127,7 +131,7 @@ export class AdminDashboardComponent {
     this.isInitializingDb = true;
     this.adminService.initDatabase().subscribe({
       next: response => {
-        this.snackBar.open(response.message || 'Database initialized successfully', 'Close', {
+        this.snackBar.open(response?.message || 'Database initialized successfully', 'Close', {
           duration: 5000,
           panelClass: ['success-snackbar'],
         });
@@ -153,7 +157,7 @@ export class AdminDashboardComponent {
     this.isMigratingDb = true;
     this.adminService.migrateDatabase().subscribe({
       next: response => {
-        this.snackBar.open(response.message || 'Database migrated successfully', 'Close', {
+        this.snackBar.open(response?.message || 'Database migrated successfully', 'Close', {
           duration: 5000,
           panelClass: ['success-snackbar'],
         });
