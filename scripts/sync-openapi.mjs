@@ -42,6 +42,11 @@ async function main() {
 
     if (previous === formatted) {
       process.stdout.write('openapi.json is already up to date.\n');
+      // Still generate client to ensure generated files exist for compilation
+      process.stdout.write('Generating services from existing OpenAPI spec...\n');
+      await execAsync('node scripts/generate-services.mjs', {
+        cwd: process.cwd(),
+      });
       return;
     }
 
