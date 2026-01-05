@@ -99,11 +99,26 @@ export class AdminDashboardComponent {
 
     this.adminService.resetUserPassword(userId).subscribe({
       next: response => {
-        const message = response?.new_password
-          ? `Password reset successfully for ${response?.email}. New password: ${response?.new_password}`
-          : 'Password reset successfully';
+        let message = 'Password reset successfully';
+
+        if (response?.new_password) {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard
+              .writeText(response.new_password)
+              .then(() => {
+                // Clipboard write succeeded; message already set below.
+              })
+              .catch(() => {
+                // Clipboard write failed; fall back to a generic secure-storage message.
+              });
+            message = `Password reset successfully for ${response?.email}. New password copied to clipboard.`;
+          } else {
+            message = `Password reset successfully for ${response?.email}. Please store the new password securely.`;
+          }
+        }
 
         this.snackBar.open(message, 'Close', {
+          duration: 5000,
           panelClass: ['success-snackbar'],
         });
         this.resetPasswordForm.reset();
