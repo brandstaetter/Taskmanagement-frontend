@@ -1,14 +1,34 @@
 import { TestBed } from '@angular/core/testing';
 import { TaskService } from './task.service';
-import { Task, TaskCreate } from '../generated';
+import { Task } from '../generated';
 import { of } from 'rxjs';
+import { AuthService } from './auth.service';
 
 describe('TaskService', () => {
   let service: TaskService;
+  let mockAuthService: jasmine.SpyObj<AuthService>;
+
+  const mockTask: Task = {
+    id: 1,
+    title: 'Test Task',
+    description: 'Test Description',
+    state: 'todo',
+    due_date: '2024-01-01',
+    reward: 'Test Reward',
+    created_at: '2023-01-01T00:00:00.000Z',
+    started_at: null,
+    completed_at: null,
+  };
 
   beforeEach(() => {
+    mockAuthService = jasmine.createSpyObj('AuthService', ['getAccessToken']);
+    mockAuthService.getAccessToken.and.returnValue('test-token');
+
     TestBed.configureTestingModule({
-      providers: [TaskService],
+      providers: [
+        TaskService,
+        { provide: AuthService, useValue: mockAuthService },
+      ],
     });
     service = TestBed.inject(TaskService);
   });
@@ -17,57 +37,41 @@ describe('TaskService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should have correct method signatures', () => {
-    expect(service.getTasks).toBeDefined();
-    expect(service.getTask).toBeDefined();
-    expect(service.getDueTasks).toBeDefined();
-    expect(service.getRandomTask).toBeDefined();
-    expect(service.searchTasks).toBeDefined();
-    expect(service.createTask).toBeDefined();
-    expect(service.startTask).toBeDefined();
-    expect(service.printTask).toBeDefined();
-    expect(service.completeTask).toBeDefined();
-    expect(service.archiveTask).toBeDefined();
-    expect(service.updateTaskState).toBeDefined();
-    expect(service.updateTask).toBeDefined();
-    expect(service.triggerMaintenance).toBeDefined();
-  });
+  describe('updateTaskState', () => {
+    it('should start task for in_progress state', () => {
+      spyOn(service, 'startTask').and.returnValue(of(mockTask));
 
-  it('should handle getTasks with correct parameters', () => {
-    const getTasksSpy = spyOn(service, 'getTasks').and.returnValue(of([] as Task[]));
+      service.updateTaskState(1, 'in_progress').subscribe(result => {
+        expect(result).toEqual(mockTask);
+        expect(service.startTask).toHaveBeenCalledWith(1);
+      });
+    });
 
-    service.getTasks(10, 50, true).subscribe();
+    it('should complete task for done state', () => {
+      spyOn(service, 'completeTask').and.returnValue(of(mockTask));
 
-    expect(getTasksSpy).toHaveBeenCalledWith(10, 50, true);
-  });
+      service.updateTaskState(1, 'done').subscribe(result => {
+        expect(result).toEqual(mockTask);
+        expect(service.completeTask).toHaveBeenCalledWith(1);
+      });
+    });
 
-  it('should handle createTask with correct type', () => {
-    const taskCreate: TaskCreate = {
-      title: 'Test Task',
-      description: 'Test Description',
-      created_by: 1,
-    };
+    it('should archive task for archived state', () => {
+      spyOn(service, 'archiveTask').and.returnValue(of(mockTask));
 
-    const createTaskSpy = spyOn(service, 'createTask').and.returnValue(of({} as Task));
+      service.updateTaskState(1, 'archived').subscribe(result => {
+        expect(result).toEqual(mockTask);
+        expect(service.archiveTask).toHaveBeenCalledWith(1);
+      });
+    });
 
-    service.createTask(taskCreate).subscribe();
-
-    expect(createTaskSpy).toHaveBeenCalledWith(taskCreate);
-  });
-
-  it('should handle updateTaskState with valid states', () => {
-    const updateTaskStateSpy = spyOn(service, 'updateTaskState').and.returnValue(of({} as Task));
-
-    service.updateTaskState(1, 'todo').subscribe();
-    expect(updateTaskStateSpy).toHaveBeenCalledWith(1, 'todo');
-
-    service.updateTaskState(1, 'in_progress').subscribe();
-    expect(updateTaskStateSpy).toHaveBeenCalledWith(1, 'in_progress');
-
-    service.updateTaskState(1, 'done').subscribe();
-    expect(updateTaskStateSpy).toHaveBeenCalledWith(1, 'done');
-
-    service.updateTaskState(1, 'archived').subscribe();
-    expect(updateTaskStateSpy).toHaveBeenCalledWith(1, 'archived');
+    it('should handle unsupported state', () => {
+      service.updateTaskState(1, 'invalid' as never).subscribe({
+        next: () => fail('should have failed'),
+        error: (err) => {
+          expect(err.message).toBe('Unsupported state transition: invalid');
+        },
+      });
+    });
   });
 });
