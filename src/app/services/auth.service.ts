@@ -7,10 +7,8 @@ import {
   getCurrentUserInfoApiV1UsersMeGet,
   Token,
   User,
-  createClient,
-  createConfig,
-  type Client,
 } from '../generated';
+import { createClient, createConfig, type Client } from '../generated/client';
 import { environment } from '../../environments/environment';
 
 @Injectable({
