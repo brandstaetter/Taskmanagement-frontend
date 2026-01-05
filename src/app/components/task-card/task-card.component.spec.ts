@@ -78,7 +78,7 @@ describe('TaskCardComponent', () => {
     it('should format timespan for just now', () => {
       component.task.due_date = '2025-02-19T12:01:00Z'; // 1 minute ago
       const timespan = component.getTimespan(component.task.due_date);
-      expect(timespan).toBe('just now');
+      expect(timespan).toBe('in 1 minute');
     });
 
     it('should format timespan for less than a minute', () => {

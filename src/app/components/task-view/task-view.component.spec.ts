@@ -6,6 +6,7 @@ import { of, throwError } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 // Mock TaskCardComponent
 @Component({
@@ -24,6 +25,7 @@ describe('TaskViewComponent', () => {
   let fixture: ComponentFixture<TaskViewComponent>;
   let taskService: jasmine.SpyObj<TaskService>;
   let mockDialog: jasmine.SpyObj<MatDialog>;
+  let mockSnackBar: jasmine.SpyObj<MatSnackBar>;
 
   const mockTasks: Task[] = [
     {
@@ -70,12 +72,19 @@ describe('TaskViewComponent', () => {
     taskServiceSpy.getRandomTask.and.returnValue(of(mockTasks[0]));
 
     mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
+    // Initialize the open spy to return a proper mock
+    mockDialog.open.and.returnValue({
+      afterClosed: () => of(null)
+    } as unknown as MatDialogRef<unknown, unknown>);
+
+    mockSnackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
 
     await TestBed.configureTestingModule({
       imports: [TaskViewComponent, NoopAnimationsModule, MockTaskCardComponent],
       providers: [
         { provide: TaskService, useValue: taskServiceSpy },
-        { provide: MatDialog, useValue: mockDialog }
+        { provide: MatDialog, useValue: mockDialog },
+        { provide: MatSnackBar, useValue: mockSnackBar }
       ],
     }).compileComponents();
 
@@ -178,19 +187,17 @@ describe('TaskViewComponent', () => {
   }));
 
   it('should handle print task error', fakeAsync(() => {
-    // Mock console.error and snackBar
+    // Mock console.error
     spyOn(console, 'error');
-    const snackBarSpy = jasmine.createSpy('open');
 
     // Change printTask to return an error
     taskService.printTask.and.returnValue(throwError(() => new Error('Print failed')));
-    spyOn(component as unknown as { snackBar: jasmine.Spy }, 'snackBar').and.returnValue(snackBarSpy);
 
     component.onPrintTask(mockTasks[0]);
     tick();
 
     expect(console.error).toHaveBeenCalledWith('Error printing task:', jasmine.any(Error));
-    expect(snackBarSpy).toHaveBeenCalledWith('Print failed', 'Close', {
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Print failed', 'Close', {
       duration: 5000,
       panelClass: ['error-snackbar'],
     });
@@ -229,8 +236,6 @@ describe('TaskViewComponent', () => {
     } as unknown as MatDialogRef<unknown, unknown>;
     mockDialog.open.and.returnValue(mockDialogRef);
     spyOn(console, 'error');
-    const snackBarSpy = jasmine.createSpy('open');
-    spyOn(component as unknown as { snackBar: jasmine.Spy }, 'snackBar').and.returnValue(snackBarSpy);
 
     // Change updateTask to return an error
     taskService.updateTask.and.returnValue(throwError(() => new Error('Update failed')));
@@ -239,7 +244,7 @@ describe('TaskViewComponent', () => {
     tick();
 
     expect(console.error).toHaveBeenCalledWith('Error updating task:', jasmine.any(Error));
-    expect(snackBarSpy).toHaveBeenCalledWith('Failed to update task. Please try again.', 'Close', {
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Failed to update task. Please try again.', 'Close', {
       duration: 3000,
     });
   }));
@@ -257,8 +262,6 @@ describe('TaskViewComponent', () => {
 
   it('should handle random task error', fakeAsync(() => {
     spyOn(console, 'error');
-    const snackBarSpy = jasmine.createSpy('open');
-    spyOn(component as unknown as { snackBar: jasmine.Spy }, 'snackBar').and.returnValue(snackBarSpy);
 
     // Change getRandomTask to return an error
     taskService.getRandomTask.and.returnValue(throwError(() => new Error('No random task')));
@@ -267,7 +270,7 @@ describe('TaskViewComponent', () => {
     tick();
 
     expect(console.error).toHaveBeenCalledWith('Error getting random task:', jasmine.any(Error));
-    expect(snackBarSpy).toHaveBeenCalledWith('No random task', 'Close', {
+    expect(mockSnackBar.open).toHaveBeenCalledWith('No random task', 'Close', {
       duration: 5000,
       panelClass: ['error-snackbar'],
     });
@@ -276,8 +279,9 @@ describe('TaskViewComponent', () => {
 
   it('should not get random task while loading', () => {
     component.isLoadingRandom = true;
-    spyOn(taskService, 'getRandomTask');
-
+    // Reset the spy to avoid duplication
+    taskService.getRandomTask.calls.reset();
+    
     component.onPrintRandomTask();
 
     expect(taskService.getRandomTask).not.toHaveBeenCalled();
