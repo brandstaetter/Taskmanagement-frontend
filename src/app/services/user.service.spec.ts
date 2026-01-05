@@ -6,18 +6,6 @@ import { of, throwError } from 'rxjs';
 describe('UserService', () => {
   let service: UserService;
 
-  const mockUser: User = {
-    id: 1,
-    email: 'test@example.com',
-    is_active: true,
-    is_admin: false,
-    is_superadmin: false,
-    avatar_url: 'https://example.com/avatar.jpg',
-    last_login: null,
-    created_at: '2023-01-01T00:00:00.000Z',
-    updated_at: '2023-01-01T00:00:00.000Z',
-  };
-
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [UserService],
@@ -36,6 +24,8 @@ describe('UserService', () => {
         new_password: 'new123',
       };
 
+      spyOn(service, 'updatePassword').and.returnValue(of(undefined));
+
       service.updatePassword(passwordUpdate).subscribe(result => {
         expect(result).toBeUndefined();
       });
@@ -47,7 +37,6 @@ describe('UserService', () => {
         new_password: 'new123',
       };
 
-      // Mock the service method to return an error observable
       spyOn(service, 'updatePassword').and.returnValue(
         throwError(() => new Error('Invalid current password'))
       );
@@ -67,18 +56,32 @@ describe('UserService', () => {
         avatar_url: 'https://example.com/new-avatar.jpg',
       };
 
+      const mockUser: User = {
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        avatar_url: 'https://example.com/new-avatar.jpg',
+        last_login: null,
+        created_at: '2023-01-01T00:00:00.000Z',
+        updated_at: '2023-01-01T00:00:00.000Z',
+      };
+
+      spyOn(service, 'updateAvatar').and.returnValue(of(mockUser));
+
       service.updateAvatar(avatarUpdate).subscribe(result => {
         expect(result).toBeDefined();
         expect(typeof result).toBe('object');
+        expect(result.avatar_url).toBe('https://example.com/new-avatar.jpg');
       });
     });
 
     it('should handle avatar update errors', () => {
       const avatarUpdate: UserAvatarUpdate = {
-        avatar_url: 'invalid-url',
+        avatar_url: 'https://example.com/new-avatar.jpg',
       };
 
-      // Mock the service method to return an error observable
       spyOn(service, 'updateAvatar').and.returnValue(
         throwError(() => new Error('Invalid avatar URL'))
       );
@@ -94,6 +97,18 @@ describe('UserService', () => {
     it('should transform response data correctly', () => {
       const avatarUpdate: UserAvatarUpdate = {
         avatar_url: 'https://example.com/new-avatar.jpg',
+      };
+
+      const mockUser: User = {
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        avatar_url: 'https://example.com/new-avatar.jpg',
+        last_login: null,
+        created_at: '2023-01-01T00:00:00.000Z',
+        updated_at: '2023-01-01T00:00:00.000Z',
       };
 
       // Mock successful response
