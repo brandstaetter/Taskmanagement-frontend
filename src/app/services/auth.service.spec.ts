@@ -27,7 +27,7 @@ describe('AuthService', () => {
     });
 
     it('should return null when no token is stored', () => {
-      const localStorageSpy = spyOn(localStorage, 'getItem').and.returnValue(null);
+      spyOn(localStorage, 'getItem').and.returnValue(null);
 
       const token = service.getAccessToken();
 
