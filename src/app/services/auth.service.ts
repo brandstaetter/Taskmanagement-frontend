@@ -41,7 +41,7 @@ export class AuthService {
   private fetchCurrentUser(): Observable<User> {
     return from(
       getCurrentUserInfoApiV1UsersMeGet({
-        baseUrl: environment.apiUrl,
+        baseUrl: environment.baseUrl,
       })
     ).pipe(
       map(response => response.data as User),
@@ -105,7 +105,7 @@ export class AuthService {
   login(username: string, password: string): Observable<Token> {
     return from(
       loginUserForAccessTokenApiV1AuthUserTokenPost({
-        baseUrl: environment.apiUrl,
+        baseUrl: environment.baseUrl,
         body: {
           username,
           password,

@@ -61,7 +61,7 @@ import { environment } from '../../environments/environment';
 
 // Direct usage
 const tasks = await readTasksApiV1TasksGet({
-  baseUrl: environment.apiUrl,
+  baseUrl: environment.baseUrl,
 });
 
 // In Angular services
@@ -74,7 +74,7 @@ export class TaskService {
   getTasks(): Observable<Task[]> {
     return from(
       readTasksApiV1TasksGet({
-        baseUrl: environment.apiUrl,
+        baseUrl: environment.baseUrl,
       })
     ).pipe(map(response => response.data));
   }
@@ -96,12 +96,12 @@ cat src/app/api/openapi.json | grep '"version"'
 
 ### Environment Configuration
 
-The generated services use `environment.apiUrl`. Configure this in:
+The generated services use `environment.baseUrl`. Configure this in:
 
 ```typescript
 // src/environments/environment.ts
 export const environment = {
-  apiUrl: 'http://localhost:8000', // Your backend URL
+  baseUrl: 'http://localhost:8000', // Your backend URL
   // ...
 };
 ```

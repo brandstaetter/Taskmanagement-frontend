@@ -20,7 +20,7 @@ export class UserService {
   updatePassword(passwordUpdate: UserPasswordChange): Observable<void> {
     return from(
       changePasswordApiV1UsersMePasswordPut({
-        baseUrl: environment.apiUrl,
+        baseUrl: environment.baseUrl,
         body: passwordUpdate,
       })
     ).pipe(
@@ -31,7 +31,7 @@ export class UserService {
   updateAvatar(avatarUpdate: UserAvatarUpdate): Observable<User> {
     return from(
       updateAvatarApiV1UsersMeAvatarPut({
-        baseUrl: environment.apiUrl,
+        baseUrl: environment.baseUrl,
         body: avatarUpdate,
       })
     ).pipe(map(response => response.data as User));

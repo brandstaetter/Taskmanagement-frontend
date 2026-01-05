@@ -23,7 +23,7 @@
 - Global providers: src/app/app.config.ts (Router, Animations, HttpClientModule, Material modules, locale).
 - Top-level routing: src/app/app.routes.ts.
 - Feature routing: lazy-loaded *.module.ts under src/app/components/** using RouterModule.forChild(...).
-- API base URL: src/environments/environment.ts and src/environments/environment.prod.ts (environment.apiUrl).
+- API base URL: src/environments/environment.ts and src/environments/environment.prod.ts (environment.baseUrl).
 - HTTP / API access: src/app/services/task.service.ts.
 - API contract reference: src/app/api/openapi.json.
 - Global styles: src/styles.scss (Material + .error-snackbar).
@@ -32,9 +32,9 @@
 
 - Standalone components: most components are standalone: true and declare their own Angular Material imports.
 - Lazy loading pattern: routes load a feature NgModule (e.g. main-view.module.ts) that wires a path to a standalone component.
-- HTTP pattern:
-  - Use HttpClient + RxJS Observable.
-  - Base URL is environment.apiUrl and versioned routes are built as `${environment.apiUrl}/v1`.
+- Use generated openapi.json for API contract.
+- Generate API service code with HeyAPI Generator.
+- Base url is in environment.ts and environment.prod.ts.
 - Error/toast UX: use MatSnackBar for user-visible errors/success. For “hard” errors, prefer panelClass: ['error-snackbar'].
 
 ## Formatting & linting rules

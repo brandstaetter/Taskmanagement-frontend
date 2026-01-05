@@ -20,7 +20,7 @@ export class AdminService {
   createUser(user: AdminUserCreate): Observable<User> {
     return from(
       createNewUserApiV1AdminUsersPost({
-        baseUrl: environment.apiUrl,
+        baseUrl: environment.baseUrl,
         body: user,
       })
     ).pipe(map(response => response.data as User));
@@ -29,7 +29,7 @@ export class AdminService {
   resetUserPassword(userId: number): Observable<PasswordResetResponse> {
     return from(
       resetPasswordApiV1AdminUsersUserIdResetPasswordPost({
-        baseUrl: environment.apiUrl,
+        baseUrl: environment.baseUrl,
         path: { user_id: userId },
       })
     ).pipe(map(response => response.data as PasswordResetResponse));
@@ -38,7 +38,7 @@ export class AdminService {
   initDatabase(): Observable<{ message: string }> {
     return from(
       initDbApiV1AdminDbInitPost({
-        baseUrl: environment.apiUrl,
+        baseUrl: environment.baseUrl,
       })
     ).pipe(map(response => response.data as { message: string }));
   }
@@ -46,7 +46,7 @@ export class AdminService {
   migrateDatabase(): Observable<{ message: string }> {
     return from(
       runMigrationsApiV1AdminDbMigratePost({
-        baseUrl: environment.apiUrl,
+        baseUrl: environment.baseUrl,
       })
     ).pipe(map(response => response.data as { message: string }));
   }
