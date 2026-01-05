@@ -2,9 +2,10 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { TaskViewComponent } from './task-view.component';
 import { TaskService } from '../../services/task.service';
 import { Task } from '../../services/task.service';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 
 // Mock TaskCardComponent
 @Component({
@@ -22,6 +23,7 @@ describe('TaskViewComponent', () => {
   let component: TaskViewComponent;
   let fixture: ComponentFixture<TaskViewComponent>;
   let taskService: jasmine.SpyObj<TaskService>;
+  let mockDialog: jasmine.SpyObj<MatDialog>;
 
   const mockTasks: Task[] = [
     {
@@ -54,6 +56,8 @@ describe('TaskViewComponent', () => {
       'completeTask',
       'archiveTask',
       'printTask',
+      'updateTask',
+      'getRandomTask',
     ]);
     taskServiceSpy.getDueTasks.and.returnValue(of(mockTasks));
     taskServiceSpy.startTask.and.returnValue(of({ ...mockTasks[0], state: 'in_progress' }));
@@ -62,10 +66,17 @@ describe('TaskViewComponent', () => {
     taskServiceSpy.printTask.and.returnValue(
       of(new Blob(['PDF content'], { type: 'application/pdf' }))
     );
+    taskServiceSpy.updateTask.and.returnValue(of(mockTasks[0]));
+    taskServiceSpy.getRandomTask.and.returnValue(of(mockTasks[0]));
+
+    mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
 
     await TestBed.configureTestingModule({
       imports: [TaskViewComponent, NoopAnimationsModule, MockTaskCardComponent],
-      providers: [{ provide: TaskService, useValue: taskServiceSpy }],
+      providers: [
+        { provide: TaskService, useValue: taskServiceSpy },
+        { provide: MatDialog, useValue: mockDialog }
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TaskViewComponent);
@@ -165,4 +176,135 @@ describe('TaskViewComponent', () => {
     // Should still start task if it was in todo state
     expect(taskService.startTask).toHaveBeenCalledWith(mockTasks[0].id);
   }));
+
+  it('should handle print task error', fakeAsync(() => {
+    // Mock console.error and snackBar
+    spyOn(console, 'error');
+    const snackBarSpy = jasmine.createSpy('open');
+
+    // Change printTask to return an error
+    taskService.printTask.and.returnValue(throwError(() => new Error('Print failed')));
+    spyOn(component as unknown as { snackBar: jasmine.Spy }, 'snackBar').and.returnValue(snackBarSpy);
+
+    component.onPrintTask(mockTasks[0]);
+    tick();
+
+    expect(console.error).toHaveBeenCalledWith('Error printing task:', jasmine.any(Error));
+    expect(snackBarSpy).toHaveBeenCalledWith('Print failed', 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+    });
+  }));
+
+  it('should open edit dialog', () => {
+    const mockDialogRef = {
+      afterClosed: () => of({ title: 'Updated Task' })
+    } as unknown as MatDialogRef<unknown, unknown>;
+    mockDialog.open.and.returnValue(mockDialogRef);
+
+    component.onEditTask(mockTasks[0]);
+
+    expect(mockDialog.open).toHaveBeenCalledWith(jasmine.any(Object), {
+      data: mockTasks[0],
+      width: '500px',
+    });
+  });
+
+  it('should handle edit dialog result', fakeAsync(() => {
+    const mockDialogRef = {
+      afterClosed: () => of({ title: 'Updated Task' })
+    } as unknown as MatDialogRef<unknown, unknown>;
+    mockDialog.open.and.returnValue(mockDialogRef);
+
+    component.onEditTask(mockTasks[0]);
+    tick();
+
+    expect(taskService.updateTask).toHaveBeenCalledWith(mockTasks[0].id, { title: 'Updated Task' });
+    expect(taskService.getDueTasks).toHaveBeenCalledTimes(2); // initial + after update
+  }));
+
+  it('should handle edit dialog error', fakeAsync(() => {
+    const mockDialogRef = {
+      afterClosed: () => of({ title: 'Updated Task' })
+    } as unknown as MatDialogRef<unknown, unknown>;
+    mockDialog.open.and.returnValue(mockDialogRef);
+    spyOn(console, 'error');
+    const snackBarSpy = jasmine.createSpy('open');
+    spyOn(component as unknown as { snackBar: jasmine.Spy }, 'snackBar').and.returnValue(snackBarSpy);
+
+    // Change updateTask to return an error
+    taskService.updateTask.and.returnValue(throwError(() => new Error('Update failed')));
+
+    component.onEditTask(mockTasks[0]);
+    tick();
+
+    expect(console.error).toHaveBeenCalledWith('Error updating task:', jasmine.any(Error));
+    expect(snackBarSpy).toHaveBeenCalledWith('Failed to update task. Please try again.', 'Close', {
+      duration: 3000,
+    });
+  }));
+
+  it('should get random task and print it', fakeAsync(() => {
+    spyOn(component, 'onPrintTask');
+
+    component.onPrintRandomTask();
+    tick();
+
+    expect(taskService.getRandomTask).toHaveBeenCalled();
+    expect(component.onPrintTask).toHaveBeenCalledWith(mockTasks[0]);
+    expect(component.isLoadingRandom).toBeFalse();
+  }));
+
+  it('should handle random task error', fakeAsync(() => {
+    spyOn(console, 'error');
+    const snackBarSpy = jasmine.createSpy('open');
+    spyOn(component as unknown as { snackBar: jasmine.Spy }, 'snackBar').and.returnValue(snackBarSpy);
+
+    // Change getRandomTask to return an error
+    taskService.getRandomTask.and.returnValue(throwError(() => new Error('No random task')));
+
+    component.onPrintRandomTask();
+    tick();
+
+    expect(console.error).toHaveBeenCalledWith('Error getting random task:', jasmine.any(Error));
+    expect(snackBarSpy).toHaveBeenCalledWith('No random task', 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+    });
+    expect(component.isLoadingRandom).toBeFalse();
+  }));
+
+  it('should not get random task while loading', () => {
+    component.isLoadingRandom = true;
+    spyOn(taskService, 'getRandomTask');
+
+    component.onPrintRandomTask();
+
+    expect(taskService.getRandomTask).not.toHaveBeenCalled();
+  });
+
+  it('should have onEditTask method', () => {
+    expect(component.onEditTask).toBeDefined();
+    expect(typeof component.onEditTask).toBe('function');
+  });
+
+  it('should have onPrintRandomTask method', () => {
+    expect(component.onPrintRandomTask).toBeDefined();
+    expect(typeof component.onPrintRandomTask).toBe('function');
+  });
+
+  it('should have toggleArchivedTasks method', () => {
+    expect(component.toggleArchivedTasks).toBeDefined();
+    expect(typeof component.toggleArchivedTasks).toBe('function');
+  });
+
+  it('should have isOverdue method', () => {
+    expect(component.isOverdue).toBeDefined();
+    expect(typeof component.isOverdue).toBe('function');
+  });
+
+  it('should have isDueSoon method', () => {
+    expect(component.isDueSoon).toBeDefined();
+    expect(typeof component.isDueSoon).toBe('function');
+  });
 });
