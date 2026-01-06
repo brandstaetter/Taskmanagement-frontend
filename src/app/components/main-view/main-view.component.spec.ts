@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MainViewComponent } from './main-view.component';
 import { TaskViewComponent } from '../task-view/task-view.component';
 import { PlanItComponent } from '../plan-it/plan-it.component';
@@ -49,6 +50,7 @@ describe('MainViewComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, MainViewComponent],
+      schemas: [NO_ERRORS_SCHEMA],
       providers: [
         { provide: AuthService, useValue: mockAuthService },
         { provide: Router, useValue: mockRouter },

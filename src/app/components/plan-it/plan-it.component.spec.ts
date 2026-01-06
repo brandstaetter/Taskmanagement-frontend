@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -64,6 +64,9 @@ describe('PlanItComponent', () => {
     } as MatDialogRef<unknown, unknown>;
     mockDialog.open.and.returnValue(mockDialogRef);
 
+    // Mock getTasks BEFORE creating the component to prevent any real calls during ngOnInit
+    mockTaskService.getTasks = jasmine.createSpy('getTasks').and.returnValue(of(mockTasks));
+
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, PlanItComponent],
       providers: [
@@ -80,9 +83,6 @@ describe('PlanItComponent', () => {
 
     fixture = TestBed.createComponent(PlanItComponent);
     component = fixture.componentInstance;
-
-    // Mock getTasks to prevent actual service calls during ngOnInit
-    mockTaskService.getTasks.and.returnValue(of(mockTasks));
 
     fixture.detectChanges();
   });
@@ -144,18 +144,19 @@ describe('PlanItComponent', () => {
       expect(component.archivedTasks).toEqual([]);
     });
 
-    it('should handle 404 error gracefully', () => {
+    it('should handle 404 error gracefully', fakeAsync(() => {
       const error404 = { status: 404 };
       mockTaskService.getTasks.and.returnValue(throwError(() => error404));
 
       component.loadTasks();
+      tick();
 
       expect(mockSnackBar.open).not.toHaveBeenCalled();
       expect(component.todoTasks).toEqual([]);
       expect(component.inProgressTasks).toEqual([]);
       expect(component.doneTasks).toEqual([]);
       expect(component.archivedTasks).toEqual([]);
-    });
+    }));
 
     it('should have error handling for loadTasks', () => {
       // Test that the component has error handling capability
