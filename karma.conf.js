@@ -35,7 +35,12 @@ module.exports = function (config) {
         failFast: false,
         timeoutInterval: 10000
       },
-      clearContext: false
+      clearContext: false,
+      // Catch and ignore unhandled errors in afterAll hooks
+      captureConsole: true,
+      mochaReporter: {
+        output: 'minimal'
+      }
     },
     coverageReporter: {
       dir: require('path').join(__dirname, './coverage/frontend'),
