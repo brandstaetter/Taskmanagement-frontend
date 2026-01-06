@@ -6,7 +6,11 @@ describe('UserService', () => {
   let service: UserService;
 
   beforeEach(() => {
-    spyOn(window, 'fetch').and.returnValue(
+    // Ensure fetch spy exists before configuring it
+    if (!jasmine.isSpy(window.fetch)) {
+      spyOn(window, 'fetch');
+    }
+    (window.fetch as jasmine.Spy).and.returnValue(
       Promise.resolve({
         ok: true,
         status: 200,

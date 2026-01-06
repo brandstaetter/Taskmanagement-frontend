@@ -181,7 +181,11 @@ describe('AuthService', () => {
 
   describe('Authentication Flow', () => {
     it('should handle login errors', () => {
-      const mockFetch = spyOn(window, 'fetch').and.returnValue(
+      // Ensure spy exists before configuring it
+      if (!jasmine.isSpy(window.fetch)) {
+        spyOn(window, 'fetch');
+      }
+      const mockFetch = (window.fetch as jasmine.Spy).and.returnValue(
         Promise.resolve({
           ok: false,
           status: 401,
@@ -321,7 +325,11 @@ describe('AuthService', () => {
 
     it('should handle fetchCurrentUser error', () => {
       const consoleSpy = spyOn(console, 'error');
-      spyOn(window, 'fetch').and.returnValue(
+      // Ensure spy exists before configuring it
+      if (!jasmine.isSpy(window.fetch)) {
+        spyOn(window, 'fetch');
+      }
+      (window.fetch as jasmine.Spy).and.returnValue(
         Promise.resolve({
           ok: false,
           status: 500,
