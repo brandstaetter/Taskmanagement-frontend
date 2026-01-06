@@ -258,6 +258,18 @@ describe('AuthService', () => {
 
     it('should handle getAuthSecurity when token exists', () => {
       spyOn(localStorage, 'getItem').and.returnValue('test-token');
+      // Mock fetch to prevent real HTTP calls
+      if (!jasmine.isSpy(window.fetch)) {
+        spyOn(window, 'fetch');
+      }
+      (window.fetch as jasmine.Spy).and.returnValue(
+        Promise.resolve(
+          new Response(JSON.stringify({}), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        )
+      );
 
       const security = (
         service as unknown as {
@@ -270,6 +282,18 @@ describe('AuthService', () => {
 
     it('should handle getAuthSecurity when token is null', fakeAsync(() => {
       spyOn(localStorage, 'getItem').and.returnValue(null);
+      // Mock fetch to prevent real HTTP calls
+      if (!jasmine.isSpy(window.fetch)) {
+        spyOn(window, 'fetch');
+      }
+      (window.fetch as jasmine.Spy).and.returnValue(
+        Promise.resolve(
+          new Response(JSON.stringify({}), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        )
+      );
 
       const security = (
         service as unknown as {
@@ -283,6 +307,18 @@ describe('AuthService', () => {
 
     it('should handle getAuthSecurity when token is empty string', () => {
       spyOn(localStorage, 'getItem').and.returnValue('');
+      // Mock fetch to prevent real HTTP calls
+      if (!jasmine.isSpy(window.fetch)) {
+        spyOn(window, 'fetch');
+      }
+      (window.fetch as jasmine.Spy).and.returnValue(
+        Promise.resolve(
+          new Response(JSON.stringify({}), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        )
+      );
 
       const security = (
         service as unknown as {
