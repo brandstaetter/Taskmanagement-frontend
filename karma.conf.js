@@ -1,4 +1,21 @@
 module.exports = function (config) {
+  // Add Chrome flags for CI environments (Linux)
+  if (process.env.CI || process.env.GITHUB_ACTIONS) {
+    config.set({
+      customLaunchers: {
+        ChromeHeadlessCI: {
+          base: 'ChromeHeadless',
+          flags: [
+            '--no-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu'
+          ]
+        }
+      },
+      browsers: ['ChromeHeadlessCI']
+    });
+  }
+
   config.set({
     basePath: '',
     frameworks: ['jasmine', '@angular-devkit/build-angular'],
