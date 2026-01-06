@@ -1,12 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MainViewComponent } from './main-view.component';
 import { TaskViewComponent } from '../task-view/task-view.component';
 import { PlanItComponent } from '../plan-it/plan-it.component';
 import { AuthService } from '../../services/auth.service';
+import { TaskService } from '../../services/task.service';
 import { User } from '../../generated';
 import { of } from 'rxjs';
 
@@ -16,6 +18,8 @@ describe('MainViewComponent', () => {
   let mockAuthService: jasmine.SpyObj<AuthService>;
   let mockRouter: jasmine.SpyObj<Router>;
   let mockDialog: jasmine.SpyObj<MatDialog>;
+  let mockTaskService: jasmine.SpyObj<TaskService>;
+  let mockSnackBar: jasmine.SpyObj<MatSnackBar>;
 
   const mockUser: User = {
     id: 1,
@@ -38,6 +42,10 @@ describe('MainViewComponent', () => {
     ]);
     mockRouter = jasmine.createSpyObj('Router', ['navigate']);
     mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
+    mockTaskService = jasmine.createSpyObj('TaskService', ['getTasks', 'getDueTasks']);
+    mockSnackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
+    mockTaskService.getTasks.and.returnValue(of([]));
+    mockTaskService.getDueTasks.and.returnValue(of([]));
 
     // Simple mock that bypasses Angular Material's internal dialog logic
     const mockDialogRef = {
@@ -54,6 +62,8 @@ describe('MainViewComponent', () => {
       providers: [
         { provide: AuthService, useValue: mockAuthService },
         { provide: Router, useValue: mockRouter },
+        { provide: TaskService, useValue: mockTaskService },
+        { provide: MatSnackBar, useValue: mockSnackBar },
       ],
     })
       .overrideComponent(MainViewComponent, {
