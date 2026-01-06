@@ -34,6 +34,19 @@ describe('MainViewComponent', () => {
   };
 
   beforeEach(async () => {
+    // Mock window.fetch to prevent real HTTP calls from HeyAPI client
+    if (!jasmine.isSpy(window.fetch)) {
+      spyOn(window, 'fetch');
+    }
+    (window.fetch as jasmine.Spy).and.returnValue(
+      Promise.resolve(
+        new Response(JSON.stringify({}), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      )
+    );
+
     mockAuthService = jasmine.createSpyObj('AuthService', [
       'isAdmin',
       'getCurrentUser',
