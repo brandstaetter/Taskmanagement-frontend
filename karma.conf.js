@@ -9,10 +9,6 @@ module.exports = function (config) {
       require('karma-coverage'),
       require('@angular-devkit/build-angular/plugins/karma')
     ],
-    files: [
-      // Load global test setup before any tests run
-      { pattern: 'src/test-setup.ts', watched: false, type: 'js' }
-    ],
     client: {
       jasmine: {
         random: true,
