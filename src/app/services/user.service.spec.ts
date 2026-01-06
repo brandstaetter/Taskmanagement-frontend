@@ -6,6 +6,16 @@ describe('UserService', () => {
   let service: UserService;
 
   beforeEach(() => {
+    spyOn(window, 'fetch').and.returnValue(
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(''),
+      } as Response)
+    );
+
     TestBed.configureTestingModule({
       providers: [UserService],
     });
@@ -28,12 +38,9 @@ describe('UserService', () => {
         new_password: 'new123',
       };
 
-      // Test that the method exists and can be called with correct parameter type
-      expect(() => {
-        const observable = service.updatePassword(passwordUpdate);
-        expect(observable).toBeDefined();
-        expect(typeof observable.subscribe).toBe('function');
-      }).not.toThrow();
+      const observable = service.updatePassword(passwordUpdate);
+      expect(observable).toBeDefined();
+      expect(typeof observable.subscribe).toBe('function');
     });
 
     it('should return Observable<void>', () => {
@@ -59,12 +66,9 @@ describe('UserService', () => {
         avatar_url: 'https://example.com/new-avatar.jpg',
       };
 
-      // Test that the method exists and can be called with correct parameter type
-      expect(() => {
-        const observable = service.updateAvatar(avatarUpdate);
-        expect(observable).toBeDefined();
-        expect(typeof observable.subscribe).toBe('function');
-      }).not.toThrow();
+      const observable = service.updateAvatar(avatarUpdate);
+      expect(observable).toBeDefined();
+      expect(typeof observable.subscribe).toBe('function');
     });
 
     it('should return Observable<User>', () => {
