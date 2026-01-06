@@ -9,10 +9,10 @@ import {
 
 // Global fetch mock to prevent HeyAPI client from making real HTTP requests
 // This fixes "Failed to fetch" errors in afterAll hooks on CI
-// Apply the mock immediately and aggressively
+// Apply the mock immediately and aggressively at multiple levels
 if (typeof window !== 'undefined') {
   // Create aggressive fetch mock
-  const fetchSpy = jasmine.createSpy('globalFetch').and.callFake((input, init) => {
+  const fetchSpy = jasmine.createSpy('globalFetch').and.callFake((input: RequestInfo | URL, init?: RequestInit) => {
     console.log('Global fetch mock intercepted:', input, init);
     return Promise.resolve(new Response('{}', {
       status: 200,
@@ -21,8 +21,13 @@ if (typeof window !== 'undefined') {
     }));
   });
   
-  // Replace fetch immediately
+  // Replace fetch at window level
   window.fetch = fetchSpy;
+  
+  // Also replace at global level if available
+  if (typeof globalThis !== 'undefined') {
+    globalThis.fetch = fetchSpy;
+  }
   
   // Ensure it can't be overridden easily
   Object.defineProperty(window, 'fetch', {
