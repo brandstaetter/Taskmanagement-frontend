@@ -7,6 +7,19 @@ import {
   platformBrowserDynamicTesting
 } from '@angular/platform-browser-dynamic/testing';
 
+// Global fetch mock to prevent HeyAPI client from making real HTTP requests
+// This fixes "Failed to fetch" errors in afterAll hooks on CI
+if (typeof window !== 'undefined' && window.fetch && !jasmine.isSpy(window.fetch)) {
+  const fetchSpy = jasmine.createSpy('globalFetch').and.callFake(() => {
+    return Promise.resolve(new Response('{}', {
+      status: 200,
+      statusText: 'OK',
+      headers: { 'Content-Type': 'application/json' }
+    }));
+  });
+  window.fetch = fetchSpy;
+}
+
 declare const require: {
   context(path: string, deep?: boolean, filter?: RegExp): {
     keys(): string[];
