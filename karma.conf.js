@@ -9,6 +9,10 @@ module.exports = function (config) {
       require('karma-coverage'),
       require('@angular-devkit/build-angular/plugins/karma')
     ],
+    files: [
+      // Load fetch mock setup before any tests run
+      { pattern: 'src/test-helpers/setup-fetch-mock.ts', watched: false }
+    ],
     client: {
       jasmine: {
         random: true,
