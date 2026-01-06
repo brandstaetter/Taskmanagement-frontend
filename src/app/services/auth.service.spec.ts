@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { AuthService } from './auth.service';
 import { of, Observable } from 'rxjs';
 import { User, Token } from '../generated';
@@ -264,7 +264,7 @@ describe('AuthService', () => {
       expect(security).toEqual([{ scheme: 'bearer', type: 'http' }]);
     });
 
-    it('should handle getAuthSecurity when token is null', () => {
+    it('should handle getAuthSecurity when token is null', fakeAsync(() => {
       spyOn(localStorage, 'getItem').and.returnValue(null);
 
       const security = (
@@ -274,7 +274,8 @@ describe('AuthService', () => {
       ).getAuthSecurity();
 
       expect(security).toBeUndefined();
-    });
+      tick();
+    }));
 
     it('should handle getAuthSecurity when token is empty string', () => {
       spyOn(localStorage, 'getItem').and.returnValue('');
