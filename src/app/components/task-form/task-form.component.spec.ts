@@ -327,24 +327,23 @@ describe('TaskFormComponent', () => {
     });
 
     it('should prefill current time when called', () => {
-      const now = new Date();
+      jasmine.clock().install();
+      const now = new Date(2023, 0, 1, 10, 15, 30);
+      jasmine.clock().mockDate(now);
+
       const componentWithPrivateMethods = component as unknown as {
         roundUpToNextInterval(date: Date): Date;
         prefillCurrentTime(): void;
       };
-      spyOn(componentWithPrivateMethods, 'roundUpToNextInterval').and.callFake((date: Date) => {
-        const rounded = new Date(date);
-        rounded.setMinutes(Math.ceil(rounded.getMinutes() / 30) * 30);
-        rounded.setSeconds(0);
-        rounded.setMilliseconds(0);
-        return rounded;
-      });
+      spyOn(componentWithPrivateMethods, 'roundUpToNextInterval').and.callThrough();
 
       componentWithPrivateMethods.prefillCurrentTime();
 
       expect(componentWithPrivateMethods.roundUpToNextInterval).toHaveBeenCalledWith(now);
       expect(component.taskForm.get('due_time')?.value).toBeDefined();
       expect(component.taskForm.get('due_date')?.value).toBeDefined();
+
+      jasmine.clock().uninstall();
     });
 
     it('should not override existing time when prefilling current time', () => {

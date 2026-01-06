@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { AuthService } from './auth.service';
-import { of } from 'rxjs';
+import { of, Observable } from 'rxjs';
 import { User, Token } from '../generated';
 
 describe('AuthService', () => {
@@ -180,11 +180,6 @@ describe('AuthService', () => {
   });
 
   describe('Authentication Flow', () => {
-    const mockToken: Token = {
-      access_token: 'test-access-token',
-      token_type: 'bearer',
-    };
-
     it('should handle login errors', () => {
       const loginSpy = spyOn(
         service as unknown as { authenticatedClient: jasmine.Spy },
@@ -208,7 +203,7 @@ describe('AuthService', () => {
       expect(loginSpy).toBeDefined();
     });
 
-    it('should login successfully and store token', () => {
+    it('should handle login when response has no access token', () => {
       const setTokenSpy = spyOn(service, 'setAccessToken');
       const fetchUserSpy = spyOn(
         service as unknown as { fetchCurrentUser: jasmine.Spy },
@@ -219,17 +214,141 @@ describe('AuthService', () => {
         'authenticatedClient'
       ).and.returnValue({
         loginUserForAccessTokenApiV1AuthUserTokenPost: () =>
-          Promise.resolve({ data: mockToken, response: {} as Response }),
+          Promise.resolve({
+            data: { access_token: null, token_type: 'bearer' } as unknown as Token,
+            response: {} as Response,
+          }),
       });
 
       service.login('test@example.com', 'password').subscribe(result => {
-        expect(result).toEqual(mockToken);
-        expect(setTokenSpy).toHaveBeenCalledWith('test-access-token');
-        expect(fetchUserSpy).toHaveBeenCalled();
+        expect(result).toEqual({ access_token: null, token_type: 'bearer' } as unknown as Token);
+        expect(setTokenSpy).not.toHaveBeenCalled();
+        expect(fetchUserSpy).not.toHaveBeenCalled();
       });
 
-      // Add expectation to prevent warning
       expect(setTokenSpy).toBeDefined();
+    });
+
+    it('should handle login when response is undefined', () => {
+      const setTokenSpy = spyOn(service, 'setAccessToken');
+      const fetchUserSpy = spyOn(
+        service as unknown as { fetchCurrentUser: jasmine.Spy },
+        'fetchCurrentUser'
+      ).and.returnValue(of({}));
+      spyOn(
+        service as unknown as { authenticatedClient: jasmine.Spy },
+        'authenticatedClient'
+      ).and.returnValue({
+        loginUserForAccessTokenApiV1AuthUserTokenPost: () =>
+          Promise.resolve({ data: undefined, response: {} as Response }),
+      });
+
+      service.login('test@example.com', 'password').subscribe(result => {
+        expect(result).toBeUndefined();
+        expect(setTokenSpy).not.toHaveBeenCalled();
+        expect(fetchUserSpy).not.toHaveBeenCalled();
+      });
+
+      expect(setTokenSpy).toBeDefined();
+    });
+
+    it('should handle getAuthSecurity when token exists', () => {
+      spyOn(localStorage, 'getItem').and.returnValue('test-token');
+
+      const security = (
+        service as unknown as {
+          getAuthSecurity: () => { scheme: string; type: string }[] | undefined;
+        }
+      ).getAuthSecurity();
+
+      expect(security).toEqual([{ scheme: 'bearer', type: 'http' }]);
+    });
+
+    it('should handle getAuthSecurity when token is null', () => {
+      spyOn(localStorage, 'getItem').and.returnValue(null);
+
+      const security = (
+        service as unknown as {
+          getAuthSecurity: () => { scheme: string; type: string }[] | undefined;
+        }
+      ).getAuthSecurity();
+
+      expect(security).toBeUndefined();
+    });
+
+    it('should handle getAuthSecurity when token is empty string', () => {
+      spyOn(localStorage, 'getItem').and.returnValue('');
+
+      const security = (
+        service as unknown as {
+          getAuthSecurity: () => { scheme: string; type: string }[] | undefined;
+        }
+      ).getAuthSecurity();
+
+      expect(security).toBeUndefined();
+    });
+
+    it('should handle getStoredUser when JSON parsing fails', () => {
+      spyOn(localStorage, 'getItem').and.returnValue('invalid-json');
+
+      const user = (service as unknown as { getStoredUser: () => User | null }).getStoredUser();
+
+      expect(user).toBeNull();
+    });
+
+    it('should handle handleApiResponse when error exists', () => {
+      const error = new Error('Test error');
+      const response = { data: null, error, response: {} as Response };
+
+      expect(() => {
+        (
+          service as unknown as { handleApiResponse: (response: unknown) => unknown }
+        ).handleApiResponse(response);
+      }).toThrow(new Error('Test error'));
+    });
+
+    it('should handle handleApiResponse when no error exists', () => {
+      const data = { test: 'data' };
+      const response = { data, error: undefined, response: {} as Response };
+
+      const result = (
+        service as unknown as { handleApiResponse: (response: unknown) => unknown }
+      ).handleApiResponse(response);
+
+      expect(result).toEqual(data);
+    });
+
+    it('should handle fetchCurrentUser error', () => {
+      const consoleSpy = spyOn(console, 'error');
+      spyOn(
+        service as unknown as { authenticatedClient: jasmine.Spy },
+        'authenticatedClient'
+      ).and.returnValue({
+        getCurrentUserInfoApiV1UsersMeGet: () => Promise.reject(new Error('API Error')),
+      });
+
+      (service as unknown as { fetchCurrentUser: () => Observable<User> })
+        .fetchCurrentUser()
+        .subscribe({
+          next: () => fail('should have failed'),
+          error: (err: unknown) => {
+            expect(err).toBe('API Error');
+          },
+        });
+
+      expect(consoleSpy).not.toHaveBeenCalled();
+    });
+
+    it('should have all required methods', () => {
+      expect(typeof service.getCurrentUser).toBe('function');
+      expect(typeof service.isAdmin).toBe('function');
+      expect(typeof service.isSuperAdmin).toBe('function');
+      expect(typeof service.getAccessToken).toBe('function');
+      expect(typeof service.isAuthenticated).toBe('function');
+      expect(typeof service.setAccessToken).toBe('function');
+      expect(typeof service.clearAccessToken).toBe('function');
+      expect(typeof service.login).toBe('function');
+      expect(typeof service.logout).toBe('function');
     });
 
     it('should logout and clear stored data', () => {

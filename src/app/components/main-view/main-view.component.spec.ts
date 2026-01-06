@@ -1,10 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MainViewComponent } from './main-view.component';
+import { TaskViewComponent } from '../task-view/task-view.component';
+import { PlanItComponent } from '../plan-it/plan-it.component';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../generated';
+import { of } from 'rxjs';
 
 describe('MainViewComponent', () => {
   let component: MainViewComponent;
@@ -35,14 +38,28 @@ describe('MainViewComponent', () => {
     mockRouter = jasmine.createSpyObj('Router', ['navigate']);
     mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
 
+    // Simple mock that bypasses Angular Material's internal dialog logic
+    const mockDialogRef = {
+      afterClosed: () => of(null),
+      close: () => {
+        return;
+      },
+    } as MatDialogRef<unknown, unknown>;
+    mockDialog.open.and.returnValue(mockDialogRef);
+
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, MainViewComponent],
       providers: [
         { provide: AuthService, useValue: mockAuthService },
         { provide: Router, useValue: mockRouter },
-        { provide: MatDialog, useValue: mockDialog },
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(MainViewComponent, {
+        set: {
+          providers: [{ provide: MatDialog, useValue: mockDialog }],
+        },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(MainViewComponent);
     component = fixture.componentInstance;
@@ -131,6 +148,87 @@ describe('MainViewComponent', () => {
       component.logout();
       expect(mockAuthService.logout).toHaveBeenCalled();
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
+    });
+  });
+
+  describe('openAddTaskDialog', () => {
+    it('should open dialog and refresh do-it view when result is truthy', () => {
+      const mockDialogRef = {
+        afterClosed: () => of({ title: 'New Task' }),
+      } as MatDialogRef<unknown, unknown>;
+      mockDialog.open.and.returnValue(mockDialogRef);
+
+      // Mock child component
+      const mockTaskView = {
+        loadDueTasks: jasmine.createSpy('loadDueTasks'),
+      };
+      component.taskView = mockTaskView as unknown as TaskViewComponent;
+      component.currentView = 'do-it';
+
+      component.openAddTaskDialog();
+
+      expect(mockDialog.open).toHaveBeenCalled();
+      expect(mockTaskView.loadDueTasks).toHaveBeenCalled();
+    });
+
+    it('should open dialog and refresh plan-it view when result is truthy', () => {
+      const mockDialogRef = {
+        afterClosed: () => of({ title: 'New Task' }),
+      } as MatDialogRef<unknown, unknown>;
+      mockDialog.open.and.returnValue(mockDialogRef);
+
+      // Mock child component
+      const mockPlanIt = {
+        loadTasks: jasmine.createSpy('loadTasks'),
+      };
+      component.planIt = mockPlanIt as unknown as PlanItComponent;
+      component.currentView = 'plan-it';
+
+      component.openAddTaskDialog();
+
+      expect(mockDialog.open).toHaveBeenCalled();
+      expect(mockPlanIt.loadTasks).toHaveBeenCalled();
+    });
+
+    it('should not refresh when dialog result is falsy', () => {
+      const mockDialogRef = {
+        afterClosed: () => of(null),
+      } as MatDialogRef<unknown, unknown>;
+      mockDialog.open.and.returnValue(mockDialogRef);
+
+      // Mock child components
+      const mockTaskView = {
+        loadDueTasks: jasmine.createSpy('loadDueTasks'),
+      };
+      const mockPlanIt = {
+        loadTasks: jasmine.createSpy('loadTasks'),
+      };
+      component.taskView = mockTaskView as unknown as TaskViewComponent;
+      component.planIt = mockPlanIt as unknown as PlanItComponent;
+
+      component.currentView = 'do-it';
+      component.openAddTaskDialog();
+
+      expect(mockDialog.open).toHaveBeenCalled();
+      expect(mockTaskView.loadDueTasks).not.toHaveBeenCalled();
+      expect(mockPlanIt.loadTasks).not.toHaveBeenCalled();
+    });
+
+    it('should handle missing child components gracefully', () => {
+      const mockDialogRef = {
+        afterClosed: () => of({ title: 'New Task' }),
+      } as MatDialogRef<unknown, unknown>;
+      mockDialog.open.and.returnValue(mockDialogRef);
+
+      component.taskView = null!;
+      component.planIt = null!;
+      component.currentView = 'do-it';
+
+      expect(() => {
+        component.openAddTaskDialog();
+      }).not.toThrow();
+
+      expect(mockDialog.open).toHaveBeenCalled();
     });
   });
 });

@@ -274,4 +274,9 @@ describe('LoginComponent', () => {
 
     expect(authService.login).not.toHaveBeenCalled();
   });
+
+  it('should have isLoading property', () => {
+    expect(component.isLoading).toBeDefined();
+    expect(typeof component.isLoading).toBe('boolean');
+  });
 });

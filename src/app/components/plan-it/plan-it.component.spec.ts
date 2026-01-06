@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { PlanItComponent } from './plan-it.component';
 import { TaskService } from '../../services/task.service';
+import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
 import { Task } from '../../generated';
 
 describe('PlanItComponent', () => {
@@ -54,14 +55,28 @@ describe('PlanItComponent', () => {
     mockSnackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
     mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
 
+    // Simple mock that bypasses Angular Material's internal dialog logic
+    const mockDialogRef = {
+      afterClosed: () => of(null),
+      close: () => {
+        return;
+      },
+    } as MatDialogRef<unknown, unknown>;
+    mockDialog.open.and.returnValue(mockDialogRef);
+
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, PlanItComponent],
       providers: [
         { provide: TaskService, useValue: mockTaskService },
         { provide: MatSnackBar, useValue: mockSnackBar },
-        { provide: MatDialog, useValue: mockDialog },
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(PlanItComponent, {
+        set: {
+          providers: [{ provide: MatDialog, useValue: mockDialog }],
+        },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(PlanItComponent);
     component = fixture.componentInstance;
@@ -103,15 +118,15 @@ describe('PlanItComponent', () => {
   describe('loadTasks', () => {
     it('should load and categorize tasks correctly', () => {
       mockTaskService.getTasks.and.returnValue(of(mockTasks));
-      
+
       component.loadTasks();
-      
+
       // Test that tasks are loaded and categorized by state
       expect(component.todoTasks.length).toBe(1);
       expect(component.inProgressTasks.length).toBe(1);
       expect(component.doneTasks.length).toBe(1);
       expect(component.archivedTasks.length).toBe(0);
-      
+
       // Test that each category has the correct task by state
       expect(component.todoTasks[0].state).toBe('todo');
       expect(component.inProgressTasks[0].state).toBe('in_progress');
@@ -235,6 +250,20 @@ describe('PlanItComponent', () => {
       expect(component.onEditTask).toBeDefined();
       expect(typeof component.onEditTask).toBe('function');
     });
+
+    it('should open dialog', () => {
+      const mockDialogRef = {
+        afterClosed: () => of(null),
+      };
+      mockDialog.open.and.returnValue(mockDialogRef as unknown as MatDialogRef<unknown, unknown>);
+
+      component.onEditTask(mockTasks[0]);
+
+      expect(mockDialog.open).toHaveBeenCalledWith(TaskEditDialogComponent, {
+        data: mockTasks[0],
+        width: '500px',
+      });
+    });
   });
 
   describe('onReopenTask', () => {
@@ -346,7 +375,7 @@ describe('PlanItComponent', () => {
       component.doneTasks = [];
       component.archivedTasks = [];
       component.showArchived = false;
-      
+
       expect(component.hasAnyTasks()).toBe(false);
     });
 
@@ -368,7 +397,7 @@ describe('PlanItComponent', () => {
       component.todoTasks = [];
       component.inProgressTasks = [];
       component.doneTasks = [];
-      
+
       expect(component.hasAnyTasks()).toBe(false);
     });
   });

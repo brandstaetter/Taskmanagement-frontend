@@ -32,7 +32,15 @@ module.exports = function (config) {
           functions: 65,
           lines: 65
         }
-      }
+      },
+      exclude: [
+        'src/app/generated/**',
+        '**/*.spec.ts',
+        '**/test.ts',
+        '**/polyfills.ts',
+        '**/main.ts',
+        '**/environments/environment.prod.ts'
+      ]
     },
     reporters: ['progress', 'kjhtml'],
     port: 9876,
