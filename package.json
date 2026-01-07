@@ -61,7 +61,7 @@
     "@angular-devkit/build-angular": "^21.0.0",
     "@angular/cli": "^21.0.0",
     "@angular/compiler-cli": "^21.0.0",
-    "@hey-api/openapi-ts": "^0.90.1",
+    "@hey-api/openapi-ts": "^0.90.2",
     "@types/jasmine": "~5.1.7",
     "angular-eslint": "^21.0.0",
     "esbuild": ">=0.25.0",
@@ -81,7 +81,7 @@
     "rimraf": "^6.0.1",
     "sonarqube-scanner": "^4.3.0",
     "typescript": "~5.9.0",
-    "typescript-eslint": "8.50.0",
+    "typescript-eslint": "8.52.0",
     "webpack-bundle-analyzer": "^5.0.0"
   }
 }
