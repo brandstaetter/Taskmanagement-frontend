@@ -33,7 +33,11 @@ module.exports = function (config) {
       jasmine: {
         random: true,
         failFast: false,
-        timeoutInterval: 10000
+        timeoutInterval: 10000,
+        // Stop execution on first failure to prevent cascading errors
+        stopOnSpecFailure: false,
+        // Continue after spec failure
+        stopOnFailure: false
       },
       clearContext: false,
       // Catch and ignore unhandled errors in afterAll hooks
