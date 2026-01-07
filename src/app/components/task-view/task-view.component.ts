@@ -112,6 +112,7 @@ export class TaskViewComponent implements OnInit {
             console.error('Error updating task:', error);
             this.snackBar.open('Failed to update task. Please try again.', 'Close', {
               duration: 3000,
+              panelClass: ['error-snackbar'],
             });
           },
         });
@@ -147,7 +148,7 @@ export class TaskViewComponent implements OnInit {
       },
       error: error => {
         console.error('Error printing task:', error);
-        this.snackBar.open(error.message, 'Close', {
+        this.snackBar.open(error.message || 'Print failed', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar'],
         });
@@ -163,7 +164,7 @@ export class TaskViewComponent implements OnInit {
       next: task => this.onPrintTask(task),
       error: error => {
         console.error('Error getting random task:', error);
-        this.snackBar.open(error.message, 'Close', {
+        this.snackBar.open(error.message || 'No random task available', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar'],
         });

@@ -23,7 +23,7 @@
 - Global providers: src/app/app.config.ts (Router, Animations, HttpClientModule, Material modules, locale).
 - Top-level routing: src/app/app.routes.ts.
 - Feature routing: lazy-loaded *.module.ts under src/app/components/** using RouterModule.forChild(...).
-- API base URL: src/environments/environment.ts and src/environments/environment.prod.ts (environment.apiUrl).
+- API base URL: src/environments/environment.ts and src/environments/environment.prod.ts (environment.baseUrl).
 - HTTP / API access: src/app/services/task.service.ts.
 - API contract reference: src/app/api/openapi.json.
 - Global styles: src/styles.scss (Material + .error-snackbar).
@@ -32,9 +32,9 @@
 
 - Standalone components: most components are standalone: true and declare their own Angular Material imports.
 - Lazy loading pattern: routes load a feature NgModule (e.g. main-view.module.ts) that wires a path to a standalone component.
-- HTTP pattern:
-  - Use HttpClient + RxJS Observable.
-  - Base URL is environment.apiUrl and versioned routes are built as `${environment.apiUrl}/v1`.
+- Use generated openapi.json for API contract.
+- Generate API service code with HeyAPI Generator.
+- Base url is in environment.ts and environment.prod.ts.
 - Error/toast UX: use MatSnackBar for user-visible errors/success. For “hard” errors, prefer panelClass: ['error-snackbar'].
 
 ## Formatting & linting rules
@@ -50,6 +50,7 @@
 - Do not edit backend code or assume backend behavior beyond openapi.json.
 - Do not add new dependencies (npm packages) unless explicitly requested.
 - Do not change environment URLs unless explicitly asked; use environment*.ts when you must.
+- Do not remove failing tests instead of fixing them unless explicitly asked.
 - Prefer small, localized patches in existing files over large refactors.
 - When adding a UI feature:
   - Use Angular Material components already used in the repo.
@@ -59,31 +60,57 @@
 ## “How to proceed” checklist (agent workflow)
 
 - First: search for existing patterns/components/services before creating new ones.
-- Second: implement changes following the patterns in TaskService, TaskViewComponent, PlanItComponent, and dialogs.
-- Third: run npm run lint and npm test (or at minimum npm run lint) after code changes.
-- Finally: ensure builds stay strict-TS compatible and no new lint violations are introduced.
+- Second: search for best practices online before creating new ones.
+- Third: implement changes following the patterns in TaskService, TaskViewComponent, PlanItComponent, and dialogs.
+- Fourth: run npm run lint and npm test (or at minimum npm run lint) after code changes.
+- Fifth: ensure builds stay strict-TS compatible and no new lint violations are introduced.
+
+## Testing Commands and Debugging (Angular 21 + Karma)
+
+### Essential Test Commands
+
+* npm test or ng test - Run tests in watch mode with Chrome
+* npm run test:ci - Run tests once with ChromeHeadless (CI mode)
+* npm run test:coverage - Run tests with coverage report
+
+### Advanced Test Parameters for Debugging
+
+* ng test --include="src/app/components/**/*.spec.ts" - Run only component tests
+* ng test --include="src/app/services/**/*.spec.ts" - Run only service tests
+* ng test --include="src/app/components/task-view/task-view.component.spec.ts" - Run single test file
+* ng test --filter="TaskViewComponent" - Run tests matching pattern
+* ng test --filter="should create" - Run tests with specific name pattern
+* ng test --reporters=verbose - Detailed test output
+* ng test --reporters=json --output-file=test-results.json - JSON output to file
+* ng test --reporters=junit --output-file=test-results.xml - JUnit XML output
+* ng test --no-watch --browsers=ChromeHeadless - CI-friendly single run
+* ng test --list-tests - List all test files without running
+
+### Recommended Debugging Workflow
+
+* Identify failing tests: ng test --no-watch --browsers=ChromeHeadless --reporters=verbose
+* Isolate specific test: ng test --include="path/to/failing.spec.ts" --no-watch --reporters=verbose
+* Run single test pattern: ng test --filter="failing test name" --no-watch --reporters=verbose
+* Get structured output: ng test --reporters=json --output-file=debug-results.json --no-watch
+* Verify fix: ng test --include="path/to/test.spec.ts" --no-watch
+
+### File Patterns
+
+Component tests: `src/app/components/**/*.spec.ts`
+Service tests: `src/app/services/**/*.spec.ts`
+Guard tests: `src/app/guards/**/*.spec.ts`
+
+### Important Notes
+
+This project uses Angular 21 with Karma + Jasmine
+Use --no-watch --browsers=ChromeHeadless for CI/automation
+Karma HTML reporter available at `http://localhost:9876` during test runs
+Coverage reports generated in `coverage/frontend/`
 
 ## MCP usage (when and how)
 
-This environment provides MCP servers (notably `sequential-thinking` and `memory`).
+This environment provides MCP servers (notably `github-mcp-server` and `memory`).
 Use them deliberately:
-
-### `sequential-thinking` (structured reasoning)
-
-Use when:
-
-- the task is ambiguous, multi-step, or high-risk (debugging, design changes, refactors)
-- you need to form multiple hypotheses and verify them against repo evidence
-- you need a clear milestone plan and validation strategy
-
-Do not use when:
-
-- the task is straightforward (single-file tweak, obvious fix)
-- the next best action is to inspect the repo (prefer search + file reads first)
-
-Rule:
-
-- Prefer evidence-first (search/read files) and use `sequential-thinking` to organize/verify reasoning, not to replace inspection.
 
 ### `memory` (persist stable facts/preferences)
 

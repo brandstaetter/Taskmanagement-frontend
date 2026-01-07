@@ -11,7 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
-import { User } from '../../models/user.model';
+import { User } from '../../generated';
 
 @Component({
   selector: 'app-user-profile',

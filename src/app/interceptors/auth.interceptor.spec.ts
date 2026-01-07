@@ -44,9 +44,9 @@ describe('AuthInterceptor', () => {
       const mockToken = 'test-token-123';
       authService.getAccessToken.and.returnValue(mockToken);
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe();
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe();
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       expect(req.request.headers.get('Authorization')).toBe(`Bearer ${mockToken}`);
       req.flush({});
     });
@@ -65,9 +65,9 @@ describe('AuthInterceptor', () => {
     it('should not attach token when no token is available', () => {
       authService.getAccessToken.and.returnValue(null);
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe();
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe();
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       expect(req.request.headers.has('Authorization')).toBe(false);
       req.flush({});
     });
@@ -75,9 +75,9 @@ describe('AuthInterceptor', () => {
     it('should not attach token when token is empty string', () => {
       authService.getAccessToken.and.returnValue('');
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe();
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe();
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       expect(req.request.headers.has('Authorization')).toBe(false);
       req.flush({});
     });
@@ -87,13 +87,13 @@ describe('AuthInterceptor', () => {
     it('should call logout on 401 error', () => {
       authService.getAccessToken.and.returnValue('test-token');
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe({
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
           // Expected error
         },
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
       expect(authService.logout).toHaveBeenCalled();
@@ -103,13 +103,13 @@ describe('AuthInterceptor', () => {
       authService.getAccessToken.and.returnValue('test-token');
       Object.defineProperty(router, 'url', { value: '/tasks', writable: true });
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe({
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
           // Expected error
         },
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
       expect(router.navigate).toHaveBeenCalledWith(['/login'], {
@@ -121,13 +121,13 @@ describe('AuthInterceptor', () => {
       authService.getAccessToken.and.returnValue('test-token');
       Object.defineProperty(router, 'url', { value: '/login', writable: true });
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe({
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
           // Expected error
         },
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
       expect(authService.logout).toHaveBeenCalled();
@@ -138,13 +138,13 @@ describe('AuthInterceptor', () => {
       authService.getAccessToken.and.returnValue('test-token');
       Object.defineProperty(router, 'url', { value: '/login?returnUrl=/tasks', writable: true });
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe({
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
           // Expected error
         },
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
       expect(authService.logout).toHaveBeenCalled();
@@ -154,7 +154,7 @@ describe('AuthInterceptor', () => {
     it('should propagate 401 error after handling', done => {
       authService.getAccessToken.and.returnValue('test-token');
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe({
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: (error: HttpErrorResponse) => {
           expect(error.status).toBe(401);
           expect(error.statusText).toBe('Unauthorized');
@@ -162,7 +162,7 @@ describe('AuthInterceptor', () => {
         },
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
     });
   });
@@ -171,13 +171,13 @@ describe('AuthInterceptor', () => {
     it('should not call logout on 403 error', () => {
       authService.getAccessToken.and.returnValue('test-token');
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe({
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
           // Expected error
         },
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       req.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
 
       expect(authService.logout).not.toHaveBeenCalled();
@@ -187,13 +187,13 @@ describe('AuthInterceptor', () => {
     it('should not call logout on 404 error', () => {
       authService.getAccessToken.and.returnValue('test-token');
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe({
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
           // Expected error
         },
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       req.flush('Not Found', { status: 404, statusText: 'Not Found' });
 
       expect(authService.logout).not.toHaveBeenCalled();
@@ -203,13 +203,13 @@ describe('AuthInterceptor', () => {
     it('should not call logout on 500 error', () => {
       authService.getAccessToken.and.returnValue('test-token');
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe({
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
           // Expected error
         },
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       req.flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
 
       expect(authService.logout).not.toHaveBeenCalled();
@@ -219,7 +219,7 @@ describe('AuthInterceptor', () => {
     it('should propagate non-401 errors unchanged', done => {
       authService.getAccessToken.and.returnValue('test-token');
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe({
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: (error: HttpErrorResponse) => {
           expect(error.status).toBe(500);
           expect(error.statusText).toBe('Internal Server Error');
@@ -227,7 +227,7 @@ describe('AuthInterceptor', () => {
         },
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       req.flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
     });
   });
@@ -237,11 +237,11 @@ describe('AuthInterceptor', () => {
       const mockResponse = { data: 'test' };
       authService.getAccessToken.and.returnValue('test-token');
 
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe(response => {
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe(response => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       req.flush(mockResponse);
     });
 
@@ -250,9 +250,9 @@ describe('AuthInterceptor', () => {
       const postData = { title: 'New Task' };
       authService.getAccessToken.and.returnValue(mockToken);
 
-      httpClient.post(`${environment.apiUrl}/v1/tasks`, postData).subscribe();
+      httpClient.post(`${environment.baseUrl}/v1/tasks`, postData).subscribe();
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       expect(req.request.method).toBe('POST');
       expect(req.request.headers.get('Authorization')).toBe(`Bearer ${mockToken}`);
       expect(req.request.body).toEqual(postData);
@@ -264,9 +264,9 @@ describe('AuthInterceptor', () => {
       const updateData = { title: 'Updated Task' };
       authService.getAccessToken.and.returnValue(mockToken);
 
-      httpClient.put(`${environment.apiUrl}/v1/tasks/1`, updateData).subscribe();
+      httpClient.put(`${environment.baseUrl}/v1/tasks/1`, updateData).subscribe();
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks/1`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks/1`);
       expect(req.request.method).toBe('PUT');
       expect(req.request.headers.get('Authorization')).toBe(`Bearer ${mockToken}`);
       req.flush({});
@@ -276,9 +276,9 @@ describe('AuthInterceptor', () => {
       const mockToken = 'test-token-123';
       authService.getAccessToken.and.returnValue(mockToken);
 
-      httpClient.delete(`${environment.apiUrl}/v1/tasks/1`).subscribe();
+      httpClient.delete(`${environment.baseUrl}/v1/tasks/1`).subscribe();
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/v1/tasks/1`);
+      const req = httpMock.expectOne(`${environment.baseUrl}/v1/tasks/1`);
       expect(req.request.method).toBe('DELETE');
       expect(req.request.headers.get('Authorization')).toBe(`Bearer ${mockToken}`);
       req.flush({});
@@ -291,23 +291,23 @@ describe('AuthInterceptor', () => {
       Object.defineProperty(router, 'url', { value: '/tasks', writable: true });
 
       // First request
-      httpClient.get(`${environment.apiUrl}/v1/tasks`).subscribe({
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
           // Expected error
         },
       });
 
-      const req1 = httpMock.expectOne(`${environment.apiUrl}/v1/tasks`);
+      const req1 = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       req1.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
       // Second request
-      httpClient.get(`${environment.apiUrl}/v1/users`).subscribe({
+      httpClient.get(`${environment.baseUrl}/v1/users`).subscribe({
         error: () => {
           // Expected error
         },
       });
 
-      const req2 = httpMock.expectOne(`${environment.apiUrl}/v1/users`);
+      const req2 = httpMock.expectOne(`${environment.baseUrl}/v1/users`);
       req2.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
       expect(authService.logout).toHaveBeenCalledTimes(2);

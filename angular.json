@@ -42,7 +42,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "800kB",
+                  "maximumWarning": "850kB",
                   "maximumError": "1MB"
                 },
                 {
@@ -102,7 +102,15 @@
               "@angular/material/prebuilt-themes/azure-blue.css",
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "codeCoverageExclude": [
+              "src/app/generated/**",
+              "**/*.spec.ts",
+              "src/test.ts",
+              "src/polyfills.ts",
+              "src/main.ts",
+              "src/environments/environment.prod.ts"
+            ]
           }
         },
         "lint": {

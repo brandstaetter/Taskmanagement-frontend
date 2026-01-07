@@ -1,75 +1,108 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, from, of, throwError } from 'rxjs';
-import { mergeMap, catchError } from 'rxjs/operators';
+import { Observable, throwError, of, from } from 'rxjs';
+import { catchError, mergeMap, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import {
+  Task,
+  TaskCreate,
+  TaskUpdate,
+  readTasksApiV1TasksGet,
+  createNewTaskApiV1TasksPost,
+  readDueTasksApiV1TasksDueGet,
+  getRandomTaskApiV1TasksRandomGet,
+  searchTasksApiV1TasksSearchGet,
+  deleteTaskEndpointApiV1TasksTaskIdDelete,
+  readTaskApiV1TasksTaskIdGet,
+  updateTaskEndpointApiV1TasksTaskIdPatch,
+  startTaskApiV1TasksTaskIdStartPost,
+  completeTaskApiV1TasksTaskIdCompletePost,
+  printTaskApiV1TasksTaskIdPrintPost,
+  triggerMaintenanceApiV1TasksMaintenancePost,
+  resetTaskToTodoEndpointApiV1TasksTaskIdResetToTodoPatch,
+} from '../generated';
+import { createClient, createConfig, type Client } from '../generated/client';
+import { AuthService } from './auth.service';
 
-export interface Task {
-  id: number;
-  title: string;
-  description: string;
-  state: 'todo' | 'in_progress' | 'done' | 'archived';
-  due_date?: string;
-  reward?: string;
-  created_at?: string;
-  started_at?: string;
-  completed_at?: string;
-}
-
-export interface TaskCreate {
-  title: string;
-  description: string;
-  state?: 'todo' | 'in_progress' | 'done' | 'archived';
-  due_date?: string;
-  reward?: string;
-  created_at?: string;
-  started_at?: string;
-  completed_at?: string;
-}
-
-export interface TaskUpdate {
-  title?: string;
-  description?: string;
-  due_date?: string;
-  reward?: string;
-}
-
-export interface AuthResponse {
-  access_token: string;
-  token_type: string;
-}
+// Re-export types for backward compatibility
+export type { Task, TaskCreate, TaskUpdate };
 
 @Injectable({
   providedIn: 'root',
 })
 export class TaskService {
-  private apiBaseUrl = environment.apiUrl;
-  private apiUrl = `${this.apiBaseUrl}/v1`;
+  private baseUrl = environment.baseUrl;
+  private authenticatedClient: Client;
 
-  constructor(private http: HttpClient) {}
+  constructor(private authService: AuthService) {
+    // Create a base client
+    this.authenticatedClient = createClient(
+      createConfig({
+        baseUrl: this.baseUrl,
+      })
+    );
+  }
+
+  private getAuthSecurity() {
+    const token = this.authService.getAccessToken();
+    return token ? [{ scheme: 'bearer' as const, type: 'http' as const }] : undefined;
+  }
+
+  private handleApiResponse<T>(response: { data?: T; error?: unknown; response: Response }): T {
+    if (response.error) {
+      throw response.error;
+    }
+    return response.data as T;
+  }
 
   getTasks(skip = 0, limit = 100, includeArchived = false): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.apiUrl}/tasks`, {
-      params: {
-        skip: skip.toString(),
-        limit: limit.toString(),
-        include_archived: includeArchived.toString(),
-      },
-    });
+    return from(
+      readTasksApiV1TasksGet({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+        query: {
+          skip,
+          limit,
+          include_archived: includeArchived,
+        },
+      })
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   getTask(id: number): Observable<Task> {
-    return this.http.get<Task>(`${this.apiUrl}/tasks/${id}`);
+    return from(
+      readTaskApiV1TasksTaskIdGet({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+        path: { task_id: id },
+      })
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   getDueTasks(): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.apiUrl}/tasks/due/`);
+    return from(
+      readDueTasksApiV1TasksDueGet({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+      })
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   getRandomTask(): Observable<Task> {
-    return this.http.get<Task>(`${this.apiUrl}/tasks/random/`).pipe(
-      catchError((error: HttpErrorResponse) => {
-        if (error.status === 404) {
+    return from(
+      getRandomTaskApiV1TasksRandomGet({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+      })
+    ).pipe(
+      map(response => {
+        if (response.error) {
+          throw response.error;
+        }
+        return response.data as Task;
+      }),
+      catchError(error => {
+        // Check if it's a 404 error from the response
+        if (error?.response?.status === 404 || error?.status === 404) {
           return throwError(
             () => new Error('No tasks available to select from. Please create some tasks first.')
           );
@@ -80,66 +113,77 @@ export class TaskService {
   }
 
   searchTasks(query: string, includeArchived = false): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.apiUrl}/tasks/search/`, {
-      params: {
-        q: query,
-        include_archived: includeArchived.toString(),
-      },
-    });
+    return from(
+      searchTasksApiV1TasksSearchGet({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+        query: {
+          q: query,
+          include_archived: includeArchived,
+        },
+      })
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   createTask(task: TaskCreate): Observable<Task> {
-    return this.http.post<Task>(`${this.apiUrl}/tasks`, task);
+    return from(
+      createNewTaskApiV1TasksPost({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+        body: task,
+      })
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   startTask(id: number): Observable<Task> {
-    return this.http.post<Task>(`${this.apiUrl}/tasks/${id}/start`, {});
+    return from(
+      startTaskApiV1TasksTaskIdStartPost({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+        path: { task_id: id },
+      })
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   printTask(id: number, printerType?: string): Observable<Blob | Record<string, unknown>> {
-    return this.http
-      .post(
-        `${this.apiUrl}/tasks/${id}/print`,
-        {},
-        {
-          params: printerType ? { printer_type: printerType } : {},
-          observe: 'response',
-          responseType: 'blob',
+    return from(
+      printTaskApiV1TasksTaskIdPrintPost({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+        path: { task_id: id },
+        query: printerType ? { printer_type: printerType } : undefined,
+      })
+    ).pipe(
+      mergeMap(response => {
+        const data = response.data as unknown;
+        // If it's a Blob, return it directly
+        if (data instanceof Blob) {
+          return of(data);
         }
-      )
-      .pipe(
-        mergeMap(response => {
-          const contentType = response.headers.get('content-type');
-          if (contentType?.includes('application/pdf')) {
-            return of(response.body as Blob);
-          }
-          // If it's not a PDF, convert the blob to JSON
-          return from(
-            new Promise<Record<string, unknown>>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => {
-                try {
-                  const result = JSON.parse(reader.result as string) as Record<string, unknown>;
-                  resolve(result);
-                } catch {
-                  reject(new Error('Invalid JSON response'));
-                }
-              };
-              reader.onerror = () =>
-                reject(new Error(reader.error?.message ?? 'Error reading file'));
-              reader.readAsText(response.body as Blob);
-            })
-          );
-        })
-      );
+        // Otherwise, treat it as JSON
+        return of(data as Record<string, unknown>);
+      })
+    );
   }
 
   completeTask(id: number): Observable<Task> {
-    return this.http.post<Task>(`${this.apiUrl}/tasks/${id}/complete`, {});
+    return from(
+      completeTaskApiV1TasksTaskIdCompletePost({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+        path: { task_id: id },
+      })
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   archiveTask(taskId: number): Observable<Task> {
-    return this.http.delete<Task>(`${this.apiUrl}/tasks/${taskId}`);
+    return from(
+      deleteTaskEndpointApiV1TasksTaskIdDelete({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+        path: { task_id: taskId },
+      })
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   updateTaskState(
@@ -148,41 +192,41 @@ export class TaskService {
   ): Observable<Task> {
     switch (state) {
       case 'todo':
-        return this.http.patch<Task>(`${this.apiUrl}/tasks/${taskId}/reset-to-todo`, {});
+        return from(
+          resetTaskToTodoEndpointApiV1TasksTaskIdResetToTodoPatch({
+            client: this.authenticatedClient,
+            security: this.getAuthSecurity(),
+            path: { task_id: taskId },
+          })
+        ).pipe(map(response => this.handleApiResponse(response)));
       case 'in_progress':
-        return this.http.post<Task>(`${this.apiUrl}/tasks/${taskId}/start`, {});
+        return this.startTask(taskId);
       case 'done':
-        return this.http.post<Task>(`${this.apiUrl}/tasks/${taskId}/complete`, {});
+        return this.completeTask(taskId);
       case 'archived':
-        return this.http.post<Task>(`${this.apiUrl}/tasks/${taskId}/archive`, {});
+        return this.archiveTask(taskId);
       default:
         return throwError(() => new Error(`Unsupported state transition: ${state}`));
     }
   }
 
   updateTask(taskId: number, update: TaskUpdate): Observable<Task> {
-    return this.http.patch<Task>(`${this.apiUrl}/tasks/${taskId}`, update);
+    return from(
+      updateTaskEndpointApiV1TasksTaskIdPatch({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+        path: { task_id: taskId },
+        body: update,
+      })
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 
   triggerMaintenance(): Observable<Record<string, unknown>> {
-    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/tasks/maintenance`, {});
-  }
-
-  login(username: string, password: string): Observable<AuthResponse> {
-    const body = new HttpParams().set('username', username).set('password', password);
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/x-www-form-urlencoded',
-    });
-
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/token`, body.toString(), { headers });
-  }
-
-  // Admin endpoints - these require authentication
-  initDb(): Observable<Record<string, unknown>> {
-    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/admin/db/init`, {});
-  }
-
-  runMigrations(): Observable<Record<string, unknown>> {
-    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/admin/db/migrate`, {});
+    return from(
+      triggerMaintenanceApiV1TasksMaintenancePost({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+      })
+    ).pipe(map(response => this.handleApiResponse(response)));
   }
 }

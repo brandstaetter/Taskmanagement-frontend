@@ -67,10 +67,14 @@ export class AdminDashboardComponent {
       })
       .subscribe({
         next: user => {
-          this.snackBar.open(`User created successfully: ${user.email} (ID: ${user.id})`, 'Close', {
-            duration: 5000,
-            panelClass: ['success-snackbar'],
-          });
+          this.snackBar.open(
+            `User created successfully: ${user?.email} (ID: ${user?.id})`,
+            'Close',
+            {
+              duration: 5000,
+              panelClass: ['success-snackbar'],
+            }
+          );
           this.createUserForm.reset({ isAdmin: false });
           this.isCreatingUser = false;
         },
@@ -93,27 +97,41 @@ export class AdminDashboardComponent {
     this.isResettingPassword = true;
     const userId = parseInt(this.resetPasswordForm.controls.userId.value ?? '', 10);
 
-    this.adminService
-      .resetUserPassword(userId, {
-        new_password: this.resetPasswordForm.controls.newPassword.value ?? '',
-      })
-      .subscribe({
-        next: () => {
-          this.snackBar.open('Password reset successfully', 'Close', {
-            duration: 3000,
-            panelClass: ['success-snackbar'],
-          });
-          this.resetPasswordForm.reset();
-          this.isResettingPassword = false;
-        },
-        error: err => {
-          this.snackBar.open(err.error?.detail || 'Failed to reset password', 'Close', {
-            duration: 5000,
-            panelClass: ['error-snackbar'],
-          });
-          this.isResettingPassword = false;
-        },
-      });
+    this.adminService.resetUserPassword(userId).subscribe({
+      next: response => {
+        let message = 'Password reset successfully';
+
+        if (response?.new_password) {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard
+              .writeText(response.new_password)
+              .then(() => {
+                // Clipboard write succeeded; message already set below.
+              })
+              .catch(() => {
+                // Clipboard write failed; fall back to a generic secure-storage message.
+              });
+            message = `Password reset successfully for ${response?.email}. New password copied to clipboard.`;
+          } else {
+            message = `Password reset successfully for ${response?.email}. Please store the new password securely.`;
+          }
+        }
+
+        this.snackBar.open(message, 'Close', {
+          duration: 5000,
+          panelClass: ['success-snackbar'],
+        });
+        this.resetPasswordForm.reset();
+        this.isResettingPassword = false;
+      },
+      error: err => {
+        this.snackBar.open(err.error?.detail || 'Failed to reset password', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+        });
+        this.isResettingPassword = false;
+      },
+    });
   }
 
   initializeDatabase(): void {
@@ -128,7 +146,7 @@ export class AdminDashboardComponent {
     this.isInitializingDb = true;
     this.adminService.initDatabase().subscribe({
       next: response => {
-        this.snackBar.open(response.message || 'Database initialized successfully', 'Close', {
+        this.snackBar.open(response?.message || 'Database initialized successfully', 'Close', {
           duration: 5000,
           panelClass: ['success-snackbar'],
         });
@@ -154,7 +172,7 @@ export class AdminDashboardComponent {
     this.isMigratingDb = true;
     this.adminService.migrateDatabase().subscribe({
       next: response => {
-        this.snackBar.open(response.message || 'Database migrated successfully', 'Close', {
+        this.snackBar.open(response?.message || 'Database migrated successfully', 'Close', {
           duration: 5000,
           panelClass: ['success-snackbar'],
         });

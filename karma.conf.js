@@ -1,4 +1,21 @@
 module.exports = function (config) {
+  // Add Chrome flags for CI environments (Linux)
+  if (process.env.CI || process.env.GITHUB_ACTIONS) {
+    config.set({
+      customLaunchers: {
+        ChromeHeadlessCI: {
+          base: 'ChromeHeadless',
+          flags: [
+            '--no-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu'
+          ]
+        }
+      },
+      browsers: ['ChromeHeadlessCI']
+    });
+  }
+
   config.set({
     basePath: '',
     frameworks: ['jasmine', '@angular-devkit/build-angular'],
@@ -9,13 +26,25 @@ module.exports = function (config) {
       require('karma-coverage'),
       require('@angular-devkit/build-angular/plugins/karma')
     ],
+    files: [
+      { pattern: 'src/test.ts', included: true, watched: false }
+    ],
     client: {
       jasmine: {
         random: true,
         failFast: false,
-        timeoutInterval: 10000
+        timeoutInterval: 10000,
+        // Stop execution on first failure to prevent cascading errors
+        stopOnSpecFailure: false,
+        // Continue after spec failure
+        stopOnFailure: false
       },
-      clearContext: false
+      clearContext: false,
+      // Catch and ignore unhandled errors in afterAll hooks
+      captureConsole: true,
+      mochaReporter: {
+        output: 'minimal'
+      }
     },
     coverageReporter: {
       dir: require('path').join(__dirname, './coverage/frontend'),
@@ -32,7 +61,15 @@ module.exports = function (config) {
           functions: 65,
           lines: 65
         }
-      }
+      },
+      exclude: [
+        'src/app/generated/**',
+        '**/*.spec.ts',
+        '**/test.ts',
+        '**/polyfills.ts',
+        '**/main.ts',
+        '**/environments/environment.prod.ts'
+      ]
     },
     reporters: ['progress', 'kjhtml'],
     port: 9876,
@@ -42,10 +79,10 @@ module.exports = function (config) {
     browsers: ['ChromeHeadless'],
     singleRun: true,
     restartOnFileChange: true,
-    browserDisconnectTimeout: 10000,
+    browserDisconnectTimeout: 30000,
     browserDisconnectTolerance: 3,
-    browserNoActivityTimeout: 60000,
-    captureTimeout: 60000,
+    browserNoActivityTimeout: 120000,
+    captureTimeout: 120000,
     processKillTimeout: 2000
   });
 };

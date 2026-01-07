@@ -47,6 +47,146 @@ describe('TaskCardComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  describe('Date formatting methods', () => {
+    beforeEach(() => {
+      jasmine.clock().install();
+      jasmine.clock().mockDate(new Date('2025-02-19T12:00:00Z'));
+    });
+
+    afterEach(() => {
+      jasmine.clock().uninstall();
+    });
+
+    it('should format timespan for future tasks', () => {
+      component.task.due_date = '2025-02-20T12:00:00Z'; // 24 hours from now
+      const timespan = component.getTimespan(component.task.due_date);
+      expect(timespan).toBe('in 1 day');
+    });
+
+    it('should format timespan for past tasks', () => {
+      component.task.due_date = '2025-02-18T12:00:00Z'; // 24 hours ago
+      const timespan = component.getTimespan(component.task.due_date);
+      expect(timespan).toBe('1 day ago');
+    });
+
+    it('should format timespan for hours and minutes', () => {
+      component.task.due_date = '2025-02-19T13:30:00Z'; // 1 hour 30 minutes from now
+      const timespan = component.getTimespan(component.task.due_date);
+      expect(timespan).toBe('in 1 hour and 30 minutes');
+    });
+
+    it('should format timespan for just now', () => {
+      component.task.due_date = '2025-02-19T12:01:00Z'; // 1 minute ago
+      const timespan = component.getTimespan(component.task.due_date);
+      expect(timespan).toBe('in 1 minute');
+    });
+
+    it('should format timespan for less than a minute', () => {
+      component.task.due_date = '2025-02-19T12:00:30Z'; // 30 seconds from now
+      const timespan = component.getTimespan(component.task.due_date);
+      expect(timespan).toBe('in less than a minute');
+    });
+
+    it('should return empty string for null due date', () => {
+      component.task.due_date = null;
+      const timespan = component.getTimespan(component.task.due_date);
+      expect(timespan).toBe('');
+    });
+
+    it('should return empty string for undefined due date', () => {
+      component.task.due_date = undefined;
+      const timespan = component.getTimespan(component.task.due_date);
+      expect(timespan).toBe('');
+    });
+  });
+
+  describe('isDueSoon method', () => {
+    beforeEach(() => {
+      jasmine.clock().install();
+      jasmine.clock().mockDate(new Date('2025-02-19T12:00:00Z'));
+    });
+
+    afterEach(() => {
+      jasmine.clock().uninstall();
+    });
+
+    it('should return true for tasks due within threshold', () => {
+      component.task.due_date = '2025-02-19T20:00:00Z'; // 8 hours from now
+      expect(component.isDueSoon(component.task)).toBe(true);
+    });
+
+    it('should return false for tasks due beyond threshold', () => {
+      component.task.due_date = '2025-02-20T12:00:00Z'; // 24 hours from now
+      expect(component.isDueSoon(component.task)).toBe(false);
+    });
+
+    it('should return false for overdue tasks', () => {
+      component.task.due_date = '2025-02-18T12:00:00Z'; // 24 hours ago
+      expect(component.isDueSoon(component.task)).toBe(false);
+    });
+
+    it('should return false for tasks without due date', () => {
+      component.task.due_date = null;
+      expect(component.isDueSoon(component.task)).toBe(false);
+    });
+  });
+
+  describe('getTaskClass method', () => {
+    beforeEach(() => {
+      jasmine.clock().install();
+      jasmine.clock().mockDate(new Date('2025-02-19T12:00:00Z'));
+    });
+
+    afterEach(() => {
+      jasmine.clock().uninstall();
+    });
+
+    it('should return archived-task for archived tasks', () => {
+      component.task.state = 'archived';
+      expect(component.getTaskClass()).toBe('archived-task');
+    });
+
+    it('should return overdue for overdue tasks', () => {
+      component.task.state = 'todo';
+      component.task.due_date = '2025-02-18T12:00:00Z'; // 24 hours ago
+      expect(component.getTaskClass()).toBe('overdue');
+    });
+
+    it('should return due-soon for tasks due soon', () => {
+      component.task.state = 'todo';
+      component.task.due_date = '2025-02-19T20:00:00Z'; // 8 hours from now
+      expect(component.getTaskClass()).toBe('due-soon');
+    });
+
+    it('should return empty string for normal tasks', () => {
+      component.task.state = 'todo';
+      component.task.due_date = '2025-02-20T12:00:00Z'; // 24 hours from now
+      expect(component.getTaskClass()).toBe('');
+    });
+  });
+
+  describe('Method existence', () => {
+    it('should have getTimespan method', () => {
+      expect(component.getTimespan).toBeDefined();
+      expect(typeof component.getTimespan).toBe('function');
+    });
+
+    it('should have isOverdue method', () => {
+      expect(component.isOverdue).toBeDefined();
+      expect(typeof component.isOverdue).toBe('function');
+    });
+
+    it('should have isDueSoon method', () => {
+      expect(component.isDueSoon).toBeDefined();
+      expect(typeof component.isDueSoon).toBe('function');
+    });
+
+    it('should have getTaskClass method', () => {
+      expect(component.getTaskClass).toBeDefined();
+      expect(typeof component.getTaskClass).toBe('function');
+    });
+  });
+
   describe('Menu visibility', () => {
     it('should show menu button when showActions is true', () => {
       component.showActions = true;

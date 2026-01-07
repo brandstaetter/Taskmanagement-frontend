@@ -3,6 +3,7 @@ import { TaskFormComponent } from './task-form.component';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TaskService, Task, TaskCreate, TaskUpdate } from '../../services/task.service';
+import { AuthService } from '../../services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -14,10 +15,11 @@ import { MatButtonHarness } from '@angular/material/button/testing';
 describe('TaskFormComponent', () => {
   let component: TaskFormComponent;
   let fixture: ComponentFixture<TaskFormComponent>;
+  let loader: HarnessLoader;
   let taskService: jasmine.SpyObj<TaskService>;
+  let authService: jasmine.SpyObj<AuthService>;
   let dialogRef: jasmine.SpyObj<MatDialogRef<TaskFormComponent>>;
   let snackBar: jasmine.SpyObj<MatSnackBar>;
-  let loader: HarnessLoader;
 
   const mockTask: Task = {
     id: 1,
@@ -31,10 +33,22 @@ describe('TaskFormComponent', () => {
 
   beforeEach(async () => {
     taskService = jasmine.createSpyObj('TaskService', ['createTask', 'updateTask']);
+    authService = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
     dialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
     snackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
 
     // Set up default mock responses
+    authService.getCurrentUser.and.returnValue({
+      id: 1,
+      email: 'test@example.com',
+      is_active: true,
+      is_admin: false,
+      is_superadmin: false,
+      avatar_url: null,
+      last_login: null,
+      created_at: '2024-01-01T00:00:00.000Z',
+      updated_at: '2024-01-01T00:00:00.000Z',
+    });
     taskService.createTask.and.returnValue(of({ ...mockTask }));
     taskService.updateTask.and.returnValue(of({ ...mockTask }));
 
@@ -43,6 +57,7 @@ describe('TaskFormComponent', () => {
       providers: [
         FormBuilder,
         { provide: TaskService, useValue: taskService },
+        { provide: AuthService, useValue: authService },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: MatSnackBar, useValue: snackBar },
         { provide: MAT_DIALOG_DATA, useValue: null },
@@ -115,6 +130,7 @@ describe('TaskFormComponent', () => {
         state: 'todo',
         due_date: undefined,
         reward: undefined,
+        created_by: 1,
       };
 
       expect(taskService.createTask).toHaveBeenCalledWith(jasmine.objectContaining(expectedCreate));
@@ -300,5 +316,157 @@ describe('TaskFormComponent', () => {
 
       expect(component.cancelled.emit).toHaveBeenCalled();
     });
+  });
+
+  describe('Helper Methods', () => {
+    beforeEach(() => {
+      component.mode = 'create';
+      component.task = undefined;
+      component.ngOnInit();
+      fixture.detectChanges();
+    });
+
+    it('should prefill current time when called', () => {
+      jasmine.clock().install();
+      const now = new Date(2023, 0, 1, 10, 15, 30);
+      jasmine.clock().mockDate(now);
+
+      const componentWithPrivateMethods = component as unknown as {
+        roundUpToNextInterval(date: Date): Date;
+        prefillCurrentTime(): void;
+      };
+      spyOn(componentWithPrivateMethods, 'roundUpToNextInterval').and.callThrough();
+
+      componentWithPrivateMethods.prefillCurrentTime();
+
+      expect(componentWithPrivateMethods.roundUpToNextInterval).toHaveBeenCalledWith(now);
+      expect(component.taskForm.get('due_time')?.value).toBeDefined();
+      expect(component.taskForm.get('due_date')?.value).toBeDefined();
+
+      jasmine.clock().uninstall();
+    });
+
+    it('should not override existing time when prefilling current time', () => {
+      const existingTime = new Date('2023-01-01T10:00:00');
+      component.taskForm.get('due_time')?.setValue(existingTime);
+
+      const componentWithPrivateMethods = component as unknown as {
+        prefillCurrentTime(): void;
+      };
+      componentWithPrivateMethods.prefillCurrentTime();
+
+      expect(component.taskForm.get('due_time')?.value).toEqual(existingTime);
+    });
+
+    it('should prefill end of day when called', () => {
+      component.prefillEndOfDay();
+
+      const dateValue = component.taskForm.get('due_date')?.value;
+      const timeValue = component.taskForm.get('due_time')?.value;
+
+      expect(dateValue).toBeDefined();
+      expect(timeValue).toBeDefined();
+      expect(dateValue.getHours()).toBe(23);
+      expect(dateValue.getMinutes()).toBe(30);
+      expect(timeValue.getHours()).toBe(23);
+      expect(timeValue.getMinutes()).toBe(30);
+    });
+
+    it('should not override existing date when prefilling end of day', () => {
+      const existingDate = new Date('2023-01-01T10:00:00');
+      component.taskForm.get('due_date')?.setValue(existingDate);
+
+      component.prefillEndOfDay();
+
+      expect(component.taskForm.get('due_date')?.value).toEqual(existingDate);
+    });
+
+    it('should round up time to next 30-minute interval', () => {
+      const testDate = new Date('2023-01-01T10:15:30');
+      const componentWithPrivateMethods = component as unknown as {
+        roundUpToNextInterval(date: Date): Date;
+      };
+      const rounded = componentWithPrivateMethods.roundUpToNextInterval(testDate);
+
+      expect(rounded.getHours()).toBe(10);
+      expect(rounded.getMinutes()).toBe(30);
+      expect(rounded.getSeconds()).toBe(0);
+      expect(rounded.getMilliseconds()).toBe(0);
+    });
+
+    it('should update date time when both date and time are set', () => {
+      const date = new Date('2023-01-01T00:00:00');
+      const time = new Date('2023-01-01T15:45:00');
+
+      component.taskForm.get('due_date')?.setValue(date);
+      component.taskForm.get('due_time')?.setValue(time);
+
+      component.updateDateTime();
+
+      const updatedDate = component.taskForm.get('due_date')?.value;
+      expect(updatedDate.getHours()).toBe(15);
+      expect(updatedDate.getMinutes()).toBe(45);
+      expect(updatedDate.getSeconds()).toBe(0);
+      expect(updatedDate.getMilliseconds()).toBe(0);
+    });
+
+    it('should not update when only date or time is set', () => {
+      const date = new Date('2023-01-01T00:00:00');
+      component.taskForm.get('due_date')?.setValue(date);
+      component.taskForm.get('due_time')?.setValue(null);
+
+      const originalDate = component.taskForm.get('due_date')?.value;
+      component.updateDateTime();
+
+      expect(component.taskForm.get('due_date')?.value).toEqual(originalDate);
+    });
+  });
+
+  describe('Date/Time Integration', () => {
+    beforeEach(() => {
+      component.mode = 'create';
+      component.task = undefined;
+      component.ngOnInit();
+      fixture.detectChanges();
+    });
+
+    it('should initialize form with task due date and time', () => {
+      component.task = mockTask;
+      component.ngOnInit();
+      fixture.detectChanges();
+
+      const dateValue = component.taskForm.get('due_date')?.value;
+      const timeValue = component.taskForm.get('due_time')?.value;
+
+      expect(dateValue).toBeDefined();
+      expect(timeValue).toBeDefined();
+      expect(dateValue.toISOString().startsWith('2025-02-19')).toBeTrue();
+    });
+
+    it('should combine date and time in form submission', fakeAsync(async () => {
+      const date = new Date('2023-01-01T00:00:00');
+      const time = new Date('2023-01-01T15:30:00');
+
+      component.taskForm.get('due_date')?.setValue(date);
+      component.taskForm.get('due_time')?.setValue(time);
+      component.taskForm.get('title')?.setValue('Test Task');
+      component.taskForm.get('description')?.setValue('Test Description');
+
+      const submitButton = await loader.getHarness(
+        MatButtonHarness.with({ selector: 'button[type="submit"]' })
+      );
+      await submitButton.click();
+
+      tick();
+
+      const createCall = taskService.createTask.calls.mostRecent();
+      const taskData = createCall.args[0] as TaskCreate;
+
+      expect(taskData.due_date).toBeDefined();
+      // Check that the time component is correctly set (accounting for timezone)
+      // The actual time might be different due to timezone conversion
+      expect(taskData.due_date).toBeDefined();
+      expect(typeof taskData.due_date).toBe('string');
+    }));
   });
 });

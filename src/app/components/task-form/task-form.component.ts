@@ -23,6 +23,7 @@ import {
 import { MatTimepickerModule } from '@angular/material/timepicker';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Task, TaskService, TaskCreate, TaskUpdate } from '../../services/task.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-task-form',
@@ -57,6 +58,7 @@ export class TaskFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private taskService: TaskService,
+    private authService: AuthService,
     private snackBar: MatSnackBar,
     @Optional() private dialogRef?: MatDialogRef<TaskFormComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) private dialogData?: Task
@@ -211,11 +213,13 @@ export class TaskFormComponent implements OnInit {
 
       if (this.mode === 'create') {
         // For create, include all values
+        const currentUser = this.authService.getCurrentUser();
         const taskData: TaskCreate = {
           ...formValue,
           state: 'todo',
           due_date: formValue.due_date || undefined,
           reward: formValue.reward?.trim() || undefined,
+          created_by: currentUser?.id || 0,
         };
 
         this.taskService.createTask(taskData).subscribe({
