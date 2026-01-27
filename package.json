@@ -82,6 +82,6 @@
     "sonarqube-scanner": "^4.3.0",
     "typescript": "~5.9.0",
     "typescript-eslint": "8.54.0",
-    "webpack-bundle-analyzer": "^5.0.0"
+    "webpack-bundle-analyzer": "^5.2.0"
   }
 }
