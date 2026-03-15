@@ -155,16 +155,16 @@ export class AdminDashboardComponent implements OnInit {
                 // Clipboard write succeeded.
               })
               .catch(() => {
-                // Clipboard write failed; fall back to a generic secure-storage message.
+                // Clipboard write failed; password is still shown in the snackbar.
               });
-            message = `Password reset for ${response?.email}. New password copied to clipboard.`;
+            message = `New password for ${response?.email}: ${response.new_password} (copied to clipboard)`;
           } else {
-            message = `Password reset for ${response?.email}. Please store the new password securely.`;
+            message = `New password for ${response?.email}: ${response.new_password}`;
           }
         }
 
         this.snackBar.open(message, 'Close', {
-          duration: 5000,
+          duration: 30000,
           panelClass: ['success-snackbar'],
         });
       },
