@@ -13,9 +13,11 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { User } from '../../generated';
+import { PasswordResetDialogComponent } from '../password-reset-dialog/password-reset-dialog.component';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -35,6 +37,7 @@ import { User } from '../../generated';
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatChipsModule,
+    MatDialogModule,
   ],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss'],
@@ -44,6 +47,7 @@ export class AdminDashboardComponent implements OnInit {
   private adminService = inject(AdminService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   isCreatingUser = false;
   isInitializingDb = false;
@@ -145,27 +149,10 @@ export class AdminDashboardComponent implements OnInit {
     this.adminService.resetUserPassword(userId).subscribe({
       next: response => {
         this.resettingPasswordIds.delete(userId);
-        let message = 'Password reset successfully';
-
-        if (response?.new_password) {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard
-              .writeText(response.new_password)
-              .then(() => {
-                // Clipboard write succeeded.
-              })
-              .catch(() => {
-                // Clipboard write failed; password is still shown in the snackbar.
-              });
-            message = `New password for ${response?.email}: ${response.new_password} (copied to clipboard)`;
-          } else {
-            message = `New password for ${response?.email}: ${response.new_password}`;
-          }
-        }
-
-        this.snackBar.open(message, 'Close', {
-          duration: 30000,
-          panelClass: ['success-snackbar'],
+        this.dialog.open(PasswordResetDialogComponent, {
+          data: { email: response.email, newPassword: response.new_password },
+          width: '420px',
+          disableClose: true,
         });
       },
       error: err => {

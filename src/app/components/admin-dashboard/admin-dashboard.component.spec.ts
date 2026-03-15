@@ -5,6 +5,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { AdminDashboardComponent } from './admin-dashboard.component';
 import { AdminService } from '../../services/admin.service';
+import { PasswordResetDialogComponent } from '../password-reset-dialog/password-reset-dialog.component';
 import { User, PasswordResetResponse } from '../../generated';
 import { of, throwError } from 'rxjs';
 
@@ -173,39 +174,22 @@ describe('AdminDashboardComponent', () => {
     });
   });
 
-  it('should reset user password', () => {
+  it('should reset user password and open dialog', () => {
     const mockResponse: PasswordResetResponse = {
       email: 'test@example.com',
       new_password: 'newpassword123',
     };
-    spyOnProperty(navigator, 'clipboard').and.returnValue(undefined as unknown as Clipboard);
+    const dialogOpenSpy = spyOn(component['dialog'], 'open');
     adminService.resetUserPassword.and.returnValue(of(mockResponse));
 
     component.resetPassword(1);
 
     expect(adminService.resetUserPassword).toHaveBeenCalledWith(1);
-  });
-
-  it('should reset password with clipboard', () => {
-    const mockResponse: PasswordResetResponse = {
-      email: 'test@example.com',
-      new_password: 'newpassword123',
-    };
-    const mockClipboard = {
-      writeText: jasmine.createSpy('writeText').and.returnValue(Promise.resolve()),
-      read: jasmine.createSpy('read'),
-      readText: jasmine.createSpy('readText'),
-      write: jasmine.createSpy('write'),
-      addEventListener: jasmine.createSpy('addEventListener'),
-      removeEventListener: jasmine.createSpy('removeEventListener'),
-      dispatchEvent: jasmine.createSpy('dispatchEvent'),
-    } as Clipboard;
-    spyOnProperty(navigator, 'clipboard').and.returnValue(mockClipboard);
-    adminService.resetUserPassword.and.returnValue(of(mockResponse));
-
-    component.resetPassword(1);
-
-    expect(mockClipboard.writeText).toHaveBeenCalledWith('newpassword123');
+    expect(dialogOpenSpy).toHaveBeenCalledWith(PasswordResetDialogComponent, {
+      data: { email: 'test@example.com', newPassword: 'newpassword123' },
+      width: '420px',
+      disableClose: true,
+    });
   });
 
   it('should not reset password when already resetting for that user', () => {
@@ -217,12 +201,12 @@ describe('AdminDashboardComponent', () => {
     expect(adminService.resetUserPassword).not.toHaveBeenCalled();
   });
 
-  it('should add and remove userId from resettingPasswordIds on success', () => {
+  it('should remove userId from resettingPasswordIds on success', () => {
     const mockResponse: PasswordResetResponse = {
       email: 'test@example.com',
       new_password: 'newpassword123',
     };
-    spyOnProperty(navigator, 'clipboard').and.returnValue(undefined as unknown as Clipboard);
+    spyOn(component['dialog'], 'open');
     adminService.resetUserPassword.and.returnValue(of(mockResponse));
 
     component.resetPassword(1);
