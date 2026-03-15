@@ -18,6 +18,10 @@ import { Router } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { User } from '../../generated';
 import { PasswordResetDialogComponent } from '../password-reset-dialog/password-reset-dialog.component';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '../confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -123,22 +127,30 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   deleteUser(userId: number): void {
-    if (!confirm('Are you sure you want to delete this user?')) return;
-
-    this.adminService.deleteUser(userId).subscribe({
-      next: user => {
-        this.snackBar.open(`User ${user?.email} deleted successfully`, 'Close', {
-          duration: 5000,
-          panelClass: ['success-snackbar'],
-        });
-        this.loadUsers();
-      },
-      error: err => {
-        this.snackBar.open(err.error?.detail || 'Failed to delete user', 'Close', {
-          duration: 5000,
-          panelClass: ['error-snackbar'],
-        });
-      },
+    const ref = this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        data: { title: 'Delete User', message: 'Are you sure you want to delete this user?' },
+        width: '360px',
+      }
+    );
+    ref.afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      this.adminService.deleteUser(userId).subscribe({
+        next: user => {
+          this.snackBar.open(`User ${user?.email} deleted successfully`, 'Close', {
+            duration: 5000,
+            panelClass: ['success-snackbar'],
+          });
+          this.loadUsers();
+        },
+        error: err => {
+          this.snackBar.open(err.error?.detail || 'Failed to delete user', 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+          });
+        },
+      });
     });
   }
 
@@ -187,54 +199,71 @@ export class AdminDashboardComponent implements OnInit {
   initializeDatabase(): void {
     if (this.isInitializingDb) return;
 
-    if (
-      !confirm('Are you sure you want to initialize the database? This will create all tables.')
-    ) {
-      return;
-    }
-
-    this.isInitializingDb = true;
-    this.adminService.initDatabase().subscribe({
-      next: response => {
-        this.snackBar.open(response?.message || 'Database initialized successfully', 'Close', {
-          duration: 5000,
-          panelClass: ['success-snackbar'],
-        });
-        this.isInitializingDb = false;
-      },
-      error: err => {
-        this.snackBar.open(err.error?.detail || 'Failed to initialize database', 'Close', {
-          duration: 5000,
-          panelClass: ['error-snackbar'],
-        });
-        this.isInitializingDb = false;
-      },
+    const ref = this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        data: {
+          title: 'Initialize Database',
+          message:
+            'Are you sure you want to initialize the database? This will DROP all data and recreate all tables.',
+        },
+        width: '360px',
+      }
+    );
+    ref.afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      this.isInitializingDb = true;
+      this.adminService.initDatabase().subscribe({
+        next: response => {
+          this.snackBar.open(response?.message || 'Database initialized successfully', 'Close', {
+            duration: 5000,
+            panelClass: ['success-snackbar'],
+          });
+          this.isInitializingDb = false;
+        },
+        error: err => {
+          this.snackBar.open(err.error?.detail || 'Failed to initialize database', 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+          });
+          this.isInitializingDb = false;
+        },
+      });
     });
   }
 
   migrateDatabase(): void {
     if (this.isMigratingDb) return;
 
-    if (!confirm('Are you sure you want to migrate the database?')) {
-      return;
-    }
-
-    this.isMigratingDb = true;
-    this.adminService.migrateDatabase().subscribe({
-      next: response => {
-        this.snackBar.open(response?.message || 'Database migrated successfully', 'Close', {
-          duration: 5000,
-          panelClass: ['success-snackbar'],
-        });
-        this.isMigratingDb = false;
-      },
-      error: err => {
-        this.snackBar.open(err.error?.detail || 'Failed to migrate database', 'Close', {
-          duration: 5000,
-          panelClass: ['error-snackbar'],
-        });
-        this.isMigratingDb = false;
-      },
+    const ref = this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        data: {
+          title: 'Migrate Database',
+          message: 'Are you sure you want to migrate the database?',
+        },
+        width: '360px',
+      }
+    );
+    ref.afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      this.isMigratingDb = true;
+      this.adminService.migrateDatabase().subscribe({
+        next: response => {
+          this.snackBar.open(response?.message || 'Database migrated successfully', 'Close', {
+            duration: 5000,
+            panelClass: ['success-snackbar'],
+          });
+          this.isMigratingDb = false;
+        },
+        error: err => {
+          this.snackBar.open(err.error?.detail || 'Failed to migrate database', 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+          });
+          this.isMigratingDb = false;
+        },
+      });
     });
   }
 

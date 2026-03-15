@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogRef } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { AdminDashboardComponent } from './admin-dashboard.component';
@@ -8,6 +9,11 @@ import { AdminService } from '../../services/admin.service';
 import { PasswordResetDialogComponent } from '../password-reset-dialog/password-reset-dialog.component';
 import { User, PasswordResetResponse } from '../../generated';
 import { of, throwError } from 'rxjs';
+
+/** Returns a fake MatDialogRef whose afterClosed() emits `result`. */
+function fakeDialogRef(result: boolean | undefined): MatDialogRef<unknown, unknown> {
+  return { afterClosed: () => of(result) } as unknown as MatDialogRef<unknown, unknown>;
+}
 
 const mockUser: User = {
   id: 1,
@@ -142,7 +148,7 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should delete user after confirmation', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(true));
     adminService.deleteUser.and.returnValue(of(mockUser));
 
     component.deleteUser(1);
@@ -152,7 +158,7 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should not delete user without confirmation', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
+    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(false));
 
     component.deleteUser(1);
 
@@ -161,7 +167,7 @@ describe('AdminDashboardComponent', () => {
 
   it('should handle delete user error', () => {
     const snackBarSpy = spyOn(component['snackBar'], 'open');
-    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(true));
     adminService.deleteUser.and.returnValue(
       throwError(() => ({ error: { detail: 'Delete failed' } }))
     );
@@ -179,7 +185,9 @@ describe('AdminDashboardComponent', () => {
       email: 'test@example.com',
       new_password: 'newpassword123',
     };
-    const dialogOpenSpy = spyOn(component['dialog'], 'open');
+    const dialogOpenSpy = spyOn(component['dialog'], 'open').and.returnValue(
+      fakeDialogRef(undefined)
+    );
     adminService.resetUserPassword.and.returnValue(of(mockResponse));
 
     component.resetPassword(1);
@@ -206,7 +214,7 @@ describe('AdminDashboardComponent', () => {
       email: 'test@example.com',
       new_password: 'newpassword123',
     };
-    spyOn(component['dialog'], 'open');
+    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(undefined));
     adminService.resetUserPassword.and.returnValue(of(mockResponse));
 
     component.resetPassword(1);
@@ -254,17 +262,16 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should initialize database with confirmation', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(true));
     adminService.initDatabase.and.returnValue(of({ message: 'Database initialized successfully' }));
 
     component.initializeDatabase();
 
-    expect(window.confirm).toHaveBeenCalled();
     expect(adminService.initDatabase).toHaveBeenCalled();
   });
 
   it('should not initialize database without confirmation', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
+    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(false));
 
     component.initializeDatabase();
 
@@ -273,26 +280,25 @@ describe('AdminDashboardComponent', () => {
 
   it('should not initialize database when already initializing', () => {
     component.isInitializingDb = true;
-    spyOn(window, 'confirm');
+    const dialogSpy = spyOn(component['dialog'], 'open');
 
     component.initializeDatabase();
 
-    expect(window.confirm).not.toHaveBeenCalled();
+    expect(dialogSpy).not.toHaveBeenCalled();
     expect(adminService.initDatabase).not.toHaveBeenCalled();
   });
 
   it('should migrate database with confirmation', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(true));
     adminService.migrateDatabase.and.returnValue(of({ message: 'Database migrated successfully' }));
 
     component.migrateDatabase();
 
-    expect(window.confirm).toHaveBeenCalled();
     expect(adminService.migrateDatabase).toHaveBeenCalled();
   });
 
   it('should not migrate database without confirmation', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
+    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(false));
 
     component.migrateDatabase();
 
@@ -301,17 +307,17 @@ describe('AdminDashboardComponent', () => {
 
   it('should not migrate database when already migrating', () => {
     component.isMigratingDb = true;
-    spyOn(window, 'confirm');
+    const dialogSpy = spyOn(component['dialog'], 'open');
 
     component.migrateDatabase();
 
-    expect(window.confirm).not.toHaveBeenCalled();
+    expect(dialogSpy).not.toHaveBeenCalled();
     expect(adminService.migrateDatabase).not.toHaveBeenCalled();
   });
 
   it('should handle initialize database error', () => {
     const snackBarSpy = spyOn(component['snackBar'], 'open');
-    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(true));
     adminService.initDatabase.and.returnValue(
       throwError(() => ({ error: { detail: 'Database init failed' } }))
     );
@@ -327,7 +333,7 @@ describe('AdminDashboardComponent', () => {
 
   it('should handle migrate database error', () => {
     const snackBarSpy = spyOn(component['snackBar'], 'open');
-    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(true));
     adminService.migrateDatabase.and.returnValue(
       throwError(() => ({ error: { detail: 'Database migration failed' } }))
     );
