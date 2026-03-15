@@ -99,7 +99,7 @@
                       mat-icon-button
                       matTooltip="Reset password"
                       (click)="resetPassword(user.id)"
-                      [disabled]="user.is_superadmin"
+                      [disabled]="user.is_superadmin || resettingPasswordIds.has(user.id)"
                     >
                       <mat-icon>lock_reset</mat-icon>
                     </button>

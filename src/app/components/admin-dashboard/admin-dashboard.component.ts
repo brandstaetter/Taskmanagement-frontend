@@ -49,6 +49,7 @@ export class AdminDashboardComponent implements OnInit {
   isInitializingDb = false;
   isMigratingDb = false;
   isLoadingUsers = false;
+  resettingPasswordIds = new Set<number>();
 
   users: User[] = [];
   displayedColumns = ['id', 'email', 'role', 'actions'];
@@ -138,8 +139,12 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   resetPassword(userId: number): void {
+    if (this.resettingPasswordIds.has(userId)) return;
+    this.resettingPasswordIds.add(userId);
+
     this.adminService.resetUserPassword(userId).subscribe({
       next: response => {
+        this.resettingPasswordIds.delete(userId);
         let message = 'Password reset successfully';
 
         if (response?.new_password) {
@@ -164,6 +169,7 @@ export class AdminDashboardComponent implements OnInit {
         });
       },
       error: err => {
+        this.resettingPasswordIds.delete(userId);
         this.snackBar.open(err.error?.detail || 'Failed to reset password', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar'],

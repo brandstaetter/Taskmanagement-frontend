@@ -208,6 +208,28 @@ describe('AdminDashboardComponent', () => {
     expect(mockClipboard.writeText).toHaveBeenCalledWith('newpassword123');
   });
 
+  it('should not reset password when already resetting for that user', () => {
+    adminService.resetUserPassword.and.returnValue(of({ email: 'x@x.com', new_password: 'p' }));
+    component.resettingPasswordIds.add(1);
+
+    component.resetPassword(1);
+
+    expect(adminService.resetUserPassword).not.toHaveBeenCalled();
+  });
+
+  it('should add and remove userId from resettingPasswordIds on success', () => {
+    const mockResponse: PasswordResetResponse = {
+      email: 'test@example.com',
+      new_password: 'newpassword123',
+    };
+    spyOnProperty(navigator, 'clipboard').and.returnValue(undefined as unknown as Clipboard);
+    adminService.resetUserPassword.and.returnValue(of(mockResponse));
+
+    component.resetPassword(1);
+
+    expect(component.resettingPasswordIds.has(1)).toBe(false);
+  });
+
   it('should handle reset password error', () => {
     const snackBarSpy = spyOn(component['snackBar'], 'open');
     adminService.resetUserPassword.and.returnValue(
@@ -220,6 +242,7 @@ describe('AdminDashboardComponent', () => {
       duration: 5000,
       panelClass: ['error-snackbar'],
     });
+    expect(component.resettingPasswordIds.has(1)).toBe(false);
   });
 
   it('should toggle admin role', () => {
