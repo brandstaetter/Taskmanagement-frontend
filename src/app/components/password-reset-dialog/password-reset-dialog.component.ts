@@ -4,6 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 export interface PasswordResetDialogData {
   email: string;
@@ -13,7 +14,14 @@ export interface PasswordResetDialogData {
 @Component({
   selector: 'app-password-reset-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule, MatSnackBarModule],
+  imports: [
+    CommonModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSnackBarModule,
+    MatTooltipModule,
+  ],
   templateUrl: './password-reset-dialog.component.html',
   styleUrls: ['./password-reset-dialog.component.scss'],
 })
