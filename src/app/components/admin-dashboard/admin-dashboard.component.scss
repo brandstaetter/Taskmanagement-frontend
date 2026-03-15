@@ -10,7 +10,7 @@
 
 .admin-card {
   width: 100%;
-  max-width: 700px;
+  max-width: 900px;
 }
 
 mat-card-header {
@@ -35,6 +35,43 @@ mat-card-header {
 .admin-checkbox {
   display: block;
   margin-bottom: 1.5rem;
+}
+
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.users-table {
+  width: 100%;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.no-data-cell {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.chip-admin {
+  background-color: rgba(99, 102, 241, 0.2) !important;
+  color: #a5b4fc !important;
+}
+
+.chip-superadmin {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+  color: #fcd34d !important;
+}
+
+.chip-user {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
 }
 
 .db-operations {

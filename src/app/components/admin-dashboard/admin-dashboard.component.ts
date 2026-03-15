@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -9,8 +9,13 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
 import { Router } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
+import { User } from '../../generated';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -26,20 +31,27 @@ import { AdminService } from '../../services/admin.service';
     MatTabsModule,
     MatIconModule,
     MatCheckboxModule,
+    MatTableModule,
+    MatTooltipModule,
+    MatProgressSpinnerModule,
+    MatChipsModule,
   ],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss'],
 })
-export class AdminDashboardComponent {
+export class AdminDashboardComponent implements OnInit {
   private fb = inject(FormBuilder);
   private adminService = inject(AdminService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
 
   isCreatingUser = false;
-  isResettingPassword = false;
   isInitializingDb = false;
   isMigratingDb = false;
+  isLoadingUsers = false;
+
+  users: User[] = [];
+  displayedColumns = ['id', 'email', 'role', 'actions'];
 
   createUserForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -47,10 +59,26 @@ export class AdminDashboardComponent {
     isAdmin: [false],
   });
 
-  resetPasswordForm = this.fb.group({
-    userId: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
-    newPassword: ['', [Validators.required, Validators.minLength(8)]],
-  });
+  ngOnInit(): void {
+    this.loadUsers();
+  }
+
+  loadUsers(): void {
+    this.isLoadingUsers = true;
+    this.adminService.listUsers().subscribe({
+      next: users => {
+        this.users = users;
+        this.isLoadingUsers = false;
+      },
+      error: err => {
+        this.snackBar.open(err.error?.detail || 'Failed to load users', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+        });
+        this.isLoadingUsers = false;
+      },
+    });
+  }
 
   createUser(): void {
     if (this.createUserForm.invalid || this.isCreatingUser) {
@@ -77,6 +105,7 @@ export class AdminDashboardComponent {
           );
           this.createUserForm.reset({ isAdmin: false });
           this.isCreatingUser = false;
+          this.loadUsers();
         },
         error: err => {
           this.snackBar.open(err.error?.detail || 'Failed to create user', 'Close', {
@@ -88,15 +117,27 @@ export class AdminDashboardComponent {
       });
   }
 
-  resetPassword(): void {
-    if (this.resetPasswordForm.invalid || this.isResettingPassword) {
-      this.resetPasswordForm.markAllAsTouched();
-      return;
-    }
+  deleteUser(userId: number): void {
+    if (!confirm('Are you sure you want to delete this user?')) return;
 
-    this.isResettingPassword = true;
-    const userId = parseInt(this.resetPasswordForm.controls.userId.value ?? '', 10);
+    this.adminService.deleteUser(userId).subscribe({
+      next: user => {
+        this.snackBar.open(`User ${user?.email} deleted successfully`, 'Close', {
+          duration: 5000,
+          panelClass: ['success-snackbar'],
+        });
+        this.loadUsers();
+      },
+      error: err => {
+        this.snackBar.open(err.error?.detail || 'Failed to delete user', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+        });
+      },
+    });
+  }
 
+  resetPassword(userId: number): void {
     this.adminService.resetUserPassword(userId).subscribe({
       next: response => {
         let message = 'Password reset successfully';
@@ -106,14 +147,14 @@ export class AdminDashboardComponent {
             navigator.clipboard
               .writeText(response.new_password)
               .then(() => {
-                // Clipboard write succeeded; message already set below.
+                // Clipboard write succeeded.
               })
               .catch(() => {
                 // Clipboard write failed; fall back to a generic secure-storage message.
               });
-            message = `Password reset successfully for ${response?.email}. New password copied to clipboard.`;
+            message = `Password reset for ${response?.email}. New password copied to clipboard.`;
           } else {
-            message = `Password reset successfully for ${response?.email}. Please store the new password securely.`;
+            message = `Password reset for ${response?.email}. Please store the new password securely.`;
           }
         }
 
@@ -121,15 +162,31 @@ export class AdminDashboardComponent {
           duration: 5000,
           panelClass: ['success-snackbar'],
         });
-        this.resetPasswordForm.reset();
-        this.isResettingPassword = false;
       },
       error: err => {
         this.snackBar.open(err.error?.detail || 'Failed to reset password', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar'],
         });
-        this.isResettingPassword = false;
+      },
+    });
+  }
+
+  toggleRole(user: User): void {
+    this.adminService.updateUserRole(user.id, !user.is_admin).subscribe({
+      next: updated => {
+        this.snackBar.open(
+          `${updated?.email} is now ${updated?.is_admin ? 'an admin' : 'a regular user'}`,
+          'Close',
+          { duration: 5000, panelClass: ['success-snackbar'] }
+        );
+        this.loadUsers();
+      },
+      error: err => {
+        this.snackBar.open(err.error?.detail || 'Failed to update role', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+        });
       },
     });
   }
