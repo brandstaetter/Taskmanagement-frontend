@@ -38,6 +38,7 @@ export class TaskService {
     this.authenticatedClient = createClient(
       createConfig({
         baseUrl: this.baseUrl,
+        auth: () => this.authService.getAccessToken() ?? undefined,
       })
     );
   }

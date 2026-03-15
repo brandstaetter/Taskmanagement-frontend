@@ -5,25 +5,49 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+  background-color: #1a1a1e;
 
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 1rem;
-    background-color: #3f51b5;
-    color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0 1.25rem;
+    height: 52px;
+    background-color: #1e1e24;
+    border-bottom: 1px solid #32323a;
+    position: relative;
+    flex-shrink: 0;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #f0a030 0%, rgba(240, 160, 48, 0.2) 50%, transparent 80%);
+    }
 
     .app-title {
       margin: 0;
-      font-size: 1.5rem;
-      font-weight: 500;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      color: #f0a030;
+      line-height: 1;
+      user-select: none;
     }
 
     .user-menu {
       button {
-        color: white;
+        color: #808088 !important;
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: #e8e8ec !important;
+          background-color: rgba(255, 255, 255, 0.06) !important;
+        }
       }
     }
   }
@@ -38,12 +62,48 @@
     min-height: 0;
     overflow-y: auto;
   }
+
+  ::ng-deep .mat-mdc-tab-header {
+    background-color: #1e1e24;
+    border-bottom: 1px solid #32323a;
+  }
+
+  ::ng-deep .mat-mdc-tab-label-container {
+    background-color: #1e1e24;
+    padding: 0 0.5rem;
+  }
+
+  ::ng-deep .mat-mdc-tab .mdc-tab__text-label {
+    font-family: 'Mulish', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #808088;
+    transition: color 0.2s ease;
+  }
+
+  ::ng-deep .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+    color: #f0a030 !important;
+  }
+
+  ::ng-deep .mdc-tab-indicator__content--underline {
+    border-color: #f0a030 !important;
+    border-top-width: 2px !important;
+  }
+
+  ::ng-deep .mat-mdc-tab-header-pagination {
+    background-color: #1e1e24;
+  }
 }
 
 .user-info {
   padding: 0.5rem 1rem;
   cursor: default;
   opacity: 1 !important;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #808088 !important;
 }
 
 .add-task-button {
@@ -51,4 +111,17 @@
   bottom: 24px;
   right: 24px;
   z-index: 1000;
+  box-shadow: 0 4px 20px rgba(240, 160, 48, 0.3) !important;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease !important;
+
+  &:hover {
+    box-shadow: 0 6px 28px rgba(240, 160, 48, 0.45) !important;
+    transform: translateY(-1px);
+  }
+
+  .mat-icon {
+    color: #1a1a1e !important;
+  }
 }

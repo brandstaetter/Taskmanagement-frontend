@@ -25,6 +25,7 @@ export class AuthService {
     this.authenticatedClient = createClient(
       createConfig({
         baseUrl: this.baseUrl,
+        auth: () => this.getAccessToken() ?? undefined,
       })
     );
   }

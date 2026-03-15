@@ -1,14 +1,255 @@
-/* You can add global styles to this file, and also import other style files */
-
 @use '@angular/material' as mat;
+
+// ============================================================
+// DARK FORGE — Design System Tokens (Readable Dark Mode)
+// ============================================================
+
+:root {
+  // Angular Material M3 System Token Overrides
+  --mat-sys-primary: #f0a030;
+  --mat-sys-on-primary: #1a1a1e;
+  --mat-sys-primary-container: #4a2e00;
+  --mat-sys-on-primary-container: #ffd898;
+  --mat-sys-secondary: #6b9ef8;
+  --mat-sys-on-secondary: #1a1a1e;
+  --mat-sys-secondary-container: #1e3060;
+  --mat-sys-on-secondary-container: #c8dcff;
+  --mat-sys-tertiary: #5ec98a;
+  --mat-sys-on-tertiary: #1a1a1e;
+  --mat-sys-tertiary-container: #0d3020;
+  --mat-sys-on-tertiary-container: #b0f0cc;
+  --mat-sys-error: #ff6b6b;
+  --mat-sys-on-error: #ffffff;
+  --mat-sys-error-container: #4d1010;
+  --mat-sys-on-error-container: #ffc0c0;
+
+  // Surfaces — dark but readable
+  --mat-sys-background: #1a1a1e;
+  --mat-sys-on-background: #e8e8ec;
+  --mat-sys-surface: #242428;
+  --mat-sys-surface-dim: #1a1a1e;
+  --mat-sys-surface-bright: #32323a;
+  --mat-sys-surface-variant: #2a2a30;
+  --mat-sys-on-surface: #e8e8ec;
+  --mat-sys-on-surface-variant: #a0a0aa;
+  --mat-sys-surface-container-lowest: #161618;
+  --mat-sys-surface-container-low: #1e1e22;
+  --mat-sys-surface-container: #262628;
+  --mat-sys-surface-container-high: #2e2e34;
+  --mat-sys-surface-container-highest: #38383e;
+
+  // Outlines
+  --mat-sys-outline: #505058;
+  --mat-sys-outline-variant: #38383e;
+
+  // Inverse
+  --mat-sys-inverse-surface: #e8e8ec;
+  --mat-sys-inverse-on-surface: #242428;
+  --mat-sys-scrim: rgba(0, 0, 0, 0.8);
+
+  // Design Tokens
+  --forge-bg: #1a1a1e;
+  --forge-surface: #242428;
+  --forge-surface-raised: #2e2e34;
+  --forge-amber: #f0a030;
+  --forge-amber-glow: rgba(240, 160, 48, 0.12);
+  --forge-blue: #6b9ef8;
+  --forge-green: #5ec98a;
+  --forge-red: #ff6b6b;
+  --forge-text: #e8e8ec;
+  --forge-text-secondary: #a0a0aa;
+  --forge-text-muted: #686870;
+  --forge-border: #32323a;
+  --forge-border-hover: #505058;
+
+  // Typography tokens
+  --mat-sys-body-large-font: 'Mulish', sans-serif;
+  --mat-sys-body-medium-font: 'Mulish', sans-serif;
+  --mat-sys-body-small-font: 'Mulish', sans-serif;
+  --mat-sys-label-large-font: 'Mulish', sans-serif;
+  --mat-sys-label-medium-font: 'Mulish', sans-serif;
+  --mat-sys-label-small-font: 'Mulish', sans-serif;
+  --mat-sys-title-large-font: 'Mulish', sans-serif;
+  --mat-sys-title-medium-font: 'Mulish', sans-serif;
+  --mat-sys-title-small-font: 'Mulish', sans-serif;
+  --mat-sys-headline-small-font: 'Mulish', sans-serif;
+  --mat-sys-headline-medium-font: 'Mulish', sans-serif;
+  --mat-sys-headline-large-font: 'Mulish', sans-serif;
+}
 
 html,
 body {
   height: 100%;
   margin: 0;
+  color-scheme: dark;
 }
 
+body {
+  background-color: var(--forge-bg);
+  color: var(--forge-text);
+  font-family: 'Mulish', sans-serif !important;
+}
+
+// ============================================================
+// Angular Material Component Overrides
+// ============================================================
+
+// Cards
+.mat-mdc-card {
+  background-color: var(--forge-surface) !important;
+  color: var(--forge-text) !important;
+}
+
+// Raised buttons
+.mat-mdc-raised-button.mat-primary {
+  --mat-raised-button-container-color: var(--forge-amber);
+  --mat-raised-button-label-text-color: #1a1a1e;
+}
+
+.mat-mdc-raised-button.mat-accent {
+  --mat-raised-button-container-color: var(--forge-green);
+  --mat-raised-button-label-text-color: #1a1a1e;
+}
+
+// FAB
+.mat-mdc-fab.mat-primary,
+.mat-mdc-mini-fab.mat-primary {
+  --mat-fab-container-color: var(--forge-amber);
+  --mat-fab-foreground-color: #1a1a1e;
+}
+
+// Tabs
+.mat-mdc-tab-group {
+  --mat-tab-header-active-label-text-color: var(--forge-amber);
+  --mat-tab-header-active-indicator-color: var(--forge-amber);
+  --mat-tab-header-inactive-label-text-color: #808088;
+  --mat-tab-header-background-color: var(--forge-surface);
+}
+
+// Form fields
+.mat-mdc-form-field {
+  --mat-form-field-container-text-color: var(--forge-text);
+  --mat-form-field-label-text-color: var(--forge-text-secondary);
+  --mat-form-field-outlined-idle-border-color: #505058;
+  --mat-form-field-outlined-hover-border-color: var(--forge-amber);
+  --mat-form-field-outlined-focus-border-color: var(--forge-amber);
+  --mat-form-field-container-fill-color: rgba(255, 255, 255, 0.03);
+}
+
+.mat-mdc-input-element {
+  color: var(--forge-text) !important;
+  caret-color: var(--forge-amber) !important;
+}
+
+// Menus
+.mat-mdc-menu-panel {
+  background-color: #2e2e34 !important;
+  border: 1px solid #505058 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+.mat-mdc-menu-item {
+  color: var(--forge-text-secondary) !important;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    color: var(--forge-text) !important;
+  }
+
+  .mat-icon {
+    color: var(--forge-text-muted) !important;
+  }
+}
+
+// Dialogs
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: #242428;
+  --mdc-dialog-supporting-text-color: var(--forge-text);
+}
+
+// Dividers
+.mat-divider {
+  border-color: var(--forge-border) !important;
+}
+
+// Chips
+.mat-mdc-chip {
+  --mat-chip-label-text-color: var(--forge-text);
+}
+
+// Snackbar
 .error-snackbar {
   --mat-snackbar-container-color: var(--mat-sys-error-container);
   --mat-snackbar-supporting-text-color: var(--mat-sys-on-error-container);
+}
+
+// Icon buttons
+.mat-mdc-icon-button {
+  color: var(--forge-text-muted) !important;
+
+  &:hover {
+    color: var(--forge-text) !important;
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+}
+
+// Tooltips
+.mat-mdc-tooltip {
+  --mdc-plain-tooltip-container-color: #38383e;
+  --mdc-plain-tooltip-supporting-text-color: var(--forge-text-secondary);
+  font-family: 'Mulish', sans-serif;
+  font-size: 12px;
+}
+
+// Select / Autocomplete
+.mat-mdc-select-value {
+  color: var(--forge-text) !important;
+}
+
+// Checkbox
+.mat-mdc-checkbox {
+  --mdc-checkbox-selected-checkmark-color: #1a1a1e;
+  --mdc-checkbox-selected-icon-color: var(--forge-amber);
+  --mdc-checkbox-selected-focus-icon-color: var(--forge-amber);
+  --mdc-checkbox-selected-hover-icon-color: var(--forge-amber);
+}
+
+// Typography
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Mulish', sans-serif;
+  font-weight: 700;
+  color: var(--forge-text);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: 'Mulish', sans-serif;
+}
+
+// Scrollbars
+* {
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #38383e;
+    border-radius: 3px;
+
+    &:hover {
+      background: #505058;
+    }
+  }
 }
