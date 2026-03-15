@@ -5,8 +5,18 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { AdminDashboardComponent } from './admin-dashboard.component';
 import { AdminService } from '../../services/admin.service';
-import { PasswordResetResponse } from '../../generated';
+import { User, PasswordResetResponse } from '../../generated';
 import { of, throwError } from 'rxjs';
+
+const mockUser: User = {
+  id: 1,
+  email: 'user@example.com',
+  is_active: true,
+  is_admin: false,
+  is_superadmin: false,
+  created_at: '2023-01-01',
+  updated_at: '2023-01-01',
+};
 
 describe('AdminDashboardComponent', () => {
   let component: AdminDashboardComponent;
@@ -17,10 +27,15 @@ describe('AdminDashboardComponent', () => {
   beforeEach(async () => {
     const adminServiceSpy = jasmine.createSpyObj('AdminService', [
       'createUser',
+      'listUsers',
+      'deleteUser',
       'resetUserPassword',
+      'updateUserRole',
       'initDatabase',
       'migrateDatabase',
     ]);
+    adminServiceSpy.listUsers.and.returnValue(of([mockUser]));
+
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
@@ -52,16 +67,25 @@ describe('AdminDashboardComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/']);
   });
 
-  it('should create a user successfully', () => {
-    const mockUser = {
-      id: 1,
-      email: 'newuser@example.com',
-      is_active: true,
-      is_admin: false,
-      is_superadmin: false,
-      created_at: '2023-01-01',
-      updated_at: '2023-01-01',
-    };
+  it('should load users on init', () => {
+    expect(adminService.listUsers).toHaveBeenCalled();
+    expect(component.users).toEqual([mockUser]);
+  });
+
+  it('should handle load users error', () => {
+    const snackBarSpy = spyOn(component['snackBar'], 'open');
+    adminService.listUsers.and.returnValue(
+      throwError(() => ({ error: { detail: 'Load failed' } }))
+    );
+    component.loadUsers();
+    expect(snackBarSpy).toHaveBeenCalledWith('Load failed', 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+    });
+    expect(component.isLoadingUsers).toBe(false);
+  });
+
+  it('should create a user successfully and refresh list', () => {
     adminService.createUser.and.returnValue(of(mockUser));
 
     component.createUserForm.patchValue({
@@ -77,23 +101,172 @@ describe('AdminDashboardComponent', () => {
       password: 'password123',
       is_admin: false,
     });
+    expect(adminService.listUsers).toHaveBeenCalledTimes(2);
   });
 
-  it('should reset user password successfully', () => {
+  it('should not create user when form is invalid', () => {
+    const markAllAsTouchedSpy = spyOn(component.createUserForm, 'markAllAsTouched');
+    component.createUser();
+    expect(markAllAsTouchedSpy).toHaveBeenCalled();
+    expect(adminService.createUser).not.toHaveBeenCalled();
+  });
+
+  it('should not create user when already creating', () => {
+    component.isCreatingUser = true;
+    const markAllAsTouchedSpy = spyOn(component.createUserForm, 'markAllAsTouched');
+    component.createUser();
+    expect(markAllAsTouchedSpy).toHaveBeenCalled();
+    expect(adminService.createUser).not.toHaveBeenCalled();
+  });
+
+  it('should handle create user error', () => {
+    const snackBarSpy = spyOn(component['snackBar'], 'open');
+    adminService.createUser.and.returnValue(
+      throwError(() => ({ error: { detail: 'User creation failed' } }))
+    );
+
+    component.createUserForm.patchValue({
+      email: 'test@example.com',
+      password: 'password123',
+      isAdmin: false,
+    });
+
+    component.createUser();
+
+    expect(snackBarSpy).toHaveBeenCalledWith('User creation failed', 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+    });
+    expect(component.isCreatingUser).toBe(false);
+  });
+
+  it('should delete user after confirmation', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    adminService.deleteUser.and.returnValue(of(mockUser));
+
+    component.deleteUser(1);
+
+    expect(adminService.deleteUser).toHaveBeenCalledWith(1);
+    expect(adminService.listUsers).toHaveBeenCalledTimes(2);
+  });
+
+  it('should not delete user without confirmation', () => {
+    spyOn(window, 'confirm').and.returnValue(false);
+
+    component.deleteUser(1);
+
+    expect(adminService.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('should handle delete user error', () => {
+    const snackBarSpy = spyOn(component['snackBar'], 'open');
+    spyOn(window, 'confirm').and.returnValue(true);
+    adminService.deleteUser.and.returnValue(
+      throwError(() => ({ error: { detail: 'Delete failed' } }))
+    );
+
+    component.deleteUser(1);
+
+    expect(snackBarSpy).toHaveBeenCalledWith('Delete failed', 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+    });
+  });
+
+  it('should reset user password', () => {
     const mockResponse: PasswordResetResponse = {
       email: 'test@example.com',
       new_password: 'newpassword123',
     };
+    spyOnProperty(navigator, 'clipboard').and.returnValue(undefined as unknown as Clipboard);
     adminService.resetUserPassword.and.returnValue(of(mockResponse));
 
-    component.resetPasswordForm.patchValue({
-      userId: '1',
-      newPassword: 'newpassword123',
-    });
-
-    component.resetPassword();
+    component.resetPassword(1);
 
     expect(adminService.resetUserPassword).toHaveBeenCalledWith(1);
+  });
+
+  it('should reset password with clipboard', () => {
+    const mockResponse: PasswordResetResponse = {
+      email: 'test@example.com',
+      new_password: 'newpassword123',
+    };
+    const mockClipboard = {
+      writeText: jasmine.createSpy('writeText').and.returnValue(Promise.resolve()),
+      read: jasmine.createSpy('read'),
+      readText: jasmine.createSpy('readText'),
+      write: jasmine.createSpy('write'),
+      addEventListener: jasmine.createSpy('addEventListener'),
+      removeEventListener: jasmine.createSpy('removeEventListener'),
+      dispatchEvent: jasmine.createSpy('dispatchEvent'),
+    } as Clipboard;
+    spyOnProperty(navigator, 'clipboard').and.returnValue(mockClipboard);
+    adminService.resetUserPassword.and.returnValue(of(mockResponse));
+
+    component.resetPassword(1);
+
+    expect(mockClipboard.writeText).toHaveBeenCalledWith('newpassword123');
+  });
+
+  it('should not reset password when already resetting for that user', () => {
+    adminService.resetUserPassword.and.returnValue(of({ email: 'x@x.com', new_password: 'p' }));
+    component.resettingPasswordIds.add(1);
+
+    component.resetPassword(1);
+
+    expect(adminService.resetUserPassword).not.toHaveBeenCalled();
+  });
+
+  it('should add and remove userId from resettingPasswordIds on success', () => {
+    const mockResponse: PasswordResetResponse = {
+      email: 'test@example.com',
+      new_password: 'newpassword123',
+    };
+    spyOnProperty(navigator, 'clipboard').and.returnValue(undefined as unknown as Clipboard);
+    adminService.resetUserPassword.and.returnValue(of(mockResponse));
+
+    component.resetPassword(1);
+
+    expect(component.resettingPasswordIds.has(1)).toBe(false);
+  });
+
+  it('should handle reset password error', () => {
+    const snackBarSpy = spyOn(component['snackBar'], 'open');
+    adminService.resetUserPassword.and.returnValue(
+      throwError(() => ({ error: { detail: 'Password reset failed' } }))
+    );
+
+    component.resetPassword(1);
+
+    expect(snackBarSpy).toHaveBeenCalledWith('Password reset failed', 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+    });
+    expect(component.resettingPasswordIds.has(1)).toBe(false);
+  });
+
+  it('should toggle admin role', () => {
+    const adminUser = { ...mockUser, is_admin: false };
+    adminService.updateUserRole.and.returnValue(of({ ...mockUser, is_admin: true }));
+
+    component.toggleRole(adminUser);
+
+    expect(adminService.updateUserRole).toHaveBeenCalledWith(1, true);
+    expect(adminService.listUsers).toHaveBeenCalledTimes(2);
+  });
+
+  it('should handle toggle role error', () => {
+    const snackBarSpy = spyOn(component['snackBar'], 'open');
+    adminService.updateUserRole.and.returnValue(
+      throwError(() => ({ error: { detail: 'Role update failed' } }))
+    );
+
+    component.toggleRole(mockUser);
+
+    expect(snackBarSpy).toHaveBeenCalledWith('Role update failed', 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+    });
   });
 
   it('should initialize database with confirmation', () => {
@@ -111,7 +284,16 @@ describe('AdminDashboardComponent', () => {
 
     component.initializeDatabase();
 
-    expect(window.confirm).toHaveBeenCalled();
+    expect(adminService.initDatabase).not.toHaveBeenCalled();
+  });
+
+  it('should not initialize database when already initializing', () => {
+    component.isInitializingDb = true;
+    spyOn(window, 'confirm');
+
+    component.initializeDatabase();
+
+    expect(window.confirm).not.toHaveBeenCalled();
     expect(adminService.initDatabase).not.toHaveBeenCalled();
   });
 
@@ -130,18 +312,7 @@ describe('AdminDashboardComponent', () => {
 
     component.migrateDatabase();
 
-    expect(window.confirm).toHaveBeenCalled();
     expect(adminService.migrateDatabase).not.toHaveBeenCalled();
-  });
-
-  it('should not initialize database when already initializing', () => {
-    component.isInitializingDb = true;
-    spyOn(window, 'confirm');
-
-    component.initializeDatabase();
-
-    expect(window.confirm).not.toHaveBeenCalled();
-    expect(adminService.initDatabase).not.toHaveBeenCalled();
   });
 
   it('should not migrate database when already migrating', () => {
@@ -154,84 +325,6 @@ describe('AdminDashboardComponent', () => {
     expect(adminService.migrateDatabase).not.toHaveBeenCalled();
   });
 
-  it('should handle create user error', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    adminService.createUser.and.returnValue(
-      throwError(() => ({ error: { detail: 'User creation failed' } }))
-    );
-
-    component.createUserForm.patchValue({
-      email: 'test@example.com',
-      password: 'password123',
-      isAdmin: false,
-    });
-
-    component.createUser();
-
-    expect(adminService.createUser).toHaveBeenCalled();
-    expect(snackBarSpy).toHaveBeenCalledWith('User creation failed', 'Close', {
-      duration: 5000,
-      panelClass: ['error-snackbar'],
-    });
-    expect(component.isCreatingUser).toBe(false);
-  });
-
-  it('should handle create user error with generic message', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    adminService.createUser.and.returnValue(throwError(() => ({ error: {} })));
-
-    component.createUserForm.patchValue({
-      email: 'test@example.com',
-      password: 'password123',
-      isAdmin: false,
-    });
-
-    component.createUser();
-
-    expect(snackBarSpy).toHaveBeenCalledWith('Failed to create user', 'Close', {
-      duration: 5000,
-      panelClass: ['error-snackbar'],
-    });
-  });
-
-  it('should handle reset password error', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    adminService.resetUserPassword.and.returnValue(
-      throwError(() => ({ error: { detail: 'Password reset failed' } }))
-    );
-
-    component.resetPasswordForm.patchValue({
-      userId: '1',
-      newPassword: 'newpassword123',
-    });
-
-    component.resetPassword();
-
-    expect(adminService.resetUserPassword).toHaveBeenCalledWith(1);
-    expect(snackBarSpy).toHaveBeenCalledWith('Password reset failed', 'Close', {
-      duration: 5000,
-      panelClass: ['error-snackbar'],
-    });
-    expect(component.isResettingPassword).toBe(false);
-  });
-
-  it('should handle reset password error with generic message', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    adminService.resetUserPassword.and.returnValue(throwError(() => ({ error: {} })));
-
-    component.resetPasswordForm.patchValue({
-      userId: '1',
-      newPassword: 'newpassword123',
-    });
-
-    component.resetPassword();
-
-    expect(snackBarSpy).toHaveBeenCalledWith('Failed to reset password', 'Close', {
-      duration: 5000,
-      panelClass: ['error-snackbar'],
-    });
-  });
-
   it('should handle initialize database error', () => {
     const snackBarSpy = spyOn(component['snackBar'], 'open');
     spyOn(window, 'confirm').and.returnValue(true);
@@ -241,25 +334,11 @@ describe('AdminDashboardComponent', () => {
 
     component.initializeDatabase();
 
-    expect(adminService.initDatabase).toHaveBeenCalled();
     expect(snackBarSpy).toHaveBeenCalledWith('Database init failed', 'Close', {
       duration: 5000,
       panelClass: ['error-snackbar'],
     });
     expect(component.isInitializingDb).toBe(false);
-  });
-
-  it('should handle initialize database error with generic message', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    spyOn(window, 'confirm').and.returnValue(true);
-    adminService.initDatabase.and.returnValue(throwError(() => ({ error: {} })));
-
-    component.initializeDatabase();
-
-    expect(snackBarSpy).toHaveBeenCalledWith('Failed to initialize database', 'Close', {
-      duration: 5000,
-      panelClass: ['error-snackbar'],
-    });
   });
 
   it('should handle migrate database error', () => {
@@ -271,154 +350,10 @@ describe('AdminDashboardComponent', () => {
 
     component.migrateDatabase();
 
-    expect(adminService.migrateDatabase).toHaveBeenCalled();
     expect(snackBarSpy).toHaveBeenCalledWith('Database migration failed', 'Close', {
       duration: 5000,
       panelClass: ['error-snackbar'],
     });
     expect(component.isMigratingDb).toBe(false);
-  });
-
-  it('should handle migrate database error with generic message', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    spyOn(window, 'confirm').and.returnValue(true);
-    adminService.migrateDatabase.and.returnValue(throwError(() => ({ error: {} })));
-
-    component.migrateDatabase();
-
-    expect(snackBarSpy).toHaveBeenCalledWith('Failed to migrate database', 'Close', {
-      duration: 5000,
-      panelClass: ['error-snackbar'],
-    });
-  });
-
-  it('should not create user when form is invalid', () => {
-    const markAllAsTouchedSpy = spyOn(component.createUserForm, 'markAllAsTouched');
-
-    component.createUser();
-
-    expect(markAllAsTouchedSpy).toHaveBeenCalled();
-    expect(adminService.createUser).not.toHaveBeenCalled();
-  });
-
-  it('should not create user when already creating', () => {
-    component.isCreatingUser = true;
-    const markAllAsTouchedSpy = spyOn(component.createUserForm, 'markAllAsTouched');
-
-    component.createUser();
-
-    expect(markAllAsTouchedSpy).toHaveBeenCalled();
-    expect(adminService.createUser).not.toHaveBeenCalled();
-  });
-
-  it('should not reset password when form is invalid', () => {
-    const markAllAsTouchedSpy = spyOn(component.resetPasswordForm, 'markAllAsTouched');
-
-    component.resetPassword();
-
-    expect(markAllAsTouchedSpy).toHaveBeenCalled();
-    expect(adminService.resetUserPassword).not.toHaveBeenCalled();
-  });
-
-  it('should not reset password when already resetting', () => {
-    component.isResettingPassword = true;
-    const markAllAsTouchedSpy = spyOn(component.resetPasswordForm, 'markAllAsTouched');
-
-    component.resetPassword();
-
-    expect(markAllAsTouchedSpy).toHaveBeenCalled();
-    expect(adminService.resetUserPassword).not.toHaveBeenCalled();
-  });
-
-  it('should handle reset password with clipboard support', () => {
-    const mockResponse: PasswordResetResponse = {
-      email: 'test@example.com',
-      new_password: 'newpassword123',
-    };
-    const mockClipboard = {
-      writeText: jasmine.createSpy('writeText').and.returnValue(Promise.resolve()),
-      read: jasmine.createSpy('read'),
-      readText: jasmine.createSpy('readText'),
-      write: jasmine.createSpy('write'),
-      addEventListener: jasmine.createSpy('addEventListener'),
-      removeEventListener: jasmine.createSpy('removeEventListener'),
-      dispatchEvent: jasmine.createSpy('dispatchEvent'),
-    } as Clipboard;
-    spyOn(window, 'confirm').and.returnValue(true);
-    spyOnProperty(navigator, 'clipboard').and.returnValue(mockClipboard);
-    adminService.resetUserPassword.and.returnValue(of(mockResponse));
-
-    component.resetPasswordForm.patchValue({
-      userId: '1',
-      newPassword: 'newpassword123',
-    });
-
-    component.resetPassword();
-
-    expect(mockClipboard.writeText).toHaveBeenCalledWith('newpassword123');
-    expect(adminService.resetUserPassword).toHaveBeenCalledWith(1);
-  });
-
-  it('should handle reset password without clipboard support', () => {
-    const mockResponse: PasswordResetResponse = {
-      email: 'test@example.com',
-      new_password: 'newpassword123',
-    };
-    spyOnProperty(navigator, 'clipboard').and.returnValue(undefined as unknown as Clipboard);
-    adminService.resetUserPassword.and.returnValue(of(mockResponse));
-
-    component.resetPasswordForm.patchValue({
-      userId: '1',
-      newPassword: 'newpassword123',
-    });
-
-    component.resetPassword();
-
-    expect(adminService.resetUserPassword).toHaveBeenCalledWith(1);
-  });
-
-  it('should handle reset password with clipboard error', () => {
-    const mockResponse: PasswordResetResponse = {
-      email: 'test@example.com',
-      new_password: 'newpassword123',
-    };
-    const mockClipboard = {
-      writeText: jasmine.createSpy('writeText').and.returnValue(Promise.reject()),
-      read: jasmine.createSpy('read'),
-      readText: jasmine.createSpy('readText'),
-      write: jasmine.createSpy('write'),
-      addEventListener: jasmine.createSpy('addEventListener'),
-      removeEventListener: jasmine.createSpy('removeEventListener'),
-      dispatchEvent: jasmine.createSpy('dispatchEvent'),
-    } as Clipboard;
-    spyOnProperty(navigator, 'clipboard').and.returnValue(mockClipboard);
-    adminService.resetUserPassword.and.returnValue(of(mockResponse));
-
-    component.resetPasswordForm.patchValue({
-      userId: '1',
-      newPassword: 'newpassword123',
-    });
-
-    component.resetPassword();
-
-    expect(mockClipboard.writeText).toHaveBeenCalledWith('newpassword123');
-    expect(adminService.resetUserPassword).toHaveBeenCalledWith(1);
-  });
-
-  it('should handle reset password without new password in response', () => {
-    const mockResponse = {
-      email: 'test@example.com',
-      new_password: undefined,
-    } as unknown as PasswordResetResponse;
-    adminService.resetUserPassword.and.returnValue(of(mockResponse));
-
-    component.resetPasswordForm.patchValue({
-      userId: '1',
-      newPassword: 'newpassword123',
-    });
-
-    component.resetPassword();
-
-    expect(adminService.resetUserPassword).toHaveBeenCalledWith(1);
   });
 });
