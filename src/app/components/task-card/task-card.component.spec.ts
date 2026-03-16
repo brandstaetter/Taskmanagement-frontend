@@ -349,6 +349,23 @@ describe('TaskCardComponent', () => {
     });
   });
 
+  describe('Reward chip', () => {
+    it('should display reward text including emoji in the chip', () => {
+      component.task.reward = 'Movie night 🎬';
+      fixture.detectChanges();
+      const chip = fixture.debugElement.query(By.css('mat-chip'));
+      expect(chip).toBeTruthy();
+      expect(chip.nativeElement.textContent).toContain('Movie night 🎬');
+    });
+
+    it('should not render reward chip when reward is absent', () => {
+      component.task.reward = undefined;
+      fixture.detectChanges();
+      const chipSet = fixture.debugElement.query(By.css('mat-chip-set'));
+      expect(chipSet).toBeFalsy();
+    });
+  });
+
   describe('Overdue warning', () => {
     beforeEach(() => {
       jasmine.clock().install();
