@@ -13,6 +13,8 @@ import { AuthService } from '../services/auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
+  private isLoggingOut = false;
+
   constructor(
     private authService: AuthService,
     private router: Router
@@ -33,13 +35,20 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
+        if (error.status === 401 && !this.isLoggingOut) {
+          this.isLoggingOut = true;
           this.authService.logout();
 
           if (!this.router.url.startsWith('/login')) {
-            void this.router.navigate(['/login'], {
-              queryParams: { returnUrl: this.router.url },
-            });
+            void this.router
+              .navigate(['/login'], {
+                queryParams: { returnUrl: this.router.url },
+              })
+              .then(() => {
+                this.isLoggingOut = false;
+              });
+          } else {
+            this.isLoggingOut = false;
           }
         }
 

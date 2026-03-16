@@ -15,6 +15,7 @@ describe('AuthInterceptor', () => {
   beforeEach(() => {
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['getAccessToken', 'logout']);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate'], { url: '/tasks' });
+    routerSpy.navigate.and.returnValue(Promise.resolve(true));
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
@@ -286,32 +287,31 @@ describe('AuthInterceptor', () => {
   });
 
   describe('Multiple Interceptor Scenarios', () => {
-    it('should handle multiple sequential 401 errors', () => {
+    it('should only logout and navigate once when concurrent 401 responses arrive', () => {
       authService.getAccessToken.and.returnValue('test-token');
       Object.defineProperty(router, 'url', { value: '/tasks', writable: true });
 
-      // First request
+      // Both requests in-flight before either response arrives
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
           // Expected error
         },
       });
-
-      const req1 = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
-      req1.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
-
-      // Second request
       httpClient.get(`${environment.baseUrl}/v1/users`).subscribe({
         error: () => {
           // Expected error
         },
       });
 
+      const req1 = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
       const req2 = httpMock.expectOne(`${environment.baseUrl}/v1/users`);
+
+      // Both return 401 before the navigation promise resolves
+      req1.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
       req2.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
-      expect(authService.logout).toHaveBeenCalledTimes(2);
-      expect(router.navigate).toHaveBeenCalledTimes(2);
+      expect(authService.logout).toHaveBeenCalledTimes(1);
+      expect(router.navigate).toHaveBeenCalledTimes(1);
     });
   });
 });
