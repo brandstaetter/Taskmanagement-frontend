@@ -3,7 +3,7 @@
   "info": {
     "title": "Task Management API",
     "description": "API for managing tasks with printing capabilities",
-    "version": "0.6.1"
+    "version": "0.7.2"
   },
   "paths": {
     "/api/v1/auth/user/token": {
@@ -1950,6 +1950,13 @@
           "type": {
             "type": "string",
             "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
           }
         },
         "type": "object",
