@@ -41,9 +41,6 @@
       "eslint --fix"
     ]
   },
-  "overrides": {
-    "minimatch": "^9.0.9"
-  },
   "private": true,
   "dependencies": {
     "@angular/animations": "^21.0.0",
