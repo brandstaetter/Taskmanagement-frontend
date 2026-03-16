@@ -108,8 +108,23 @@ export class AuthService {
     }
   }
 
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      return typeof payload.exp === 'number' && payload.exp < Date.now() / 1000;
+    } catch {
+      return true; // malformed token → treat as expired
+    }
+  }
+
   isAuthenticated(): boolean {
-    return Boolean(this.getAccessToken());
+    const token = this.getAccessToken();
+    if (!token) return false;
+    if (this.isTokenExpired(token)) {
+      this.logout(); // proactively clear stale token
+      return false;
+    }
+    return true;
   }
 
   setAccessToken(token: string): void {

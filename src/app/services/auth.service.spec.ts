@@ -85,11 +85,50 @@ describe('AuthService', () => {
 
     it('should return authentication status correctly', () => {
       const localStorageSpy = spyOn(localStorage, 'getItem');
+      spyOn(localStorage, 'removeItem'); // prevent logout side-effects
 
-      localStorageSpy.and.returnValue('test-token');
+      const futureExp = Math.floor(Date.now() / 1000) + 3600;
+      const validToken = `header.${btoa(JSON.stringify({ exp: futureExp }))}.signature`;
+
+      localStorageSpy.and.returnValue(validToken);
       expect(service.isAuthenticated()).toBe(true);
 
       localStorageSpy.and.returnValue(null);
+      expect(service.isAuthenticated()).toBe(false);
+    });
+
+    it('should return false for an expired token', () => {
+      const pastExp = Math.floor(Date.now() / 1000) - 60;
+      const expiredToken = `header.${btoa(JSON.stringify({ exp: pastExp }))}.signature`;
+      spyOn(localStorage, 'getItem').and.returnValue(expiredToken);
+      spyOn(localStorage, 'removeItem');
+
+      expect(service.isAuthenticated()).toBe(false);
+    });
+
+    it('should call logout when token is expired', () => {
+      const pastExp = Math.floor(Date.now() / 1000) - 60;
+      const expiredToken = `header.${btoa(JSON.stringify({ exp: pastExp }))}.signature`;
+      spyOn(localStorage, 'getItem').and.returnValue(expiredToken);
+      const removeItemSpy = spyOn(localStorage, 'removeItem');
+
+      service.isAuthenticated();
+
+      expect(removeItemSpy).toHaveBeenCalledWith('taskman_access_token');
+    });
+
+    it('should return true for a valid token with future exp', () => {
+      const futureExp = Math.floor(Date.now() / 1000) + 3600;
+      const validToken = `header.${btoa(JSON.stringify({ exp: futureExp }))}.signature`;
+      spyOn(localStorage, 'getItem').and.returnValue(validToken);
+
+      expect(service.isAuthenticated()).toBe(true);
+    });
+
+    it('should return false for a malformed token', () => {
+      spyOn(localStorage, 'getItem').and.returnValue('not-a-valid-jwt');
+      spyOn(localStorage, 'removeItem');
+
       expect(service.isAuthenticated()).toBe(false);
     });
   });
@@ -183,7 +222,7 @@ describe('AuthService', () => {
     it('should handle login errors', () => {
       // Temporarily disabled to prevent CI failures
       pending();
-      
+
       // Ensure spy exists before configuring it
       if (!jasmine.isSpy(window.fetch)) {
         spyOn(window, 'fetch');
@@ -213,7 +252,7 @@ describe('AuthService', () => {
     it('should handle login when response has no access token', () => {
       // Temporarily disabled to prevent CI failures
       pending();
-      
+
       const setTokenSpy = spyOn(service, 'setAccessToken');
       const fetchUserSpy = spyOn(
         service as unknown as { fetchCurrentUser: jasmine.Spy },
@@ -242,7 +281,7 @@ describe('AuthService', () => {
     it('should handle login when response is undefined', () => {
       // Temporarily disabled to prevent CI failures
       pending();
-      
+
       const setTokenSpy = spyOn(service, 'setAccessToken');
       const fetchUserSpy = spyOn(
         service as unknown as { fetchCurrentUser: jasmine.Spy },
@@ -387,7 +426,7 @@ describe('AuthService', () => {
         .fetchCurrentUser()
         .subscribe({
           next: () => fail('should have failed'),
-          error: (error) => {
+          error: error => {
             expect(error).toBeTruthy();
             expect(consoleSpy).toHaveBeenCalled();
           },
