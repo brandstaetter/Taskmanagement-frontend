@@ -313,5 +313,32 @@ describe('AuthInterceptor', () => {
       expect(authService.logout).toHaveBeenCalledTimes(1);
       expect(router.navigate).toHaveBeenCalledTimes(1);
     });
+
+    it('should reset isLoggingOut after navigation failure so future 401s still trigger logout', async () => {
+      authService.getAccessToken.and.returnValue('test-token');
+      Object.defineProperty(router, 'url', { value: '/tasks', writable: true });
+      router.navigate.and.returnValue(Promise.reject(new Error('Navigation failed')));
+
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
+        error: () => {
+          // Expected error
+        },
+      });
+      const req1 = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
+      req1.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+      // Wait for the rejected navigate promise's finally() to run
+      await Promise.resolve();
+
+      httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
+        error: () => {
+          // Expected error
+        },
+      });
+      const req2 = httpMock.expectOne(`${environment.baseUrl}/v1/tasks`);
+      req2.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+      expect(authService.logout).toHaveBeenCalledTimes(2);
+    });
   });
 });

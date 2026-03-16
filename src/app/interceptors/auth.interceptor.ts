@@ -44,7 +44,7 @@ export class AuthInterceptor implements HttpInterceptor {
               .navigate(['/login'], {
                 queryParams: { returnUrl: this.router.url },
               })
-              .then(() => {
+              .finally(() => {
                 this.isLoggingOut = false;
               });
           } else {
