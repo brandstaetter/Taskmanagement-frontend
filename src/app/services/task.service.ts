@@ -156,6 +156,9 @@ export class TaskService {
       })
     ).pipe(
       mergeMap(response => {
+        if (response.error) {
+          return throwError(() => response.error);
+        }
         const data = response.data as unknown;
         // If it's a Blob, return it directly
         if (data instanceof Blob) {
