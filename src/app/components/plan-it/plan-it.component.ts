@@ -115,8 +115,10 @@ export class PlanItComponent implements OnInit {
   onPrintTask(task: Task): void {
     this.taskService.printTask(task.id).subscribe({
       next: response => {
-        const url = window.URL.createObjectURL(response as Blob);
-        window.open(url);
+        if (response instanceof Blob) {
+          const url = window.URL.createObjectURL(response);
+          window.open(url);
+        }
         this.snackBar.open('Task printed successfully', 'Close', { duration: 3000 });
       },
       error: error => {
