@@ -61,6 +61,10 @@
       top: 8px;
       width: 30px !important;
       height: 30px !important;
+      line-height: 30px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
       color: #505058 !important;
 
       &:hover {
@@ -70,6 +74,9 @@
 
       .mat-icon {
         font-size: 18px !important;
+        width: 18px !important;
+        height: 18px !important;
+        line-height: 18px !important;
       }
     }
   }
