@@ -3,7 +3,7 @@
   "info": {
     "title": "Task Management API",
     "description": "API for managing tasks with printing capabilities",
-    "version": "0.7.2"
+    "version": "0.7.6"
   },
   "paths": {
     "/api/v1/auth/user/token": {
@@ -1427,11 +1427,16 @@
           "message": {
             "type": "string",
             "title": "Message"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
           }
         },
         "type": "object",
         "required": [
-          "message"
+          "message",
+          "version"
         ],
         "title": "RootResponse",
         "description": "Response for root endpoint."
