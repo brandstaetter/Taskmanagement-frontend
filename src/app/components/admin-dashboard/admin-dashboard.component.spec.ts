@@ -97,7 +97,7 @@ describe('AdminDashboardComponent', () => {
 
     component.createUserForm.patchValue({
       email: 'newuser@example.com',
-      password: 'password123',
+      password: 'Test1234!',
       isAdmin: false,
     });
 
@@ -105,7 +105,7 @@ describe('AdminDashboardComponent', () => {
 
     expect(adminService.createUser).toHaveBeenCalledWith({
       email: 'newuser@example.com',
-      password: 'password123',
+      password: 'Test1234!',
       is_admin: false,
     });
     expect(adminService.listUsers).toHaveBeenCalledTimes(2);
@@ -134,7 +134,7 @@ describe('AdminDashboardComponent', () => {
 
     component.createUserForm.patchValue({
       email: 'test@example.com',
-      password: 'password123',
+      password: 'Test1234!',
       isAdmin: false,
     });
 
@@ -183,7 +183,7 @@ describe('AdminDashboardComponent', () => {
   it('should reset user password and open dialog', () => {
     const mockResponse: PasswordResetResponse = {
       email: 'test@example.com',
-      new_password: 'newpassword123',
+      new_password: 'newTest1234!',
     };
     const dialogOpenSpy = spyOn(component['dialog'], 'open').and.returnValue(
       fakeDialogRef(undefined)
@@ -194,7 +194,7 @@ describe('AdminDashboardComponent', () => {
 
     expect(adminService.resetUserPassword).toHaveBeenCalledWith(1);
     expect(dialogOpenSpy).toHaveBeenCalledWith(PasswordResetDialogComponent, {
-      data: { email: 'test@example.com', newPassword: 'newpassword123' },
+      data: { email: 'test@example.com', newPassword: 'newTest1234!' },
       width: '420px',
       disableClose: true,
     });
@@ -212,7 +212,7 @@ describe('AdminDashboardComponent', () => {
   it('should remove userId from resettingPasswordIds on success', () => {
     const mockResponse: PasswordResetResponse = {
       email: 'test@example.com',
-      new_password: 'newpassword123',
+      new_password: 'newTest1234!',
     };
     spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(undefined));
     adminService.resetUserPassword.and.returnValue(of(mockResponse));
