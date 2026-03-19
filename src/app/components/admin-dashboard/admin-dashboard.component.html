@@ -42,6 +42,19 @@
                 @if (createUserForm.controls.password.hasError('minlength')) {
                   <mat-error> Password must be at least 8 characters </mat-error>
                 }
+                @if (createUserForm.controls.password.hasError('noUppercase')) {
+                  <mat-error> Must contain an uppercase letter </mat-error>
+                }
+                @if (createUserForm.controls.password.hasError('noLowercase')) {
+                  <mat-error> Must contain a lowercase letter </mat-error>
+                }
+                @if (createUserForm.controls.password.hasError('noDigit')) {
+                  <mat-error> Must contain a digit </mat-error>
+                }
+                @if (createUserForm.controls.password.hasError('noSpecial')) {
+                  <mat-error> Must contain a special character (!@#$%^&* etc.) </mat-error>
+                }
+                <mat-hint>Min 8 chars: uppercase, lowercase, digit, and special character</mat-hint>
               </mat-form-field>
 
               <mat-checkbox formControlName="isAdmin" class="admin-checkbox">

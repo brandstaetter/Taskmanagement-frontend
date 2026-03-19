@@ -1,6 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -64,9 +70,20 @@ export class AdminDashboardComponent implements OnInit {
 
   createUserForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
+    password: ['', [Validators.required, Validators.minLength(8), this.passwordStrengthValidator]],
     isAdmin: [false],
   });
+
+  passwordStrengthValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    if (!value) return null;
+    const errors: ValidationErrors = {};
+    if (!/[A-Z]/.test(value)) errors['noUppercase'] = true;
+    if (!/[a-z]/.test(value)) errors['noLowercase'] = true;
+    if (!/[0-9]/.test(value)) errors['noDigit'] = true;
+    if (!/[!@#$%^&*()_+\-=[\]{}|;:'",.<>/?]/.test(value)) errors['noSpecial'] = true;
+    return Object.keys(errors).length ? errors : null;
+  }
 
   ngOnInit(): void {
     this.loadUsers();
