@@ -7,6 +7,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
 
 // Async observable helpers (from Angular documentation)
@@ -40,6 +41,7 @@ describe('TaskViewComponent', () => {
   let taskService: jasmine.SpyObj<TaskService>;
   let mockDialog: jasmine.SpyObj<MatDialog>;
   let mockSnackBar: jasmine.SpyObj<MatSnackBar>;
+  let mockRouter: jasmine.SpyObj<Router>;
 
   const mockTasks: Task[] = [
     {
@@ -99,12 +101,14 @@ describe('TaskViewComponent', () => {
 
     mockSnackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
     mockSnackBar.open.and.stub();
+    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
       imports: [TaskViewComponent, NoopAnimationsModule, MockTaskCardComponent],
       providers: [
         { provide: TaskService, useValue: taskServiceSpy },
         { provide: MatSnackBar, useValue: mockSnackBar },
+        { provide: Router, useValue: mockRouter },
       ],
     })
       .overrideComponent(TaskViewComponent, {
@@ -484,5 +488,11 @@ describe('TaskViewComponent', () => {
     expect(taskService.getDueTasks).toHaveBeenCalled();
     // When showArchived is false, archived and done tasks should be excluded
     expect(component.dueTasks.length).toBe(2);
+  });
+
+  it('should navigate to task details on onViewDetails', () => {
+    component.onViewDetails(mockTasks[0]);
+
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/tasks', mockTasks[0].id, 'details']);
   });
 });
