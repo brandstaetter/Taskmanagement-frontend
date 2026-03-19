@@ -346,4 +346,66 @@ describe('AdminDashboardComponent', () => {
     });
     expect(component.isMigratingDb).toBe(false);
   });
+
+  describe('passwordStrengthValidator', () => {
+    it('should return null for a valid password', () => {
+      const control = { value: 'Test1234!' } as import('@angular/forms').AbstractControl;
+      expect(component.passwordStrengthValidator(control)).toBeNull();
+    });
+
+    it('should return noUppercase error when missing uppercase', () => {
+      const control = { value: 'test1234!' } as import('@angular/forms').AbstractControl;
+      const errors = component.passwordStrengthValidator(control);
+      expect(errors?.['noUppercase']).toBe(true);
+    });
+
+    it('should return noLowercase error when missing lowercase', () => {
+      const control = { value: 'TEST1234!' } as import('@angular/forms').AbstractControl;
+      const errors = component.passwordStrengthValidator(control);
+      expect(errors?.['noLowercase']).toBe(true);
+    });
+
+    it('should return noDigit error when missing digit', () => {
+      const control = { value: 'Testtest!' } as import('@angular/forms').AbstractControl;
+      const errors = component.passwordStrengthValidator(control);
+      expect(errors?.['noDigit']).toBe(true);
+    });
+
+    it('should return noSpecial error when missing special character', () => {
+      const control = { value: 'Test1234a' } as import('@angular/forms').AbstractControl;
+      const errors = component.passwordStrengthValidator(control);
+      expect(errors?.['noSpecial']).toBe(true);
+    });
+
+    it('should return null for empty value', () => {
+      const control = { value: '' } as import('@angular/forms').AbstractControl;
+      expect(component.passwordStrengthValidator(control)).toBeNull();
+    });
+  });
+
+  describe('getPasswordError', () => {
+    it('should return required error first', () => {
+      component.createUserForm.controls.password.setValue('');
+      component.createUserForm.controls.password.markAsTouched();
+      expect(component.getPasswordError()).toBe('Password is required');
+    });
+
+    it('should return minlength error for short password', () => {
+      component.createUserForm.controls.password.setValue('Te1!');
+      component.createUserForm.controls.password.markAsTouched();
+      expect(component.getPasswordError()).toBe('Password must be at least 8 characters');
+    });
+
+    it('should return uppercase error', () => {
+      component.createUserForm.controls.password.setValue('test1234!');
+      component.createUserForm.controls.password.markAsTouched();
+      expect(component.getPasswordError()).toBe('Must contain an uppercase letter');
+    });
+
+    it('should return empty string for valid password', () => {
+      component.createUserForm.controls.password.setValue('Test1234!');
+      component.createUserForm.controls.password.markAsTouched();
+      expect(component.getPasswordError()).toBe('');
+    });
+  });
 });
