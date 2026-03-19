@@ -85,6 +85,17 @@ export class AdminDashboardComponent implements OnInit {
     return Object.keys(errors).length ? errors : null;
   }
 
+  getPasswordError(): string {
+    const ctrl = this.createUserForm.controls.password;
+    if (ctrl.hasError('required')) return 'Password is required';
+    if (ctrl.hasError('minlength')) return 'Password must be at least 8 characters';
+    if (ctrl.hasError('noUppercase')) return 'Must contain an uppercase letter';
+    if (ctrl.hasError('noLowercase')) return 'Must contain a lowercase letter';
+    if (ctrl.hasError('noDigit')) return 'Must contain a digit';
+    if (ctrl.hasError('noSpecial')) return 'Must contain a special character (!@#$%^&* etc.)';
+    return '';
+  }
+
   ngOnInit(): void {
     this.loadUsers();
   }
