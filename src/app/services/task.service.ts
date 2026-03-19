@@ -147,12 +147,16 @@ export class TaskService {
   }
 
   printTask(id: number, printerType?: string): Observable<Blob | Record<string, unknown>> {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     return from(
       printTaskApiV1TasksTaskIdPrintPost({
         client: this.authenticatedClient,
         security: this.getAuthSecurity(),
         path: { task_id: id },
-        query: printerType ? { printer_type: printerType } : undefined,
+        query: {
+          ...(printerType ? { printer_type: printerType } : {}),
+          timezone: tz,
+        } as Record<string, unknown>,
       })
     ).pipe(
       mergeMap(response => {
