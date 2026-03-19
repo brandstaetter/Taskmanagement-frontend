@@ -408,4 +408,48 @@ describe('TaskCardComponent', () => {
       expect(warningIcon).toBeFalsy();
     });
   });
+
+  describe('viewDetails event', () => {
+    it('should emit viewDetails event when menu item is clicked', fakeAsync(() => {
+      spyOn(component.viewDetails, 'emit');
+      component.task.state = 'todo';
+      fixture.detectChanges();
+
+      const menuButton = fixture.debugElement.query(By.css('button[mat-icon-button]'));
+      menuButton.nativeElement.click();
+      fixture.detectChanges();
+      tick();
+
+      const menuItems = document.querySelectorAll('button[mat-menu-item]');
+      const viewDetailsButton = Array.from(menuItems).find(item =>
+        item.textContent?.includes('View Details')
+      ) as HTMLElement;
+
+      expect(viewDetailsButton).toBeTruthy('View Details button should be present');
+      viewDetailsButton?.click();
+      fixture.detectChanges();
+      tick();
+
+      expect(component.viewDetails.emit).toHaveBeenCalledWith(component.task);
+    }));
+
+    it('should emit viewDetails from print-only mode footer', () => {
+      spyOn(component.viewDetails, 'emit');
+      component.mode = 'print-only';
+      component.task.state = 'todo';
+      fixture.detectChanges();
+
+      const footerButtons = fixture.debugElement.queryAll(
+        By.css('.footer-right button[mat-icon-button]')
+      );
+      const detailsButton = footerButtons.find(
+        btn => btn.nativeElement.querySelector('mat-icon')?.textContent?.trim() === 'visibility'
+      );
+
+      expect(detailsButton).toBeTruthy('Visibility button should be present in print-only mode');
+      detailsButton?.nativeElement.click();
+
+      expect(component.viewDetails.emit).toHaveBeenCalledWith(component.task);
+    });
+  });
 });

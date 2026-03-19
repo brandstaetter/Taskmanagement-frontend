@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { PlanItComponent } from './plan-it.component';
@@ -14,6 +15,7 @@ describe('PlanItComponent', () => {
   let mockTaskService: jasmine.SpyObj<TaskService>;
   let mockSnackBar: jasmine.SpyObj<MatSnackBar>;
   let mockDialog: jasmine.SpyObj<MatDialog>;
+  let mockRouter: jasmine.SpyObj<Router>;
 
   const mockTasks: Task[] = [
     {
@@ -54,6 +56,7 @@ describe('PlanItComponent', () => {
     ]);
     mockSnackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
     mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
+    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
 
     // Simple mock that bypasses Angular Material's internal dialog logic
     const mockDialogRef = {
@@ -72,6 +75,7 @@ describe('PlanItComponent', () => {
       providers: [
         { provide: TaskService, useValue: mockTaskService },
         { provide: MatSnackBar, useValue: mockSnackBar },
+        { provide: Router, useValue: mockRouter },
       ],
     })
       .overrideComponent(PlanItComponent, {
@@ -400,6 +404,14 @@ describe('PlanItComponent', () => {
       component.doneTasks = [];
 
       expect(component.hasAnyTasks()).toBe(false);
+    });
+  });
+
+  describe('onViewDetails', () => {
+    it('should navigate to the task details page', () => {
+      component.onViewDetails(mockTasks[0]);
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/tasks', mockTasks[0].id, 'details']);
     });
   });
 });

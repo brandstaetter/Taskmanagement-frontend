@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Task } from '../../services/task.service';
 import { TaskService } from '../../services/task.service';
 import { MatIconModule } from '@angular/material/icon';
@@ -33,7 +34,8 @@ export class TaskViewComponent implements OnInit {
   constructor(
     private taskService: TaskService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -118,6 +120,10 @@ export class TaskViewComponent implements OnInit {
         });
       }
     });
+  }
+
+  onViewDetails(task: Task): void {
+    this.router.navigate(['/tasks', task.id, 'details']);
   }
 
   onPrintTask(task: Task): void {

@@ -37,6 +37,7 @@
               (reopenTask)="onReopenTask($event)"
               (printTask)="onPrintTask($event)"
               (editTask)="onEditTask($event)"
+              (viewDetails)="onViewDetails($event)"
             >
             </app-task-card>
           }
@@ -59,6 +60,7 @@
               (archiveTask)="onArchiveTask($event)"
               (reopenTask)="onReopenTask($event)"
               (printTask)="onPrintTask($event)"
+              (viewDetails)="onViewDetails($event)"
             >
             </app-task-card>
           }
@@ -79,6 +81,7 @@
               (archiveTask)="onArchiveTask($event)"
               (reopenTask)="onReopenTask($event)"
               (printTask)="onPrintTask($event)"
+              (viewDetails)="onViewDetails($event)"
             >
             </app-task-card>
           }
@@ -95,7 +98,12 @@
               </div>
             }
             @for (task of archivedTasks; track task.id) {
-              <app-task-card [task]="task" [showActions]="false" (printTask)="onPrintTask($event)">
+              <app-task-card
+                [task]="task"
+                [showActions]="false"
+                (printTask)="onPrintTask($event)"
+                (viewDetails)="onViewDetails($event)"
+              >
               </app-task-card>
             }
           </div>

@@ -34,9 +34,10 @@
       padding: 24px 24px 0;
       position: relative;
 
-      .mat-mdc-card-header-text {
+      ::ng-deep .mat-mdc-card-header-text {
         margin: 0;
         flex: 1;
+        padding-right: 80px;
       }
 
       mat-card-title {

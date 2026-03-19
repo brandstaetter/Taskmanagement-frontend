@@ -7,6 +7,10 @@
       </button>
     }
     <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="viewDetails.emit(task)">
+        <mat-icon>visibility</mat-icon>
+        <span>View Details</span>
+      </button>
       <button mat-menu-item (click)="printTask.emit(task)">
         <mat-icon>print</mat-icon>
         <span>Print Task</span>
@@ -81,6 +85,9 @@
       @if (mode === 'print-only' || (showActions && mode === 'default')) {
         <div class="footer-right">
           @if (mode === 'print-only') {
+            <button mat-icon-button (click)="viewDetails.emit(task)" matTooltip="View details">
+              <mat-icon>visibility</mat-icon>
+            </button>
             @if (task.state === 'todo') {
               <button mat-icon-button (click)="printTask.emit(task)" matTooltip="Print task">
                 <mat-icon>print</mat-icon>
