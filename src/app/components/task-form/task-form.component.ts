@@ -230,7 +230,12 @@ export class TaskFormComponent implements OnInit {
     const date = this.taskForm.get('due_date')?.value;
     const time = this.taskForm.get('due_time')?.value;
 
-    if (date && time) {
+    if (
+      date instanceof Date &&
+      time instanceof Date &&
+      !isNaN(date.getTime()) &&
+      !isNaN(time.getTime())
+    ) {
       const combinedDate = new Date(date);
       combinedDate.setHours(time.getHours());
       combinedDate.setMinutes(time.getMinutes());

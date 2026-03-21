@@ -567,6 +567,31 @@ describe('TaskFormComponent', () => {
     });
   });
 
+  describe('issue #329 — updateDateTime guards against invalid Date from MatTimepicker', () => {
+    it('should not corrupt due_date when due_time is set to an invalid Date', () => {
+      component.mode = 'create';
+      component.task = undefined;
+      component.ngOnInit();
+      fixture.detectChanges();
+
+      const selectedDate = new Date('2026-06-15T00:00:00');
+      component.taskForm.get('due_date')?.setValue(selectedDate);
+
+      // Simulate what MatTimepickerInput._handleInput does when it can't parse
+      // the user's raw input (e.g. "1430") — it pushes an invalid Date into
+      // the form control via _onChange, which triggers valueChanges → updateDateTime
+      const invalidDate = new Date('invalid');
+      component.taskForm.get('due_time')?.setValue(invalidDate);
+
+      const dateValue = component.taskForm.get('due_date')?.value as Date;
+      expect(dateValue).toBeDefined();
+      expect(isNaN(dateValue.getTime())).toBe(false);
+      expect(dateValue.getFullYear()).toBe(2026);
+      expect(dateValue.getMonth()).toBe(5);
+      expect(dateValue.getDate()).toBe(15);
+    });
+  });
+
   describe('issue #329 — date preserved after manual HHMM time entry', () => {
     it('should preserve the date after typing HHMM and blurring in create mode', () => {
       component.mode = 'create';
