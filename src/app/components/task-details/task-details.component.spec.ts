@@ -292,4 +292,58 @@ describe('TaskDetailsComponent', () => {
       expect(component).toBeTruthy();
     });
   });
+
+  describe('Avatar display', () => {
+    it('should show creator avatar image when creator_avatar_url is set', async () => {
+      const taskWithAvatar: Task = {
+        ...mockTask,
+        creator_display_name: 'Alice',
+        creator_avatar_url: 'https://gravatar.com/avatar/abc',
+      };
+      mockTaskService.getTask.mockReturnValue(of(taskWithAvatar));
+      component.ngOnInit();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const avatarImg = fixture.nativeElement.querySelector('.user-avatar');
+      expect(avatarImg).toBeTruthy();
+      expect(avatarImg.src).toContain('gravatar.com');
+    });
+
+    it('should show person_outline icon when no creator avatar', async () => {
+      const taskNoAvatar: Task = {
+        ...mockTask,
+        creator_display_name: 'Alice',
+      };
+      mockTaskService.getTask.mockReturnValue(of(taskNoAvatar));
+      component.ngOnInit();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const avatarImg = fixture.nativeElement.querySelector('.user-avatar');
+      expect(avatarImg).toBeNull();
+    });
+
+    it('should show worker avatar when worker_avatar_url is set', async () => {
+      const taskWithWorker: Task = {
+        ...mockTask,
+        state: 'in_progress',
+        worker_display_name: 'Bob',
+        worker_avatar_url: 'https://gravatar.com/avatar/def',
+      };
+      mockTaskService.getTask.mockReturnValue(of(taskWithWorker));
+      component.ngOnInit();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const avatars = fixture.nativeElement.querySelectorAll('.user-avatar');
+      const workerAvatar = Array.from(avatars).find(
+        (a: unknown) => (a as HTMLImageElement).src && (a as HTMLImageElement).src.includes('def')
+      );
+      expect(workerAvatar).toBeTruthy();
+    });
+  });
 });

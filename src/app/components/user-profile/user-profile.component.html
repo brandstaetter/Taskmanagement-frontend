@@ -16,12 +16,13 @@
             <strong>Role:</strong>
             {{ user.is_superadmin ? 'Superadmin' : user.is_admin ? 'Administrator' : 'User' }}
           </p>
-          @if (user.avatar_url) {
-            <p class="avatar-preview">
-              <strong>Current Avatar:</strong>
-              <img [src]="user.avatar_url" alt="User avatar" />
-            </p>
-          }
+          <div class="avatar-preview">
+            <strong>Current Avatar:</strong>
+            <img [src]="user.avatar_url || user.gravatar_url" alt="User avatar" />
+            @if (!user.avatar_url && user.gravatar_url) {
+              <span class="avatar-source">via Gravatar</span>
+            }
+          </div>
         </div>
       }
 
@@ -146,6 +147,23 @@
                   {{ isLoadingAvatar ? 'Updating...' : 'Update Avatar' }}
                 </button>
               </form>
+
+              @if (user?.gravatar_url) {
+                <div class="gravatar-section">
+                  <mat-divider></mat-divider>
+                  <p class="gravatar-hint">
+                    Or use your
+                    <a href="https://gravatar.com" target="_blank" rel="noopener">Gravatar</a>
+                    avatar:
+                  </p>
+                  <div class="gravatar-preview">
+                    <img [src]="user!.gravatar_url" alt="Gravatar avatar" />
+                    <button mat-stroked-button (click)="useGravatar()" [disabled]="isLoadingAvatar">
+                      Use Gravatar
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
           </mat-tab>
         </mat-tab-group>

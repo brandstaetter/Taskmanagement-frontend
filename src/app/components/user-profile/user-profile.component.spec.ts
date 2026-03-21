@@ -448,4 +448,187 @@ describe('UserProfileComponent', () => {
     });
     expect(component.isLoadingDisplayName).toBe(false);
   });
+
+  describe('Gravatar', () => {
+    it('should display gravatar_url as fallback when no custom avatar is set', () => {
+      authService.getCurrentUser.mockReturnValue({
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        gravatar_url: 'https://www.gravatar.com/avatar/abc123',
+        created_at: '2023-01-01',
+        updated_at: '2023-01-01',
+      });
+
+      component.loadUserProfile();
+      fixture.detectChanges();
+
+      const avatarImg = fixture.nativeElement.querySelector('.avatar-preview img');
+      expect(avatarImg).toBeTruthy();
+      expect(avatarImg.src).toContain('gravatar.com');
+    });
+
+    it('should display custom avatar_url when set', () => {
+      authService.getCurrentUser.mockReturnValue({
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        avatar_url: 'https://example.com/custom.png',
+        gravatar_url: 'https://www.gravatar.com/avatar/abc123',
+        created_at: '2023-01-01',
+        updated_at: '2023-01-01',
+      });
+
+      component.loadUserProfile();
+      fixture.detectChanges();
+
+      const avatarImg = fixture.nativeElement.querySelector('.avatar-preview img');
+      expect(avatarImg).toBeTruthy();
+      expect(avatarImg.src).toContain('example.com/custom.png');
+    });
+
+    it('should show "via Gravatar" label when using gravatar fallback', () => {
+      authService.getCurrentUser.mockReturnValue({
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        gravatar_url: 'https://www.gravatar.com/avatar/abc123',
+        created_at: '2023-01-01',
+        updated_at: '2023-01-01',
+      });
+
+      component.loadUserProfile();
+      fixture.detectChanges();
+
+      const label = fixture.nativeElement.querySelector('.avatar-source');
+      expect(label).toBeTruthy();
+      expect(label.textContent).toContain('via Gravatar');
+    });
+
+    it('should not show "via Gravatar" label when custom avatar is set', () => {
+      authService.getCurrentUser.mockReturnValue({
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        avatar_url: 'https://example.com/custom.png',
+        gravatar_url: 'https://www.gravatar.com/avatar/abc123',
+        created_at: '2023-01-01',
+        updated_at: '2023-01-01',
+      });
+
+      component.loadUserProfile();
+      fixture.detectChanges();
+
+      const label = fixture.nativeElement.querySelector('.avatar-source');
+      expect(label).toBeNull();
+    });
+
+    it('should call useGravatar and update avatar', () => {
+      const mockUpdatedUser = {
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        avatar_url: 'https://www.gravatar.com/avatar/abc123',
+        gravatar_url: 'https://www.gravatar.com/avatar/abc123',
+        created_at: '2023-01-01',
+        updated_at: '2023-01-01',
+      };
+      userService.updateAvatar.mockReturnValue(of(mockUpdatedUser));
+
+      component.user = {
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        gravatar_url: 'https://www.gravatar.com/avatar/abc123',
+        created_at: '2023-01-01',
+        updated_at: '2023-01-01',
+      };
+
+      component.useGravatar();
+
+      expect(userService.updateAvatar).toHaveBeenCalledWith({
+        avatar_url: 'https://www.gravatar.com/avatar/abc123',
+      });
+      expect(component.user).toBe(mockUpdatedUser);
+      expect(component.isLoadingAvatar).toBe(false);
+    });
+
+    it('should not call useGravatar when no gravatar_url', () => {
+      component.user = {
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        created_at: '2023-01-01',
+        updated_at: '2023-01-01',
+      };
+
+      component.useGravatar();
+
+      expect(userService.updateAvatar).not.toHaveBeenCalled();
+    });
+
+    it('should not call useGravatar when already loading', () => {
+      component.user = {
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        gravatar_url: 'https://www.gravatar.com/avatar/abc123',
+        created_at: '2023-01-01',
+        updated_at: '2023-01-01',
+      };
+      component.isLoadingAvatar = true;
+
+      component.useGravatar();
+
+      expect(userService.updateAvatar).not.toHaveBeenCalled();
+    });
+
+    it('should handle useGravatar error', () => {
+      const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+      userService.updateAvatar.mockReturnValue(
+        throwError(() => {
+          const error = new Error('Failed');
+          (error as { error?: { detail?: string } }).error = {
+            detail: 'Gravatar update failed',
+          };
+          return error;
+        })
+      );
+
+      component.user = {
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        gravatar_url: 'https://www.gravatar.com/avatar/abc123',
+        created_at: '2023-01-01',
+        updated_at: '2023-01-01',
+      };
+
+      component.useGravatar();
+
+      expect(snackBarSpy).toHaveBeenCalledWith('Gravatar update failed', 'Close', {
+        duration: 5000,
+        panelClass: ['error-snackbar'],
+      });
+      expect(component.isLoadingAvatar).toBe(false);
+    });
+  });
 });

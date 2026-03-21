@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDividerModule } from '@angular/material/divider';
 import { Router } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
@@ -26,6 +27,7 @@ import { User } from '../../generated';
     MatSnackBarModule,
     MatTabsModule,
     MatIconModule,
+    MatDividerModule,
   ],
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.scss'],
@@ -175,6 +177,30 @@ export class UserProfileComponent implements OnInit {
           this.isLoadingDisplayName = false;
         },
       });
+  }
+
+  useGravatar(): void {
+    if (!this.user?.gravatar_url || this.isLoadingAvatar) return;
+
+    this.isLoadingAvatar = true;
+    this.userService.updateAvatar({ avatar_url: this.user.gravatar_url }).subscribe({
+      next: user => {
+        this.user = user;
+        this.avatarForm.patchValue({ avatarUrl: user.avatar_url ?? '' });
+        this.snackBar.open('Avatar set to Gravatar', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar'],
+        });
+        this.isLoadingAvatar = false;
+      },
+      error: err => {
+        this.snackBar.open(err.error?.detail || 'Failed to set Gravatar avatar', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+        });
+        this.isLoadingAvatar = false;
+      },
+    });
   }
 
   goBack(): void {

@@ -300,5 +300,12 @@
       height: 16px;
       line-height: 16px;
     }
+
+    .meta-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
   }
 }
