@@ -157,7 +157,7 @@
                     avatar:
                   </p>
                   <div class="gravatar-preview">
-                    <img [src]="user.gravatar_url" alt="Gravatar avatar" />
+                    <img [src]="user!.gravatar_url" alt="Gravatar avatar" />
                     <button mat-stroked-button (click)="useGravatar()" [disabled]="isLoadingAvatar">
                       Use Gravatar
                     </button>
