@@ -11,16 +11,16 @@ import { of, throwError } from 'rxjs';
 describe('UserProfileComponent', () => {
   let component: UserProfileComponent;
   let fixture: ComponentFixture<UserProfileComponent>;
-  let userService: jasmine.SpyObj<UserService>;
-  let authService: jasmine.SpyObj<AuthService>;
-  let router: jasmine.SpyObj<Router>;
+  let userService: jest.Mocked<UserService>;
+  let authService: jest.Mocked<AuthService>;
+  let router: jest.Mocked<Router>;
 
   beforeEach(async () => {
     // Mock window.fetch to prevent real HTTP calls from HeyAPI client
-    if (!jasmine.isSpy(window.fetch)) {
-      spyOn(window, 'fetch');
+    if (!jest.isMockFunction(window.fetch)) {
+      jest.spyOn(window, 'fetch');
     }
-    (window.fetch as jasmine.Spy).and.returnValue(
+    (window.fetch as jest.SpyInstance).mockReturnValue(
       Promise.resolve(
         new Response(JSON.stringify({}), {
           status: 200,
@@ -29,9 +29,12 @@ describe('UserProfileComponent', () => {
       )
     );
 
-    const userServiceSpy = jasmine.createSpyObj('UserService', ['updatePassword', 'updateAvatar']);
-    const authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const userServiceSpy = {
+      updatePassword: jest.fn(),
+      updateAvatar: jest.fn(),
+    } as unknown as jest.Mocked<UserService>;
+    const authServiceSpy = { getCurrentUser: jest.fn() } as unknown as jest.Mocked<AuthService>;
+    const routerSpy = { navigate: jest.fn() } as unknown as jest.Mocked<Router>;
 
     await TestBed.configureTestingModule({
       imports: [UserProfileComponent, ReactiveFormsModule, MatSnackBarModule, NoopAnimationsModule],
@@ -44,11 +47,11 @@ describe('UserProfileComponent', () => {
 
     fixture = TestBed.createComponent(UserProfileComponent);
     component = fixture.componentInstance;
-    userService = TestBed.inject(UserService) as jasmine.SpyObj<UserService>;
-    authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    userService = TestBed.inject(UserService) as jest.Mocked<UserService>;
+    authService = TestBed.inject(AuthService) as jest.Mocked<AuthService>;
+    router = TestBed.inject(Router) as jest.Mocked<Router>;
 
-    authService.getCurrentUser.and.returnValue({
+    authService.getCurrentUser.mockReturnValue({
       id: 1,
       email: 'test@example.com',
       is_active: true,
@@ -76,7 +79,7 @@ describe('UserProfileComponent', () => {
   });
 
   it('should update password successfully', () => {
-    userService.updatePassword.and.returnValue(of(undefined));
+    userService.updatePassword.mockReturnValue(of(undefined));
 
     component.passwordForm.patchValue({
       currentPassword: 'oldpass123',
@@ -115,7 +118,7 @@ describe('UserProfileComponent', () => {
       created_at: '2023-01-01',
       updated_at: '2023-01-01',
     };
-    userService.updateAvatar.and.returnValue(of(mockUser));
+    userService.updateAvatar.mockReturnValue(of(mockUser));
 
     component.avatarForm.patchValue({
       avatarUrl: 'https://example.com/avatar.jpg',
@@ -129,7 +132,7 @@ describe('UserProfileComponent', () => {
   });
 
   it('should hide password and avatar tabs when user is superadmin', () => {
-    authService.getCurrentUser.and.returnValue({
+    authService.getCurrentUser.mockReturnValue({
       id: 1,
       email: 'test@example.com',
       is_active: true,
@@ -146,7 +149,7 @@ describe('UserProfileComponent', () => {
   });
 
   it('should load avatar URL when user has avatar', () => {
-    authService.getCurrentUser.and.returnValue({
+    authService.getCurrentUser.mockReturnValue({
       id: 1,
       email: 'test@example.com',
       is_active: true,
@@ -173,9 +176,9 @@ describe('UserProfileComponent', () => {
     component.updatePassword();
 
     expect(userService.updatePassword).not.toHaveBeenCalled();
-    expect(component.passwordForm.controls.currentPassword.touched).toBeTrue();
-    expect(component.passwordForm.controls.newPassword.touched).toBeTrue();
-    expect(component.passwordForm.controls.confirmPassword.touched).toBeTrue();
+    expect(component.passwordForm.controls.currentPassword.touched).toBe(true);
+    expect(component.passwordForm.controls.newPassword.touched).toBe(true);
+    expect(component.passwordForm.controls.confirmPassword.touched).toBe(true);
   });
 
   it('should not update password when already loading', () => {
@@ -192,8 +195,8 @@ describe('UserProfileComponent', () => {
   });
 
   it('should handle password update error with detail message', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    userService.updatePassword.and.returnValue(
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    userService.updatePassword.mockReturnValue(
       throwError(() => {
         const error = new Error('Update failed');
         (error as { error?: { detail?: string } }).error = { detail: 'Custom error message' };
@@ -213,12 +216,12 @@ describe('UserProfileComponent', () => {
       duration: 5000,
       panelClass: ['error-snackbar'],
     });
-    expect(component.isLoadingPassword).toBeFalse();
+    expect(component.isLoadingPassword).toBe(false);
   });
 
   it('should handle password update error without detail message', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    userService.updatePassword.and.returnValue(throwError(() => new Error('Update failed')));
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    userService.updatePassword.mockReturnValue(throwError(() => new Error('Update failed')));
 
     component.passwordForm.patchValue({
       currentPassword: 'oldpass123',
@@ -236,7 +239,7 @@ describe('UserProfileComponent', () => {
         panelClass: ['error-snackbar'],
       }
     );
-    expect(component.isLoadingPassword).toBeFalse();
+    expect(component.isLoadingPassword).toBe(false);
   });
 
   it('should not update avatar when form is invalid', () => {
@@ -247,7 +250,7 @@ describe('UserProfileComponent', () => {
     component.updateAvatar();
 
     expect(userService.updateAvatar).not.toHaveBeenCalled();
-    expect(component.avatarForm.controls.avatarUrl.touched).toBeTrue();
+    expect(component.avatarForm.controls.avatarUrl.touched).toBe(true);
   });
 
   it('should not update avatar when already loading', () => {
@@ -262,8 +265,8 @@ describe('UserProfileComponent', () => {
   });
 
   it('should handle avatar update error with detail message', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    userService.updateAvatar.and.returnValue(
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    userService.updateAvatar.mockReturnValue(
       throwError(() => {
         const error = new Error('Update failed');
         (error as { error?: { detail?: string } }).error = { detail: 'Avatar upload failed' };
@@ -281,12 +284,12 @@ describe('UserProfileComponent', () => {
       duration: 5000,
       panelClass: ['error-snackbar'],
     });
-    expect(component.isLoadingAvatar).toBeFalse();
+    expect(component.isLoadingAvatar).toBe(false);
   });
 
   it('should handle avatar update error without detail message', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    userService.updateAvatar.and.returnValue(throwError(() => new Error('Update failed')));
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    userService.updateAvatar.mockReturnValue(throwError(() => new Error('Update failed')));
 
     component.avatarForm.patchValue({
       avatarUrl: 'https://example.com/avatar.jpg',
@@ -298,12 +301,12 @@ describe('UserProfileComponent', () => {
       duration: 5000,
       panelClass: ['error-snackbar'],
     });
-    expect(component.isLoadingAvatar).toBeFalse();
+    expect(component.isLoadingAvatar).toBe(false);
   });
 
   it('should show success message when password is updated successfully', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    userService.updatePassword.and.returnValue(of(undefined));
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    userService.updatePassword.mockReturnValue(of(undefined));
 
     component.passwordForm.patchValue({
       currentPassword: 'oldpass123',
@@ -317,12 +320,12 @@ describe('UserProfileComponent', () => {
       duration: 3000,
       panelClass: ['success-snackbar'],
     });
-    expect(component.passwordForm.pristine).toBeTrue();
-    expect(component.isLoadingPassword).toBeFalse();
+    expect(component.passwordForm.pristine).toBe(true);
+    expect(component.isLoadingPassword).toBe(false);
   });
 
   it('should show success message and update user when avatar is updated successfully', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
     const mockUpdatedUser = {
       id: 1,
       email: 'test@example.com',
@@ -333,7 +336,7 @@ describe('UserProfileComponent', () => {
       created_at: '2023-01-01',
       updated_at: '2023-01-01',
     };
-    userService.updateAvatar.and.returnValue(of(mockUpdatedUser));
+    userService.updateAvatar.mockReturnValue(of(mockUpdatedUser));
 
     component.avatarForm.patchValue({
       avatarUrl: 'https://example.com/new-avatar.jpg',
@@ -346,6 +349,6 @@ describe('UserProfileComponent', () => {
       panelClass: ['success-snackbar'],
     });
     expect(component.user).toBe(mockUpdatedUser);
-    expect(component.isLoadingAvatar).toBeFalse();
+    expect(component.isLoadingAvatar).toBe(false);
   });
 });

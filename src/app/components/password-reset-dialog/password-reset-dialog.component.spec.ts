@@ -15,10 +15,12 @@ const mockData: PasswordResetDialogData = {
 describe('PasswordResetDialogComponent', () => {
   let component: PasswordResetDialogComponent;
   let fixture: ComponentFixture<PasswordResetDialogComponent>;
-  let dialogRef: jasmine.SpyObj<MatDialogRef<PasswordResetDialogComponent>>;
+  let dialogRef: jest.Mocked<MatDialogRef<PasswordResetDialogComponent>>;
 
   beforeEach(async () => {
-    dialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
+    dialogRef = { close: jest.fn() } as unknown as jest.Mocked<
+      MatDialogRef<PasswordResetDialogComponent>
+    >;
 
     await TestBed.configureTestingModule({
       imports: [PasswordResetDialogComponent, MatSnackBarModule, NoopAnimationsModule],
@@ -48,8 +50,8 @@ describe('PasswordResetDialogComponent', () => {
   });
 
   it('should show snackbar when clipboard API is unavailable', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    spyOnProperty(navigator, 'clipboard').and.returnValue(undefined as unknown as Clipboard);
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    jest.spyOn(navigator, 'clipboard', 'get').mockReturnValue(undefined as unknown as Clipboard);
 
     component.copyToClipboard();
 
@@ -61,17 +63,17 @@ describe('PasswordResetDialogComponent', () => {
   });
 
   it('should copy password to clipboard and show success snackbar', async () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
     const mockClipboard = {
-      writeText: jasmine.createSpy('writeText').and.returnValue(Promise.resolve()),
-      read: jasmine.createSpy('read'),
-      readText: jasmine.createSpy('readText'),
-      write: jasmine.createSpy('write'),
-      addEventListener: jasmine.createSpy('addEventListener'),
-      removeEventListener: jasmine.createSpy('removeEventListener'),
-      dispatchEvent: jasmine.createSpy('dispatchEvent'),
-    } as Clipboard;
-    spyOnProperty(navigator, 'clipboard').and.returnValue(mockClipboard);
+      writeText: jest.fn().mockReturnValue(Promise.resolve()),
+      read: jest.fn(),
+      readText: jest.fn(),
+      write: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    } as unknown as Clipboard;
+    jest.spyOn(navigator, 'clipboard', 'get').mockReturnValue(mockClipboard);
 
     component.copyToClipboard();
     await fixture.whenStable();
@@ -84,19 +86,17 @@ describe('PasswordResetDialogComponent', () => {
   });
 
   it('should show error snackbar when clipboard write fails', async () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
     const mockClipboard = {
-      writeText: jasmine
-        .createSpy('writeText')
-        .and.returnValue(Promise.reject(new Error('denied'))),
-      read: jasmine.createSpy('read'),
-      readText: jasmine.createSpy('readText'),
-      write: jasmine.createSpy('write'),
-      addEventListener: jasmine.createSpy('addEventListener'),
-      removeEventListener: jasmine.createSpy('removeEventListener'),
-      dispatchEvent: jasmine.createSpy('dispatchEvent'),
-    } as Clipboard;
-    spyOnProperty(navigator, 'clipboard').and.returnValue(mockClipboard);
+      writeText: jest.fn().mockReturnValue(Promise.reject(new Error('denied'))),
+      read: jest.fn(),
+      readText: jest.fn(),
+      write: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    } as unknown as Clipboard;
+    jest.spyOn(navigator, 'clipboard', 'get').mockReturnValue(mockClipboard);
 
     component.copyToClipboard();
     await fixture.whenStable();

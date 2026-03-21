@@ -4,12 +4,15 @@ import { adminGuard } from './admin.guard';
 import { AuthService } from '../services/auth.service';
 
 describe('adminGuard', () => {
-  let authService: jasmine.SpyObj<AuthService>;
-  let router: jasmine.SpyObj<Router>;
+  let authService: jest.Mocked<AuthService>;
+  let router: jest.Mocked<Router>;
 
   beforeEach(() => {
-    const authServiceSpy = jasmine.createSpyObj('AuthService', ['isAuthenticated', 'isAdmin']);
-    const routerSpy = jasmine.createSpyObj('Router', ['createUrlTree']);
+    const authServiceSpy = {
+      isAuthenticated: jest.fn(),
+      isAdmin: jest.fn(),
+    } as unknown as jest.Mocked<AuthService>;
+    const routerSpy = { createUrlTree: jest.fn() } as unknown as jest.Mocked<Router>;
 
     TestBed.configureTestingModule({
       providers: [
@@ -18,13 +21,13 @@ describe('adminGuard', () => {
       ],
     });
 
-    authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    authService = TestBed.inject(AuthService) as jest.Mocked<AuthService>;
+    router = TestBed.inject(Router) as jest.Mocked<Router>;
   });
 
   it('should allow access when user is authenticated and is admin', () => {
-    authService.isAuthenticated.and.returnValue(true);
-    authService.isAdmin.and.returnValue(true);
+    authService.isAuthenticated.mockReturnValue(true);
+    authService.isAdmin.mockReturnValue(true);
 
     const result = TestBed.runInInjectionContext(() =>
       adminGuard({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot)
@@ -34,10 +37,10 @@ describe('adminGuard', () => {
   });
 
   it('should redirect to home when user is not authenticated', () => {
-    authService.isAuthenticated.and.returnValue(false);
-    authService.isAdmin.and.returnValue(false);
+    authService.isAuthenticated.mockReturnValue(false);
+    authService.isAdmin.mockReturnValue(false);
     const urlTree = router.createUrlTree(['/']);
-    router.createUrlTree.and.returnValue(urlTree);
+    router.createUrlTree.mockReturnValue(urlTree);
 
     const result = TestBed.runInInjectionContext(() =>
       adminGuard({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot)
@@ -48,10 +51,10 @@ describe('adminGuard', () => {
   });
 
   it('should redirect to home when user is authenticated but not admin', () => {
-    authService.isAuthenticated.and.returnValue(true);
-    authService.isAdmin.and.returnValue(false);
+    authService.isAuthenticated.mockReturnValue(true);
+    authService.isAdmin.mockReturnValue(false);
     const urlTree = router.createUrlTree(['/']);
-    router.createUrlTree.and.returnValue(urlTree);
+    router.createUrlTree.mockReturnValue(urlTree);
 
     const result = TestBed.runInInjectionContext(() =>
       adminGuard({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot)

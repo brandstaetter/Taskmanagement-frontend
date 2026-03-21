@@ -4,13 +4,13 @@ import { authGuard } from './auth.guard';
 import { AuthService } from '../services/auth.service';
 
 describe('authGuard', () => {
-  let authService: jasmine.SpyObj<AuthService>;
-  let router: jasmine.SpyObj<Router>;
+  let authService: jest.Mocked<AuthService>;
+  let router: jest.Mocked<Router>;
 
   beforeEach(() => {
     // Create spy objects for dependencies
-    const authServiceSpy = jasmine.createSpyObj('AuthService', ['isAuthenticated']);
-    const routerSpy = jasmine.createSpyObj('Router', ['createUrlTree']);
+    const authServiceSpy = { isAuthenticated: jest.fn() } as unknown as jest.Mocked<AuthService>;
+    const routerSpy = { createUrlTree: jest.fn() } as unknown as jest.Mocked<Router>;
 
     TestBed.configureTestingModule({
       providers: [
@@ -19,13 +19,13 @@ describe('authGuard', () => {
       ],
     });
 
-    authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    authService = TestBed.inject(AuthService) as jest.Mocked<AuthService>;
+    router = TestBed.inject(Router) as jest.Mocked<Router>;
   });
 
   it('should allow access when user is authenticated', () => {
     // Arrange
-    authService.isAuthenticated.and.returnValue(true);
+    authService.isAuthenticated.mockReturnValue(true);
     const mockRoute = {} as ActivatedRouteSnapshot;
     const mockState = { url: '/protected-route' } as RouterStateSnapshot;
 
@@ -40,9 +40,9 @@ describe('authGuard', () => {
 
   it('should redirect to login when user is not authenticated', () => {
     // Arrange
-    authService.isAuthenticated.and.returnValue(false);
+    authService.isAuthenticated.mockReturnValue(false);
     const mockUrlTree = {} as UrlTree;
-    router.createUrlTree.and.returnValue(mockUrlTree);
+    router.createUrlTree.mockReturnValue(mockUrlTree);
     const mockRoute = {} as ActivatedRouteSnapshot;
     const mockState = { url: '/protected-route' } as RouterStateSnapshot;
 
@@ -59,9 +59,9 @@ describe('authGuard', () => {
 
   it('should include returnUrl query parameter when redirecting to login', () => {
     // Arrange
-    authService.isAuthenticated.and.returnValue(false);
+    authService.isAuthenticated.mockReturnValue(false);
     const mockUrlTree = {} as UrlTree;
-    router.createUrlTree.and.returnValue(mockUrlTree);
+    router.createUrlTree.mockReturnValue(mockUrlTree);
     const mockRoute = {} as ActivatedRouteSnapshot;
     const targetUrl = '/task-details/123';
     const mockState = { url: targetUrl } as RouterStateSnapshot;
@@ -78,9 +78,9 @@ describe('authGuard', () => {
 
   it('should handle root path correctly when not authenticated', () => {
     // Arrange
-    authService.isAuthenticated.and.returnValue(false);
+    authService.isAuthenticated.mockReturnValue(false);
     const mockUrlTree = {} as UrlTree;
-    router.createUrlTree.and.returnValue(mockUrlTree);
+    router.createUrlTree.mockReturnValue(mockUrlTree);
     const mockRoute = {} as ActivatedRouteSnapshot;
     const mockState = { url: '/' } as RouterStateSnapshot;
 
@@ -96,9 +96,9 @@ describe('authGuard', () => {
 
   it('should handle complex URLs with query parameters when not authenticated', () => {
     // Arrange
-    authService.isAuthenticated.and.returnValue(false);
+    authService.isAuthenticated.mockReturnValue(false);
     const mockUrlTree = {} as UrlTree;
-    router.createUrlTree.and.returnValue(mockUrlTree);
+    router.createUrlTree.mockReturnValue(mockUrlTree);
     const mockRoute = {} as ActivatedRouteSnapshot;
     const complexUrl = '/task-details/123?view=expanded&tab=comments';
     const mockState = { url: complexUrl } as RouterStateSnapshot;

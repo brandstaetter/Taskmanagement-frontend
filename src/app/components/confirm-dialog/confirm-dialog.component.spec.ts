@@ -6,10 +6,12 @@ import { ConfirmDialogComponent } from './confirm-dialog.component';
 describe('ConfirmDialogComponent', () => {
   let component: ConfirmDialogComponent;
   let fixture: ComponentFixture<ConfirmDialogComponent>;
-  let dialogRef: jasmine.SpyObj<MatDialogRef<ConfirmDialogComponent>>;
+  let dialogRef: jest.Mocked<MatDialogRef<ConfirmDialogComponent>>;
 
   beforeEach(async () => {
-    dialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
+    dialogRef = { close: jest.fn() } as unknown as jest.Mocked<
+      MatDialogRef<ConfirmDialogComponent>
+    >;
 
     await TestBed.configureTestingModule({
       imports: [ConfirmDialogComponent, NoopAnimationsModule],

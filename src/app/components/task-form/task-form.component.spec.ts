@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TaskFormComponent } from './task-form.component';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -16,10 +16,10 @@ describe('TaskFormComponent', () => {
   let component: TaskFormComponent;
   let fixture: ComponentFixture<TaskFormComponent>;
   let loader: HarnessLoader;
-  let taskService: jasmine.SpyObj<TaskService>;
-  let authService: jasmine.SpyObj<AuthService>;
-  let dialogRef: jasmine.SpyObj<MatDialogRef<TaskFormComponent>>;
-  let snackBar: jasmine.SpyObj<MatSnackBar>;
+  let taskService: jest.Mocked<TaskService>;
+  let authService: jest.Mocked<AuthService>;
+  let dialogRef: jest.Mocked<MatDialogRef<TaskFormComponent>>;
+  let snackBar: jest.Mocked<MatSnackBar>;
 
   const mockTask: Task = {
     id: 1,
@@ -32,13 +32,16 @@ describe('TaskFormComponent', () => {
   };
 
   beforeEach(async () => {
-    taskService = jasmine.createSpyObj('TaskService', ['createTask', 'updateTask']);
-    authService = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
-    dialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
-    snackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
+    taskService = {
+      createTask: jest.fn(),
+      updateTask: jest.fn(),
+    } as unknown as jest.Mocked<TaskService>;
+    authService = { getCurrentUser: jest.fn() } as unknown as jest.Mocked<AuthService>;
+    dialogRef = { close: jest.fn() } as unknown as jest.Mocked<MatDialogRef<TaskFormComponent>>;
+    snackBar = { open: jest.fn() } as unknown as jest.Mocked<MatSnackBar>;
 
     // Set up default mock responses
-    authService.getCurrentUser.and.returnValue({
+    authService.getCurrentUser.mockReturnValue({
       id: 1,
       email: 'test@example.com',
       is_active: true,
@@ -49,8 +52,8 @@ describe('TaskFormComponent', () => {
       created_at: '2024-01-01T00:00:00.000Z',
       updated_at: '2024-01-01T00:00:00.000Z',
     });
-    taskService.createTask.and.returnValue(of({ ...mockTask }));
-    taskService.updateTask.and.returnValue(of({ ...mockTask }));
+    taskService.createTask.mockReturnValue(of({ ...mockTask }));
+    taskService.updateTask.mockReturnValue(of({ ...mockTask }));
 
     await TestBed.configureTestingModule({
       imports: [TaskFormComponent, ReactiveFormsModule, NoopAnimationsModule],
@@ -109,7 +112,7 @@ describe('TaskFormComponent', () => {
       fixture.detectChanges();
     });
 
-    it('should submit valid form data', fakeAsync(async () => {
+    it('should submit valid form data', async () => {
       const titleInput = await loader.getHarness(
         MatInputHarness.with({ selector: '[formControlName="title"]' })
       );
@@ -133,18 +136,18 @@ describe('TaskFormComponent', () => {
         created_by: 1,
       };
 
-      expect(taskService.createTask).toHaveBeenCalledWith(jasmine.objectContaining(expectedCreate));
+      expect(taskService.createTask).toHaveBeenCalledWith(expect.objectContaining(expectedCreate));
 
-      tick();
+      await fixture.whenStable();
 
-      expect(dialogRef.close).toHaveBeenCalledWith(jasmine.objectContaining({ ...mockTask }));
+      expect(dialogRef.close).toHaveBeenCalledWith(expect.objectContaining({ ...mockTask }));
       expect(snackBar.open).toHaveBeenCalledWith('Task added successfully', 'Close', {
         duration: 3000,
       });
-    }));
+    });
 
-    it('should handle API errors gracefully', fakeAsync(async () => {
-      taskService.createTask.and.returnValue(throwError(() => new Error('API Error')));
+    it('should handle API errors gracefully', async () => {
+      taskService.createTask.mockReturnValue(throwError(() => new Error('API Error')));
 
       const titleInput = await loader.getHarness(
         MatInputHarness.with({ selector: '[formControlName="title"]' })
@@ -160,11 +163,11 @@ describe('TaskFormComponent', () => {
       await descInput.setValue('New Description');
       await submitButton.click();
 
-      tick();
+      await fixture.whenStable();
 
       expect(dialogRef.close).not.toHaveBeenCalled();
       expect(snackBar.open).toHaveBeenCalledWith('Error adding task', 'Close', { duration: 3000 });
-    }));
+    });
   });
 
   describe('Edit Mode', () => {
@@ -179,7 +182,7 @@ describe('TaskFormComponent', () => {
       fixture.detectChanges();
 
       // Reset mock responses before each test
-      taskService.updateTask.calls.reset();
+      taskService.updateTask.mockClear();
     });
 
     it('should initialize form with existing task data', async () => {
@@ -194,7 +197,7 @@ describe('TaskFormComponent', () => {
       expect(await descInput.getValue()).toBe(editMockTask.description);
     });
 
-    it('should update task with modified title', fakeAsync(async () => {
+    it('should update task with modified title', async () => {
       const titleInput = await loader.getHarness(
         MatInputHarness.with({ selector: '[formControlName="title"]' })
       );
@@ -214,28 +217,28 @@ describe('TaskFormComponent', () => {
         ...editMockTask, // This includes the original state
         title: 'Updated Task',
       };
-      taskService.updateTask.and.returnValue(of(updatedTask));
+      taskService.updateTask.mockReturnValue(of(updatedTask));
 
       await submitButton.click();
-      tick(); // Wait for form submission
+      await fixture.whenStable(); // Wait for form submission
 
       // Verify update data sent to service (only changed fields)
       expect(taskService.updateTask).toHaveBeenCalledWith(
         editMockTask.id,
-        jasmine.objectContaining(changes)
+        expect.objectContaining(changes)
       );
 
       // Verify response handling
-      expect(dialogRef.close).toHaveBeenCalledWith(jasmine.objectContaining(updatedTask));
+      expect(dialogRef.close).toHaveBeenCalledWith(expect.objectContaining(updatedTask));
       expect(snackBar.open).toHaveBeenCalledWith('Task updated successfully', 'Close', {
         duration: 3000,
       });
-    }));
+    });
 
-    it('should emit save event when not in dialog', fakeAsync(async () => {
+    it('should emit save event when not in dialog', async () => {
       // Remove dialog ref to test component output
       Object.defineProperty(component, 'dialogRef', { value: undefined });
-      spyOn(component.save, 'emit');
+      jest.spyOn(component.save, 'emit');
 
       const titleInput = await loader.getHarness(
         MatInputHarness.with({ selector: '[formControlName="title"]' })
@@ -263,30 +266,30 @@ describe('TaskFormComponent', () => {
         description: 'Updated Description',
       };
 
-      taskService.updateTask.and.returnValue(of(updatedTask));
+      taskService.updateTask.mockReturnValue(of(updatedTask));
 
       await submitButton.click();
-      tick(); // Wait for form submission
+      await fixture.whenStable(); // Wait for form submission
 
       // Verify update data sent to service (only changed fields)
       expect(taskService.updateTask).toHaveBeenCalledWith(
         editMockTask.id,
-        jasmine.objectContaining(changes)
+        expect.objectContaining(changes)
       );
 
       // Verify response handling with the original mock task state
       expect(component.save.emit).toHaveBeenCalledWith(
-        jasmine.objectContaining({
+        expect.objectContaining({
           id: editMockTask.id,
           title: 'Updated Task',
           description: 'Updated Description',
           state: editMockTask.state, // Use the original state
         })
       );
-    }));
+    });
 
-    it('should handle API errors gracefully', fakeAsync(async () => {
-      taskService.updateTask.and.returnValue(throwError(() => new Error('API Error')));
+    it('should handle API errors gracefully', async () => {
+      taskService.updateTask.mockReturnValue(throwError(() => new Error('API Error')));
 
       const titleInput = await loader.getHarness(
         MatInputHarness.with({ selector: '[formControlName="title"]' })
@@ -298,18 +301,18 @@ describe('TaskFormComponent', () => {
       await titleInput.setValue('Updated Task');
       await submitButton.click();
 
-      tick();
+      await fixture.whenStable();
 
       expect(dialogRef.close).not.toHaveBeenCalled();
       expect(snackBar.open).toHaveBeenCalledWith('Error updating task', 'Close', {
         duration: 3000,
       });
-    }));
+    });
 
     it('should emit cancel event when cancel button is clicked', async () => {
       // Remove dialog ref to test component output
       Object.defineProperty(component, 'dialogRef', { value: undefined });
-      spyOn(component.cancelled, 'emit');
+      jest.spyOn(component.cancelled, 'emit');
 
       const cancelButton = await loader.getHarness(MatButtonHarness.with({ text: 'Cancel' }));
       await cancelButton.click();
@@ -327,15 +330,15 @@ describe('TaskFormComponent', () => {
     });
 
     it('should prefill current time when called', () => {
-      jasmine.clock().install();
+      jest.useFakeTimers();
       const now = new Date(2023, 0, 1, 10, 15, 30);
-      jasmine.clock().mockDate(now);
+      jest.setSystemTime(now);
 
       const componentWithPrivateMethods = component as unknown as {
         roundUpToNextInterval(date: Date): Date;
         prefillCurrentTime(): void;
       };
-      spyOn(componentWithPrivateMethods, 'roundUpToNextInterval').and.callThrough();
+      jest.spyOn(componentWithPrivateMethods, 'roundUpToNextInterval');
 
       componentWithPrivateMethods.prefillCurrentTime();
 
@@ -343,7 +346,7 @@ describe('TaskFormComponent', () => {
       expect(component.taskForm.get('due_time')?.value).toBeDefined();
       expect(component.taskForm.get('due_date')?.value).toBeDefined();
 
-      jasmine.clock().uninstall();
+      jest.useRealTimers();
     });
 
     it('should not override existing time when prefilling current time', () => {
@@ -440,10 +443,10 @@ describe('TaskFormComponent', () => {
 
       expect(dateValue).toBeDefined();
       expect(timeValue).toBeDefined();
-      expect(dateValue.toISOString().startsWith('2025-02-19')).toBeTrue();
+      expect(dateValue.toISOString().startsWith('2025-02-19')).toBe(true);
     });
 
-    it('should combine date and time in form submission', fakeAsync(async () => {
+    it('should combine date and time in form submission', async () => {
       const date = new Date('2023-01-01T00:00:00');
       const time = new Date('2023-01-01T15:30:00');
 
@@ -457,16 +460,17 @@ describe('TaskFormComponent', () => {
       );
       await submitButton.click();
 
-      tick();
+      await fixture.whenStable();
 
-      const createCall = taskService.createTask.calls.mostRecent();
-      const taskData = createCall.args[0] as TaskCreate;
+      const createCall =
+        taskService.createTask.mock.calls[taskService.createTask.mock.calls.length - 1];
+      const taskData = createCall[0] as TaskCreate;
 
       expect(taskData.due_date).toBeDefined();
       // Check that the time component is correctly set (accounting for timezone)
       // The actual time might be different due to timezone conversion
       expect(taskData.due_date).toBeDefined();
       expect(typeof taskData.due_date).toBe('string');
-    }));
+    });
   });
 });

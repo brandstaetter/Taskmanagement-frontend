@@ -15,11 +15,11 @@ import { of } from 'rxjs';
 describe('MainViewComponent', () => {
   let component: MainViewComponent;
   let fixture: ComponentFixture<MainViewComponent>;
-  let mockAuthService: jasmine.SpyObj<AuthService>;
-  let mockRouter: jasmine.SpyObj<Router>;
-  let mockDialog: jasmine.SpyObj<MatDialog>;
-  let mockTaskService: jasmine.SpyObj<TaskService>;
-  let mockSnackBar: jasmine.SpyObj<MatSnackBar>;
+  let mockAuthService: jest.Mocked<AuthService>;
+  let mockRouter: jest.Mocked<Router>;
+  let mockDialog: jest.Mocked<MatDialog>;
+  let mockTaskService: jest.Mocked<TaskService>;
+  let mockSnackBar: jest.Mocked<MatSnackBar>;
 
   const mockUser: User = {
     id: 1,
@@ -35,10 +35,10 @@ describe('MainViewComponent', () => {
 
   beforeEach(async () => {
     // Mock window.fetch to prevent real HTTP calls from HeyAPI client
-    if (!jasmine.isSpy(window.fetch)) {
-      spyOn(window, 'fetch');
+    if (!jest.isMockFunction(window.fetch)) {
+      jest.spyOn(window, 'fetch');
     }
-    (window.fetch as jasmine.Spy).and.returnValue(
+    (window.fetch as jest.SpyInstance).mockReturnValue(
       Promise.resolve(
         new Response(JSON.stringify({}), {
           status: 200,
@@ -47,18 +47,21 @@ describe('MainViewComponent', () => {
       )
     );
 
-    mockAuthService = jasmine.createSpyObj('AuthService', [
-      'isAdmin',
-      'getCurrentUser',
-      'logout',
-      'getAccessToken',
-    ]);
-    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
-    mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
-    mockTaskService = jasmine.createSpyObj('TaskService', ['getTasks', 'getDueTasks']);
-    mockSnackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
-    mockTaskService.getTasks.and.returnValue(of([]));
-    mockTaskService.getDueTasks.and.returnValue(of([]));
+    mockAuthService = {
+      isAdmin: jest.fn(),
+      getCurrentUser: jest.fn(),
+      logout: jest.fn(),
+      getAccessToken: jest.fn(),
+    } as unknown as jest.Mocked<AuthService>;
+    mockRouter = { navigate: jest.fn() } as unknown as jest.Mocked<Router>;
+    mockDialog = { open: jest.fn() } as unknown as jest.Mocked<MatDialog>;
+    mockTaskService = {
+      getTasks: jest.fn(),
+      getDueTasks: jest.fn(),
+    } as unknown as jest.Mocked<TaskService>;
+    mockSnackBar = { open: jest.fn() } as unknown as jest.Mocked<MatSnackBar>;
+    mockTaskService.getTasks.mockReturnValue(of([]));
+    mockTaskService.getDueTasks.mockReturnValue(of([]));
 
     // Simple mock that bypasses Angular Material's internal dialog logic
     const mockDialogRef = {
@@ -67,7 +70,7 @@ describe('MainViewComponent', () => {
         return;
       },
     } as MatDialogRef<unknown, unknown>;
-    mockDialog.open.and.returnValue(mockDialogRef);
+    mockDialog.open.mockReturnValue(mockDialogRef);
 
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, MainViewComponent],
@@ -102,13 +105,13 @@ describe('MainViewComponent', () => {
 
   describe('isAdmin getter', () => {
     it('should return true when user is admin', () => {
-      mockAuthService.isAdmin.and.returnValue(true);
+      mockAuthService.isAdmin.mockReturnValue(true);
       expect(component.isAdmin).toBe(true);
       expect(mockAuthService.isAdmin).toHaveBeenCalled();
     });
 
     it('should return false when user is not admin', () => {
-      mockAuthService.isAdmin.and.returnValue(false);
+      mockAuthService.isAdmin.mockReturnValue(false);
       expect(component.isAdmin).toBe(false);
       expect(mockAuthService.isAdmin).toHaveBeenCalled();
     });
@@ -116,13 +119,13 @@ describe('MainViewComponent', () => {
 
   describe('currentUser getter', () => {
     it('should return current user from auth service', () => {
-      mockAuthService.getCurrentUser.and.returnValue(mockUser);
+      mockAuthService.getCurrentUser.mockReturnValue(mockUser);
       expect(component.currentUser).toBe(mockUser);
       expect(mockAuthService.getCurrentUser).toHaveBeenCalled();
     });
 
     it('should return null when no current user', () => {
-      mockAuthService.getCurrentUser.and.returnValue(null);
+      mockAuthService.getCurrentUser.mockReturnValue(null);
       expect(component.currentUser).toBeNull();
       expect(mockAuthService.getCurrentUser).toHaveBeenCalled();
     });
@@ -181,11 +184,11 @@ describe('MainViewComponent', () => {
       const mockDialogRef = {
         afterClosed: () => of({ title: 'New Task' }),
       } as MatDialogRef<unknown, unknown>;
-      mockDialog.open.and.returnValue(mockDialogRef);
+      mockDialog.open.mockReturnValue(mockDialogRef);
 
       // Mock child component
       const mockTaskView = {
-        loadDueTasks: jasmine.createSpy('loadDueTasks'),
+        loadDueTasks: jest.fn(),
       };
       component.taskView = mockTaskView as unknown as TaskViewComponent;
       component.currentView = 'do-it';
@@ -200,11 +203,11 @@ describe('MainViewComponent', () => {
       const mockDialogRef = {
         afterClosed: () => of({ title: 'New Task' }),
       } as MatDialogRef<unknown, unknown>;
-      mockDialog.open.and.returnValue(mockDialogRef);
+      mockDialog.open.mockReturnValue(mockDialogRef);
 
       // Mock child component
       const mockPlanIt = {
-        loadTasks: jasmine.createSpy('loadTasks'),
+        loadTasks: jest.fn(),
       };
       component.planIt = mockPlanIt as unknown as PlanItComponent;
       component.currentView = 'plan-it';
@@ -219,14 +222,14 @@ describe('MainViewComponent', () => {
       const mockDialogRef = {
         afterClosed: () => of(null),
       } as MatDialogRef<unknown, unknown>;
-      mockDialog.open.and.returnValue(mockDialogRef);
+      mockDialog.open.mockReturnValue(mockDialogRef);
 
       // Mock child components
       const mockTaskView = {
-        loadDueTasks: jasmine.createSpy('loadDueTasks'),
+        loadDueTasks: jest.fn(),
       };
       const mockPlanIt = {
-        loadTasks: jasmine.createSpy('loadTasks'),
+        loadTasks: jest.fn(),
       };
       component.taskView = mockTaskView as unknown as TaskViewComponent;
       component.planIt = mockPlanIt as unknown as PlanItComponent;
@@ -243,7 +246,7 @@ describe('MainViewComponent', () => {
       const mockDialogRef = {
         afterClosed: () => of({ title: 'New Task' }),
       } as MatDialogRef<unknown, unknown>;
-      mockDialog.open.and.returnValue(mockDialogRef);
+      mockDialog.open.mockReturnValue(mockDialogRef);
 
       component.taskView = null!;
       component.planIt = null!;

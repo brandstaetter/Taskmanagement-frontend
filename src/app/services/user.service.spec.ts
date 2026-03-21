@@ -7,10 +7,10 @@ describe('UserService', () => {
 
   beforeEach(() => {
     // Ensure fetch spy exists before configuring it
-    if (!jasmine.isSpy(window.fetch)) {
-      spyOn(window, 'fetch');
+    if (!jest.isMockFunction(window.fetch)) {
+      jest.spyOn(window, 'fetch');
     }
-    (window.fetch as jasmine.Spy).and.returnValue(
+    (window.fetch as jest.SpyInstance).mockReturnValue(
       Promise.resolve({
         ok: true,
         status: 200,

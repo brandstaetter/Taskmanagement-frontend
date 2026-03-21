@@ -9,13 +9,16 @@ import { environment } from '../../environments/environment';
 describe('AuthInterceptor', () => {
   let httpMock: HttpTestingController;
   let httpClient: HttpClient;
-  let authService: jasmine.SpyObj<AuthService>;
-  let router: jasmine.SpyObj<Router>;
+  let authService: jest.Mocked<AuthService>;
+  let router: jest.Mocked<Router>;
 
   beforeEach(() => {
-    const authServiceSpy = jasmine.createSpyObj('AuthService', ['getAccessToken', 'logout']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate'], { url: '/tasks' });
-    routerSpy.navigate.and.returnValue(Promise.resolve(true));
+    const authServiceSpy = {
+      getAccessToken: jest.fn(),
+      logout: jest.fn(),
+    } as unknown as jest.Mocked<AuthService>;
+    const routerSpy = { navigate: jest.fn(), url: '/tasks' } as unknown as jest.Mocked<Router>;
+    routerSpy.navigate.mockReturnValue(Promise.resolve(true));
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
@@ -32,8 +35,8 @@ describe('AuthInterceptor', () => {
 
     httpMock = TestBed.inject(HttpTestingController);
     httpClient = TestBed.inject(HttpClient);
-    authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    authService = TestBed.inject(AuthService) as jest.Mocked<AuthService>;
+    router = TestBed.inject(Router) as jest.Mocked<Router>;
   });
 
   afterEach(() => {
@@ -43,7 +46,7 @@ describe('AuthInterceptor', () => {
   describe('Token Attachment', () => {
     it('should attach Bearer token to API requests when token is available', () => {
       const mockToken = 'test-token-123';
-      authService.getAccessToken.and.returnValue(mockToken);
+      authService.getAccessToken.mockReturnValue(mockToken);
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe();
 
@@ -54,7 +57,7 @@ describe('AuthInterceptor', () => {
 
     it('should not attach token to non-API requests', () => {
       const mockToken = 'test-token-123';
-      authService.getAccessToken.and.returnValue(mockToken);
+      authService.getAccessToken.mockReturnValue(mockToken);
 
       httpClient.get('https://external-api.com/data').subscribe();
 
@@ -64,7 +67,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should not attach token when no token is available', () => {
-      authService.getAccessToken.and.returnValue(null);
+      authService.getAccessToken.mockReturnValue(null);
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe();
 
@@ -74,7 +77,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should not attach token when token is empty string', () => {
-      authService.getAccessToken.and.returnValue('');
+      authService.getAccessToken.mockReturnValue('');
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe();
 
@@ -86,7 +89,7 @@ describe('AuthInterceptor', () => {
 
   describe('401 Error Handling', () => {
     it('should call logout on 401 error', () => {
-      authService.getAccessToken.and.returnValue('test-token');
+      authService.getAccessToken.mockReturnValue('test-token');
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
@@ -101,7 +104,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should redirect to login with returnUrl on 401 error when not on login page', () => {
-      authService.getAccessToken.and.returnValue('test-token');
+      authService.getAccessToken.mockReturnValue('test-token');
       Object.defineProperty(router, 'url', { value: '/tasks', writable: true });
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
@@ -119,7 +122,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should not redirect when already on login page', () => {
-      authService.getAccessToken.and.returnValue('test-token');
+      authService.getAccessToken.mockReturnValue('test-token');
       Object.defineProperty(router, 'url', { value: '/login', writable: true });
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
@@ -136,7 +139,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should not redirect when on login page with query params', () => {
-      authService.getAccessToken.and.returnValue('test-token');
+      authService.getAccessToken.mockReturnValue('test-token');
       Object.defineProperty(router, 'url', { value: '/login?returnUrl=/tasks', writable: true });
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
@@ -153,7 +156,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should propagate 401 error after handling', done => {
-      authService.getAccessToken.and.returnValue('test-token');
+      authService.getAccessToken.mockReturnValue('test-token');
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: (error: HttpErrorResponse) => {
@@ -170,7 +173,7 @@ describe('AuthInterceptor', () => {
 
   describe('Other Error Handling', () => {
     it('should not call logout on 403 error', () => {
-      authService.getAccessToken.and.returnValue('test-token');
+      authService.getAccessToken.mockReturnValue('test-token');
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
@@ -186,7 +189,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should not call logout on 404 error', () => {
-      authService.getAccessToken.and.returnValue('test-token');
+      authService.getAccessToken.mockReturnValue('test-token');
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
@@ -202,7 +205,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should not call logout on 500 error', () => {
-      authService.getAccessToken.and.returnValue('test-token');
+      authService.getAccessToken.mockReturnValue('test-token');
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
@@ -218,7 +221,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should propagate non-401 errors unchanged', done => {
-      authService.getAccessToken.and.returnValue('test-token');
+      authService.getAccessToken.mockReturnValue('test-token');
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: (error: HttpErrorResponse) => {
@@ -236,7 +239,7 @@ describe('AuthInterceptor', () => {
   describe('Request Handling', () => {
     it('should pass through successful requests', () => {
       const mockResponse = { data: 'test' };
-      authService.getAccessToken.and.returnValue('test-token');
+      authService.getAccessToken.mockReturnValue('test-token');
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe(response => {
         expect(response).toEqual(mockResponse);
@@ -249,7 +252,7 @@ describe('AuthInterceptor', () => {
     it('should handle POST requests with token', () => {
       const mockToken = 'test-token-123';
       const postData = { title: 'New Task' };
-      authService.getAccessToken.and.returnValue(mockToken);
+      authService.getAccessToken.mockReturnValue(mockToken);
 
       httpClient.post(`${environment.baseUrl}/v1/tasks`, postData).subscribe();
 
@@ -263,7 +266,7 @@ describe('AuthInterceptor', () => {
     it('should handle PUT requests with token', () => {
       const mockToken = 'test-token-123';
       const updateData = { title: 'Updated Task' };
-      authService.getAccessToken.and.returnValue(mockToken);
+      authService.getAccessToken.mockReturnValue(mockToken);
 
       httpClient.put(`${environment.baseUrl}/v1/tasks/1`, updateData).subscribe();
 
@@ -275,7 +278,7 @@ describe('AuthInterceptor', () => {
 
     it('should handle DELETE requests with token', () => {
       const mockToken = 'test-token-123';
-      authService.getAccessToken.and.returnValue(mockToken);
+      authService.getAccessToken.mockReturnValue(mockToken);
 
       httpClient.delete(`${environment.baseUrl}/v1/tasks/1`).subscribe();
 
@@ -288,7 +291,7 @@ describe('AuthInterceptor', () => {
 
   describe('Multiple Interceptor Scenarios', () => {
     it('should only logout and navigate once when concurrent 401 responses arrive', () => {
-      authService.getAccessToken.and.returnValue('test-token');
+      authService.getAccessToken.mockReturnValue('test-token');
       Object.defineProperty(router, 'url', { value: '/tasks', writable: true });
 
       // Both requests in-flight before either response arrives
@@ -315,9 +318,9 @@ describe('AuthInterceptor', () => {
     });
 
     it('should reset isLoggingOut after navigation failure so future 401s still trigger logout', async () => {
-      authService.getAccessToken.and.returnValue('test-token');
+      authService.getAccessToken.mockReturnValue('test-token');
       Object.defineProperty(router, 'url', { value: '/tasks', writable: true });
-      router.navigate.and.returnValue(Promise.reject(new Error('Navigation failed')));
+      router.navigate.mockReturnValue(Promise.reject(new Error('Navigation failed')));
 
       httpClient.get(`${environment.baseUrl}/v1/tasks`).subscribe({
         error: () => {
