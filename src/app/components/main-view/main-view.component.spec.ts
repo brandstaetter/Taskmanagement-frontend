@@ -188,7 +188,7 @@ describe('MainViewComponent', () => {
 
       // Mock child component
       const mockTaskView = {
-        loadDueTasks: jest.fn(),
+        addTaskToView: jest.fn(),
       };
       component.taskView = mockTaskView as unknown as TaskViewComponent;
       component.currentView = 'do-it';
@@ -196,7 +196,7 @@ describe('MainViewComponent', () => {
       component.openAddTaskDialog();
 
       expect(mockDialog.open).toHaveBeenCalled();
-      expect(mockTaskView.loadDueTasks).toHaveBeenCalled();
+      expect(mockTaskView.addTaskToView).toHaveBeenCalledWith({ title: 'New Task' });
     });
 
     it('should open dialog and refresh plan-it view when result is truthy', () => {

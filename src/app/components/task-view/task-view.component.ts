@@ -65,6 +65,16 @@ export class TaskViewComponent implements OnInit, OnDestroy {
     });
   }
 
+  addTaskToView(task: Task): void {
+    if (!this.showArchived && (task.state === 'archived' || task.state === 'done')) {
+      return;
+    }
+    // Avoid duplicates
+    if (!this.dueTasks.some(t => t.id === task.id)) {
+      this.dueTasks = [...this.dueTasks, task];
+    }
+  }
+
   toggleArchivedTasks(): void {
     this.showArchived = !this.showArchived;
     this.loadDueTasks();
