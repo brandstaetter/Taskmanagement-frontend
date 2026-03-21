@@ -26,7 +26,10 @@ describe('LoginComponent', () => {
   };
 
   beforeEach(async () => {
-    authService = { login: jest.fn() } as unknown as jest.Mocked<AuthService>;
+    authService = {
+      login: jest.fn(),
+      isSuperAdmin: jest.fn().mockReturnValue(false),
+    } as unknown as jest.Mocked<AuthService>;
     router = { navigateByUrl: jest.fn() } as unknown as jest.Mocked<Router>;
     snackBar = { open: jest.fn() } as unknown as jest.Mocked<MatSnackBar>;
 
@@ -122,6 +125,28 @@ describe('LoginComponent', () => {
     expect(authService.login).toHaveBeenCalledWith('testuser', 'testpass');
     expect(router.navigateByUrl).toHaveBeenCalledWith('/');
     expect(component.isLoading).toBe(false);
+  });
+
+  it('should navigate superadmin to admin dashboard', async () => {
+    authService.login.mockReturnValue(of({ access_token: 'test-token', token_type: 'Bearer' }));
+    authService.isSuperAdmin.mockReturnValue(true);
+    router.navigateByUrl.mockReturnValue(Promise.resolve(true));
+
+    const usernameInput = await loader.getHarness(
+      MatInputHarness.with({ selector: '[formControlName="username"]' })
+    );
+    const passwordInput = await loader.getHarness(
+      MatInputHarness.with({ selector: '[formControlName="password"]' })
+    );
+    const submitButton = await loader.getHarness(
+      MatButtonHarness.with({ selector: 'button[type="submit"]' })
+    );
+
+    await usernameInput.setValue('admin');
+    await passwordInput.setValue('adminpass');
+    await submitButton.click();
+
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/admin');
   });
 
   it('should navigate to return URL when provided', async () => {

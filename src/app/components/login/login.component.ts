@@ -50,8 +50,12 @@ export class LoginComponent {
     this.isLoading = true;
     this.authService.login(username, password).subscribe({
       next: () => {
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
-        void this.router.navigateByUrl(returnUrl);
+        if (this.authService.isSuperAdmin()) {
+          void this.router.navigateByUrl('/admin');
+        } else {
+          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
+          void this.router.navigateByUrl(returnUrl);
+        }
       },
       error: () => {
         this.snackBar.open('Login failed. Please check your credentials.', 'Close', {
