@@ -298,6 +298,35 @@ describe('PlanItComponent', () => {
     });
   });
 
+  describe('toggleMyTasks', () => {
+    afterEach(() => {
+      localStorage.removeItem('planIt_myTasksOnly');
+    });
+
+    it('should toggle myTasksOnly and reload tasks', () => {
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
+      expect(component.myTasksOnly).toBe(false);
+
+      component.toggleMyTasks();
+
+      expect(component.myTasksOnly).toBe(true);
+      // include_created=false when myTasksOnly=true
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, false);
+    });
+
+    it('should persist myTasksOnly state to localStorage', () => {
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
+
+      component.toggleMyTasks();
+
+      expect(localStorage.getItem('planIt_myTasksOnly')).toBe('true');
+
+      component.toggleMyTasks();
+
+      expect(localStorage.getItem('planIt_myTasksOnly')).toBe('false');
+    });
+  });
+
   describe('formatDueDate', () => {
     it('should format valid date', () => {
       const result = component.formatDueDate('2023-12-31T23:59:59.000Z');

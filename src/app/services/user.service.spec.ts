@@ -103,6 +103,19 @@ describe('UserService', () => {
     });
   });
 
+  describe('getUsers', () => {
+    it('should have getUsers method', () => {
+      expect(service.getUsers).toBeDefined();
+      expect(typeof service.getUsers).toBe('function');
+    });
+
+    it('should return an Observable', () => {
+      const observable = service.getUsers();
+      expect(observable).toBeDefined();
+      expect(typeof observable.subscribe).toBe('function');
+    });
+  });
+
   describe('Service Structure', () => {
     it('should have proper type definitions', () => {
       // Test that types are available (they're imported at the top)

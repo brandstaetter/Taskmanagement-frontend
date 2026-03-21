@@ -453,6 +453,40 @@ describe('TaskCardComponent', () => {
     });
   });
 
+  describe('Assignee display', () => {
+    it('getAssigneesTooltip should list all assignee display names', () => {
+      component.task = {
+        ...component.task,
+        assigned_users_display: [
+          { id: 1, display_name: 'Alice' },
+          { id: 2, display_name: 'Bob' },
+        ],
+      };
+      expect(component.getAssigneesTooltip()).toBe('Assigned to: Alice, Bob');
+    });
+
+    it('getAssigneesTooltip should fall back to id when display_name is null', () => {
+      component.task = {
+        ...component.task,
+        assigned_users_display: [{ id: 42, display_name: null }],
+      };
+      expect(component.getAssigneesTooltip()).toBe('Assigned to: 42');
+    });
+
+    it('getAssigneesTooltip should return empty assignee list when no assignees', () => {
+      component.task = { ...component.task, assigned_users_display: [] };
+      expect(component.getAssigneesTooltip()).toBe('Assigned to: ');
+    });
+
+    it('getAssigneeInitial should return first letter of display_name uppercased', () => {
+      expect(component.getAssigneeInitial({ id: 1, display_name: 'alice' })).toBe('A');
+    });
+
+    it('getAssigneeInitial should fall back to id string when display_name is null', () => {
+      expect(component.getAssigneeInitial({ id: 7, display_name: null })).toBe('7');
+    });
+  });
+
   describe('Avatar display', () => {
     it('should show creator avatar image when creator_avatar_url is set', () => {
       component.task = {
