@@ -1,7 +1,6 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Input,
   Output,
   EventEmitter,
@@ -60,6 +59,7 @@ export class TaskFormComponent implements OnInit {
   private readonly END_OF_DAY_HOUR = 23;
   private readonly END_OF_DAY_MINUTE = 30;
   private _rawTimeInput = '';
+  private _updatingDateTime = false;
 
   constructor(
     private fb: FormBuilder,
@@ -67,7 +67,6 @@ export class TaskFormComponent implements OnInit {
     private authService: AuthService,
     private userService: UserService,
     private snackBar: MatSnackBar,
-    private cdr: ChangeDetectorRef,
     @Optional() private dialogRef?: MatDialogRef<TaskFormComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) private dialogData?: Task
   ) {
@@ -225,6 +224,9 @@ export class TaskFormComponent implements OnInit {
   }
 
   updateDateTime(): void {
+    if (this._updatingDateTime) return;
+    this._updatingDateTime = true;
+
     const date = this.taskForm.get('due_date')?.value;
     const time = this.taskForm.get('due_time')?.value;
 
@@ -234,9 +236,10 @@ export class TaskFormComponent implements OnInit {
       combinedDate.setMinutes(time.getMinutes());
       combinedDate.setSeconds(0);
       combinedDate.setMilliseconds(0);
-      this.taskForm.get('due_date')?.setValue(combinedDate, { emitEvent: false });
-      this.cdr.markForCheck();
+      this.taskForm.get('due_date')?.setValue(combinedDate);
     }
+
+    this._updatingDateTime = false;
   }
 
   onSubmit(): void {
