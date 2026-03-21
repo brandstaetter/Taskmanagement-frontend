@@ -68,7 +68,7 @@ export class MainViewComponent {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result && this.currentView === 'do-it') {
-        this.taskView?.loadDueTasks();
+        this.taskView?.addTaskToView(result);
       } else if (result && this.currentView === 'plan-it') {
         this.planIt?.loadTasks();
       }
