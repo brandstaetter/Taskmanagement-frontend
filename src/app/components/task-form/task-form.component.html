@@ -48,6 +48,8 @@
             [matTimepicker]="timepicker"
             formControlName="due_time"
             (click)="prefillCurrentTime()"
+            (input)="storeRawTimeInput($event)"
+            (blur)="onTimeInputBlur($event)"
           />
           <mat-timepicker #timepicker />
           <mat-timepicker-toggle [for]="timepicker" matSuffix (click)="prefillCurrentTime()" />
