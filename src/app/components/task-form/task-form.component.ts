@@ -58,6 +58,7 @@ export class TaskFormComponent implements OnInit {
   private readonly MINUTES_INTERVAL = 30;
   private readonly END_OF_DAY_HOUR = 23;
   private readonly END_OF_DAY_MINUTE = 30;
+  private _rawTimeInput = '';
 
   constructor(
     private fb: FormBuilder,
@@ -104,7 +105,7 @@ export class TaskFormComponent implements OnInit {
     if (this.task?.due_date) {
       const date = new Date(this.task.due_date);
       dueDate = date;
-      dueTime = this.roundUpToNextInterval(date);
+      dueTime = new Date(date);
     }
 
     const existingAssigneeIds = (this.task?.assigned_users_display ?? []).map(u => u.id);
@@ -152,6 +153,23 @@ export class TaskFormComponent implements OnInit {
     roundedDate.setMilliseconds(0);
 
     return roundedDate;
+  }
+
+  storeRawTimeInput(event: Event): void {
+    this._rawTimeInput = (event.target as HTMLInputElement).value;
+  }
+
+  onTimeInputBlur(event: Event): void {
+    const raw = (event.target as HTMLInputElement).value || this._rawTimeInput;
+    this._rawTimeInput = '';
+    const match = raw.match(/^(\d{1,2})(\d{2})$/);
+    if (!match) return;
+    const h = parseInt(match[1], 10);
+    const m = parseInt(match[2], 10);
+    if (h > 23 || m > 59) return;
+    const date = new Date();
+    date.setHours(h, m, 0, 0);
+    this.taskForm.get('due_time')?.setValue(date);
   }
 
   prefillCurrentTime(): void {

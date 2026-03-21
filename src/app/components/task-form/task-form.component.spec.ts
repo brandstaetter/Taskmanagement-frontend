@@ -512,6 +512,74 @@ describe('TaskFormComponent', () => {
     });
   });
 
+  describe('onTimeInputBlur (military time input)', () => {
+    const makeEvent = (value: string): Event => ({ target: { value } }) as unknown as Event;
+
+    beforeEach(() => {
+      component.mode = 'create';
+      component.task = undefined;
+      component.ngOnInit();
+      fixture.detectChanges();
+    });
+
+    it('should parse 4-digit military time "1430" → hours=14, minutes=30', () => {
+      component.onTimeInputBlur(makeEvent('1430'));
+      const timeValue = component.taskForm.get('due_time')?.value as Date;
+      expect(timeValue).toBeDefined();
+      expect(timeValue.getHours()).toBe(14);
+      expect(timeValue.getMinutes()).toBe(30);
+    });
+
+    it('should parse 3-digit military time "930" → hours=9, minutes=30', () => {
+      component.onTimeInputBlur(makeEvent('930'));
+      const timeValue = component.taskForm.get('due_time')?.value as Date;
+      expect(timeValue).toBeDefined();
+      expect(timeValue.getHours()).toBe(9);
+      expect(timeValue.getMinutes()).toBe(30);
+    });
+
+    it('should silently ignore invalid time "2400" and leave due_time unchanged', () => {
+      const initialValue = component.taskForm.get('due_time')?.value;
+      component.onTimeInputBlur(makeEvent('2400'));
+      expect(component.taskForm.get('due_time')?.value).toEqual(initialValue);
+    });
+
+    it('should leave due_time unchanged for already-formatted "14:30"', () => {
+      const existingTime = new Date('2023-01-01T14:30:00');
+      component.taskForm.get('due_time')?.setValue(existingTime);
+      component.onTimeInputBlur(makeEvent('14:30'));
+      expect(component.taskForm.get('due_time')?.value).toEqual(existingTime);
+    });
+  });
+
+  describe('Edit mode: due_time initialised without roundUpToNextInterval', () => {
+    it('should preserve hours=23, minutes=30 when editing a task saved with 23:30 local time', () => {
+      const localDate = new Date(2026, 0, 15, 23, 30, 0, 0);
+      component.mode = 'edit';
+      component.task = { ...mockTask, due_date: localDate.toISOString() };
+      component.ngOnInit();
+      fixture.detectChanges();
+
+      const timeValue = component.taskForm.get('due_time')?.value as Date;
+      expect(timeValue).toBeDefined();
+      expect(timeValue.getHours()).toBe(23);
+      expect(timeValue.getMinutes()).toBe(30);
+    });
+
+    it('should preserve hours=23, minutes=0 when editing a task saved with 23:00 local time', () => {
+      const localDate = new Date(2026, 0, 15, 23, 0, 0, 0);
+      component.mode = 'edit';
+      component.task = { ...mockTask, due_date: localDate.toISOString() };
+      component.ngOnInit();
+      fixture.detectChanges();
+
+      const timeValue = component.taskForm.get('due_time')?.value as Date;
+      expect(timeValue).toBeDefined();
+      expect(timeValue.getHours()).toBe(23);
+      expect(timeValue.getMinutes()).toBe(0);
+    });
+  });
+
   describe('getUserDisplayName', () => {
     it('should return display_name when set', () => {
       const user = {
