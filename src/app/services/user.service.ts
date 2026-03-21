@@ -9,6 +9,7 @@ import {
   changePasswordApiV1UsersMePasswordPut,
   updateAvatarApiV1UsersMeAvatarPut,
   updateDisplayNameApiV1UsersMeDisplayNamePatch,
+  listUsersApiV1UsersGet,
   User,
 } from '../generated';
 import { createClient, createConfig, type Client } from '../generated/client';
@@ -65,5 +66,14 @@ export class UserService {
         body: update,
       })
     ).pipe(map(response => response.data as User));
+  }
+
+  getUsers(): Observable<User[]> {
+    return from(
+      listUsersApiV1UsersGet({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+      })
+    ).pipe(map(response => response.data as User[]));
   }
 }

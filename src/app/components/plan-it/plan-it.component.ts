@@ -11,6 +11,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
 
+const MY_TASKS_STORAGE_KEY = 'planIt_myTasksOnly';
+
 @Component({
   selector: 'app-plan-it',
   standalone: true,
@@ -32,6 +34,7 @@ export class PlanItComponent implements OnInit {
   doneTasks: Task[] = [];
   archivedTasks: Task[] = [];
   showArchived = false;
+  myTasksOnly = localStorage.getItem(MY_TASKS_STORAGE_KEY) === 'true';
   private readonly SOON_THRESHOLD_HOURS = 12;
 
   constructor(
@@ -45,8 +48,16 @@ export class PlanItComponent implements OnInit {
     this.loadTasks();
   }
 
+  toggleMyTasks(): void {
+    this.myTasksOnly = !this.myTasksOnly;
+    localStorage.setItem(MY_TASKS_STORAGE_KEY, String(this.myTasksOnly));
+    this.loadTasks();
+  }
+
   loadTasks(): void {
-    this.taskService.getTasks(0, 100, this.showArchived).subscribe({
+    // When myTasksOnly=true: include_created=false (only assigned to me)
+    // When myTasksOnly=false: include_created=true (all tasks visible to me)
+    this.taskService.getTasks(0, 100, this.showArchived, !this.myTasksOnly).subscribe({
       next: tasks => {
         // Sort tasks by due date (null dates go to the end)
         const sortedTasks = tasks.sort((a, b) => {

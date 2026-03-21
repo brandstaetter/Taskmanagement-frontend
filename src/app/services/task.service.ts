@@ -55,7 +55,12 @@ export class TaskService {
     return response.data as T;
   }
 
-  getTasks(skip = 0, limit = 100, includeArchived = false): Observable<Task[]> {
+  getTasks(
+    skip = 0,
+    limit = 100,
+    includeArchived = false,
+    includeCreated = true
+  ): Observable<Task[]> {
     return from(
       readTasksApiV1TasksGet({
         client: this.authenticatedClient,
@@ -64,6 +69,7 @@ export class TaskService {
           skip,
           limit,
           include_archived: includeArchived,
+          include_created: includeCreated,
         },
       })
     ).pipe(map(response => this.handleApiResponse(response)));

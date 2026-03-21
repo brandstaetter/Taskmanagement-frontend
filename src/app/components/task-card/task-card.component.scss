@@ -307,5 +307,33 @@
       border-radius: 50%;
       object-fit: cover;
     }
+
+    &.assignees {
+      .assignee-avatars {
+        display: flex;
+        gap: 2px;
+
+        .assignee-avatar {
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          border: 1px solid #38383e;
+        }
+
+        .assignee-initial {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: #38383e;
+          color: #a0a0aa;
+          font-size: 9px;
+          font-weight: 700;
+          border: 1px solid #505058;
+        }
+      }
+    }
   }
 }

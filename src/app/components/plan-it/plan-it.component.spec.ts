@@ -115,7 +115,7 @@ describe('PlanItComponent', () => {
 
       component.ngOnInit();
 
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true);
     });
   });
 
@@ -294,7 +294,7 @@ describe('PlanItComponent', () => {
       component.toggleArchivedTasks();
 
       expect(component.showArchived).toBe(true);
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, true);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, true, true);
     });
   });
 

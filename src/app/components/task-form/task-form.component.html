@@ -58,6 +58,21 @@
         <mat-label>Reward</mat-label>
         <input matInput formControlName="reward" placeholder="Enter reward (optional)" />
       </mat-form-field>
+
+      <div class="assign-field">
+        <mat-form-field appearance="outline" class="assign-select">
+          <mat-label>Assign to</mat-label>
+          <mat-select formControlName="assigned_user_ids" multiple>
+            @for (user of availableUsers; track user.id) {
+              <mat-option [value]="user.id">{{ getUserDisplayName(user) }}</mat-option>
+            }
+          </mat-select>
+          <mat-hint>Leave empty to make visible to all</mat-hint>
+        </mat-form-field>
+        <button mat-stroked-button type="button" (click)="assignToMe()" class="assign-me-btn">
+          Assign to me
+        </button>
+      </div>
     </div>
   </mat-dialog-content>
 

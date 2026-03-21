@@ -4,6 +4,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TaskService, Task, TaskCreate, TaskUpdate } from '../../services/task.service';
 import { AuthService } from '../../services/auth.service';
+import { UserService } from '../../services/user.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -18,6 +19,7 @@ describe('TaskFormComponent', () => {
   let loader: HarnessLoader;
   let taskService: jest.Mocked<TaskService>;
   let authService: jest.Mocked<AuthService>;
+  let userService: jest.Mocked<UserService>;
   let dialogRef: jest.Mocked<MatDialogRef<TaskFormComponent>>;
   let snackBar: jest.Mocked<MatSnackBar>;
 
@@ -37,6 +39,9 @@ describe('TaskFormComponent', () => {
       updateTask: jest.fn(),
     } as unknown as jest.Mocked<TaskService>;
     authService = { getCurrentUser: jest.fn() } as unknown as jest.Mocked<AuthService>;
+    userService = {
+      getUsers: jest.fn().mockReturnValue(of([])),
+    } as unknown as jest.Mocked<UserService>;
     dialogRef = { close: jest.fn() } as unknown as jest.Mocked<MatDialogRef<TaskFormComponent>>;
     snackBar = { open: jest.fn() } as unknown as jest.Mocked<MatSnackBar>;
 
@@ -61,6 +66,7 @@ describe('TaskFormComponent', () => {
         FormBuilder,
         { provide: TaskService, useValue: taskService },
         { provide: AuthService, useValue: authService },
+        { provide: UserService, useValue: userService },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: MatSnackBar, useValue: snackBar },
         { provide: MAT_DIALOG_DATA, useValue: null },

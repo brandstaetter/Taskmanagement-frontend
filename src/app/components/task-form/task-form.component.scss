@@ -18,6 +18,21 @@ mat-form-field {
   width: 100%;
 }
 
+.assign-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  .assign-select {
+    flex: 1;
+  }
+
+  .assign-me-btn {
+    margin-top: 4px;
+    white-space: nowrap;
+  }
+}
+
 mat-dialog-actions {
   padding: 0 24px 16px;
   margin: 0;

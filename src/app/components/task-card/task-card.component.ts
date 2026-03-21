@@ -124,6 +124,17 @@ export class TaskCardComponent {
     return hoursUntilDue <= this.SOON_THRESHOLD_HOURS;
   }
 
+  getAssigneesTooltip(): string {
+    const names = (this.task.assigned_users_display ?? [])
+      .map(u => u.display_name ?? String(u.id))
+      .join(', ');
+    return `Assigned to: ${names}`;
+  }
+
+  getAssigneeInitial(assignee: { display_name?: string | null; id: number }): string {
+    return (assignee.display_name ?? String(assignee.id)).charAt(0).toUpperCase();
+  }
+
   getTaskClass(): string {
     if (this.task.state === 'archived') {
       return 'archived-task';

@@ -9,6 +9,20 @@
       <mat-icon>{{ showArchived ? 'visibility_off' : 'visibility' }}</mat-icon>
       {{ showArchived ? 'Hide Archived' : 'Show Archived' }}
     </button>
+    <button
+      mat-flat-button
+      [color]="myTasksOnly ? 'primary' : undefined"
+      (click)="toggleMyTasks()"
+      [matTooltip]="
+        myTasksOnly
+          ? 'Showing only your tasks — click to see all'
+          : 'Showing all tasks — click to see only yours'
+      "
+      class="my-tasks-toggle"
+    >
+      <mat-icon>{{ myTasksOnly ? 'person' : 'group' }}</mat-icon>
+      {{ myTasksOnly ? 'My Tasks' : 'All Tasks' }}
+    </button>
   </div>
 
   @if (!hasAnyTasks()) {
