@@ -3,7 +3,7 @@
   "info": {
     "title": "Task Management API",
     "description": "API for managing tasks with printing capabilities",
-    "version": "0.9.0"
+    "version": "0.11.0"
   },
   "paths": {
     "/api/v1/auth/user/token": {
@@ -753,7 +753,7 @@
           "admin"
         ],
         "summary": "Run Migrations",
-        "description": "Run all pending Alembic migrations.\nRequires admin authentication.",
+        "description": "Run all pending Alembic migrations.\nRequires admin authentication.\n\nUses the Alembic API programmatically so that migrations work regardless\nof where the package is installed (dev checkout vs site-packages wheel).",
         "operationId": "run_migrations_api_v1_admin_db_migrate_post",
         "responses": {
           "200": {
@@ -1264,6 +1264,69 @@
         ]
       }
     },
+    "/api/v1/users": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "List Users",
+        "description": "List all active users. Available to any authenticated user.",
+        "operationId": "list_users_api_v1_users_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1000,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  },
+                  "title": "Response List Users Api V1 Users Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Root",
@@ -1323,6 +1386,42 @@
           "is_admin"
         ],
         "title": "AdminUserRoleUpdate"
+      },
+      "AssignedUserDisplay": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "AssignedUserDisplay",
+        "description": "Minimal user info for display in task assignment lists."
       },
       "Body_login_user_for_access_token_api_v1_auth_user_token_post": {
         "properties": {
@@ -1613,27 +1712,6 @@
             ],
             "title": "Created By"
           },
-          "assignment_type": {
-            "type": "string",
-            "enum": [
-              "any",
-              "some",
-              "one"
-            ],
-            "title": "Assignment Type",
-            "default": "any"
-          },
-          "assigned_to": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assigned To"
-          },
           "assigned_user_ids": {
             "anyOf": [
               {
@@ -1684,6 +1762,42 @@
               }
             ],
             "title": "Worker Display Name"
+          },
+          "creator_avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creator Avatar Url"
+          },
+          "worker_avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worker Avatar Url"
+          },
+          "assigned_users_display": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/AssignedUserDisplay"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned Users Display"
           }
         },
         "type": "object",
@@ -1774,27 +1888,6 @@
             "type": "integer",
             "title": "Created By"
           },
-          "assignment_type": {
-            "type": "string",
-            "enum": [
-              "any",
-              "some",
-              "one"
-            ],
-            "title": "Assignment Type",
-            "default": "any"
-          },
-          "assigned_to": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assigned To"
-          },
           "assigned_user_ids": {
             "anyOf": [
               {
@@ -1883,33 +1976,6 @@
             ],
             "title": "Reward"
           },
-          "assignment_type": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "any",
-                  "some",
-                  "one"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assignment Type"
-          },
-          "assigned_to": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assigned To"
-          },
           "assigned_user_ids": {
             "anyOf": [
               {
@@ -1991,6 +2057,17 @@
               }
             ],
             "title": "Avatar Url"
+          },
+          "gravatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gravatar Url"
           },
           "last_login": {
             "anyOf": [

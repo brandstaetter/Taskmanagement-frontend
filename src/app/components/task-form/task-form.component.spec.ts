@@ -4,6 +4,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TaskService, Task, TaskCreate, TaskUpdate } from '../../services/task.service';
 import { AuthService } from '../../services/auth.service';
+import { UserService } from '../../services/user.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -18,6 +19,7 @@ describe('TaskFormComponent', () => {
   let loader: HarnessLoader;
   let taskService: jest.Mocked<TaskService>;
   let authService: jest.Mocked<AuthService>;
+  let userService: jest.Mocked<UserService>;
   let dialogRef: jest.Mocked<MatDialogRef<TaskFormComponent>>;
   let snackBar: jest.Mocked<MatSnackBar>;
 
@@ -37,6 +39,9 @@ describe('TaskFormComponent', () => {
       updateTask: jest.fn(),
     } as unknown as jest.Mocked<TaskService>;
     authService = { getCurrentUser: jest.fn() } as unknown as jest.Mocked<AuthService>;
+    userService = {
+      getUsers: jest.fn().mockReturnValue(of([])),
+    } as unknown as jest.Mocked<UserService>;
     dialogRef = { close: jest.fn() } as unknown as jest.Mocked<MatDialogRef<TaskFormComponent>>;
     snackBar = { open: jest.fn() } as unknown as jest.Mocked<MatSnackBar>;
 
@@ -61,6 +66,7 @@ describe('TaskFormComponent', () => {
         FormBuilder,
         { provide: TaskService, useValue: taskService },
         { provide: AuthService, useValue: authService },
+        { provide: UserService, useValue: userService },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: MatSnackBar, useValue: snackBar },
         { provide: MAT_DIALOG_DATA, useValue: null },
@@ -471,6 +477,73 @@ describe('TaskFormComponent', () => {
       // The actual time might be different due to timezone conversion
       expect(taskData.due_date).toBeDefined();
       expect(typeof taskData.due_date).toBe('string');
+    });
+  });
+
+  describe('assignToMe', () => {
+    beforeEach(() => {
+      component.ngOnInit();
+    });
+
+    it('should add current user id to assigned_user_ids if not already present', () => {
+      component.taskForm.get('assigned_user_ids')?.setValue([]);
+
+      component.assignToMe();
+
+      expect(component.taskForm.get('assigned_user_ids')?.value).toContain(1);
+    });
+
+    it('should not duplicate current user id if already assigned', () => {
+      component.taskForm.get('assigned_user_ids')?.setValue([1]);
+
+      component.assignToMe();
+
+      const ids: number[] = component.taskForm.get('assigned_user_ids')?.value;
+      expect(ids.filter(id => id === 1).length).toBe(1);
+    });
+
+    it('should do nothing when no current user', () => {
+      authService.getCurrentUser.mockReturnValue(null);
+      component.taskForm.get('assigned_user_ids')?.setValue([]);
+
+      component.assignToMe();
+
+      expect(component.taskForm.get('assigned_user_ids')?.value).toEqual([]);
+    });
+  });
+
+  describe('getUserDisplayName', () => {
+    it('should return display_name when set', () => {
+      const user = {
+        id: 1,
+        email: 'a@b.com',
+        display_name: 'Alice',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        avatar_url: null,
+        last_login: null,
+        created_at: '',
+        updated_at: '',
+      };
+      expect(component.getUserDisplayName(user)).toBe('Alice');
+    });
+
+    it('should fall back to email when display_name is null', () => {
+      const user = {
+        id: 2,
+        email: 'b@c.com',
+        display_name: null,
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        avatar_url: null,
+        last_login: null,
+        created_at: '',
+        updated_at: '',
+      };
+      component.ngOnInit();
+      expect(component.getUserDisplayName(user)).toBe('b@c.com');
     });
   });
 });

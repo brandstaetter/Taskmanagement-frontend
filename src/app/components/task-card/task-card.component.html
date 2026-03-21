@@ -77,6 +77,24 @@
           {{ task.worker_display_name }}
         </span>
       }
+      @if (task.assigned_users_display && task.assigned_users_display.length > 0) {
+        <span class="meta-item assignees" [matTooltip]="getAssigneesTooltip()">
+          <mat-icon>group</mat-icon>
+          <span class="assignee-avatars">
+            @for (assignee of task.assigned_users_display; track assignee.id) {
+              @if (assignee.avatar_url) {
+                <img
+                  [src]="assignee.avatar_url"
+                  [alt]="assignee.display_name ?? ''"
+                  class="meta-avatar assignee-avatar"
+                />
+              } @else {
+                <span class="assignee-initial">{{ getAssigneeInitial(assignee) }}</span>
+              }
+            }
+          </span>
+        </span>
+      }
     </div>
     <div class="description-container">
       <mat-icon class="info-icon">info</mat-icon>

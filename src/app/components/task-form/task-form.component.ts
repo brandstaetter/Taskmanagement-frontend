@@ -21,9 +21,11 @@ import {
   MAT_DATE_LOCALE,
 } from '@angular/material/core';
 import { MatTimepickerModule } from '@angular/material/timepicker';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Task, TaskService, TaskCreate, TaskUpdate } from '../../services/task.service';
 import { AuthService } from '../../services/auth.service';
+import { UserService, User } from '../../services/user.service';
 
 @Component({
   selector: 'app-task-form',
@@ -38,6 +40,7 @@ import { AuthService } from '../../services/auth.service';
     MatDatepickerModule,
     MatNativeDateModule,
     MatTimepickerModule,
+    MatSelectModule,
   ],
   providers: [provideNativeDateAdapter(), { provide: MAT_DATE_LOCALE, useValue: 'en-GB' }],
   templateUrl: './task-form.component.html',
@@ -51,6 +54,7 @@ export class TaskFormComponent implements OnInit {
   @Output() cancelled = new EventEmitter<void>();
 
   taskForm!: FormGroup;
+  availableUsers: User[] = [];
   private readonly MINUTES_INTERVAL = 30;
   private readonly END_OF_DAY_HOUR = 23;
   private readonly END_OF_DAY_MINUTE = 30;
@@ -59,6 +63,7 @@ export class TaskFormComponent implements OnInit {
     private fb: FormBuilder,
     private taskService: TaskService,
     private authService: AuthService,
+    private userService: UserService,
     private snackBar: MatSnackBar,
     @Optional() private dialogRef?: MatDialogRef<TaskFormComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) private dialogData?: Task
@@ -72,6 +77,24 @@ export class TaskFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
+    this.userService.getUsers().subscribe({
+      next: users => {
+        this.availableUsers = users;
+      },
+    });
+  }
+
+  assignToMe(): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) return;
+    const current: number[] = this.taskForm.get('assigned_user_ids')?.value ?? [];
+    if (!current.includes(currentUser.id)) {
+      this.taskForm.get('assigned_user_ids')?.setValue([...current, currentUser.id]);
+    }
+  }
+
+  getUserDisplayName(user: User): string {
+    return user.display_name ?? user.email ?? String(user.id);
   }
 
   private initForm(): void {
@@ -84,12 +107,15 @@ export class TaskFormComponent implements OnInit {
       dueTime = this.roundUpToNextInterval(date);
     }
 
+    const existingAssigneeIds = (this.task?.assigned_users_display ?? []).map(u => u.id);
+
     this.taskForm = this.fb.group({
       title: [this.task?.title || '', [Validators.required]],
       description: [this.task?.description || '', [Validators.required]],
       due_date: [dueDate],
       due_time: [dueTime],
       reward: [this.task?.reward || null],
+      assigned_user_ids: [existingAssigneeIds],
     });
 
     // Update time when date changes if time is already set
@@ -209,6 +235,8 @@ export class TaskFormComponent implements OnInit {
         if (formValue['reward'] !== this.task.reward) {
           changes['reward'] = formValue['reward']?.trim() || undefined;
         }
+        // Always include assigned_user_ids in edit to allow clearing
+        changes['assigned_user_ids'] = formValue['assigned_user_ids'] ?? [];
       }
 
       if (this.mode === 'create') {
@@ -220,6 +248,9 @@ export class TaskFormComponent implements OnInit {
           due_date: formValue.due_date || undefined,
           reward: formValue.reward?.trim() || undefined,
           created_by: currentUser?.id || 0,
+          assigned_user_ids: formValue.assigned_user_ids?.length
+            ? formValue.assigned_user_ids
+            : undefined,
         };
 
         this.taskService.createTask(taskData).subscribe({
