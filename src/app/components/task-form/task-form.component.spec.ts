@@ -512,6 +512,99 @@ describe('TaskFormComponent', () => {
     });
   });
 
+  describe('onTimeInputEnter (issue #329 — Enter key parses time without submitting)', () => {
+    const makeKeyEvent = (value: string): Event =>
+      ({ target: { value }, preventDefault: jest.fn() }) as unknown as Event;
+
+    beforeEach(() => {
+      component.mode = 'create';
+      component.task = undefined;
+      component.ngOnInit();
+      fixture.detectChanges();
+    });
+
+    it('should parse HHMM "1430" → hours=14, minutes=30 and prevent form submission', () => {
+      const event = makeKeyEvent('1430');
+      component.onTimeInputEnter(event);
+
+      const timeValue = component.taskForm.get('due_time')?.value as Date;
+      expect(timeValue).toBeDefined();
+      expect(timeValue.getHours()).toBe(14);
+      expect(timeValue.getMinutes()).toBe(30);
+      expect((event as KeyboardEvent).preventDefault).toHaveBeenCalled();
+      expect(taskService.createTask).not.toHaveBeenCalled();
+    });
+
+    it('should parse HHMM "930" → hours=9, minutes=30 and prevent form submission', () => {
+      const event = makeKeyEvent('930');
+      component.onTimeInputEnter(event);
+
+      const timeValue = component.taskForm.get('due_time')?.value as Date;
+      expect(timeValue).toBeDefined();
+      expect(timeValue.getHours()).toBe(9);
+      expect(timeValue.getMinutes()).toBe(30);
+      expect((event as KeyboardEvent).preventDefault).toHaveBeenCalled();
+    });
+
+    it('should call preventDefault even when "14:30" is already formatted (no form submission)', () => {
+      const existingTime = new Date('2023-01-01T14:30:00');
+      component.taskForm.get('due_time')?.setValue(existingTime);
+
+      const event = makeKeyEvent('14:30');
+      component.onTimeInputEnter(event);
+
+      expect((event as KeyboardEvent).preventDefault).toHaveBeenCalled();
+      expect(taskService.createTask).not.toHaveBeenCalled();
+    });
+
+    it('should not change due_time when input is invalid "2400"', () => {
+      const initialValue = component.taskForm.get('due_time')?.value;
+      const event = makeKeyEvent('2400');
+      component.onTimeInputEnter(event);
+
+      expect(component.taskForm.get('due_time')?.value).toEqual(initialValue);
+      expect((event as KeyboardEvent).preventDefault).toHaveBeenCalled();
+    });
+  });
+
+  describe('issue #329 — date preserved after manual HHMM time entry', () => {
+    it('should preserve the date after typing HHMM and blurring in create mode', () => {
+      component.mode = 'create';
+      component.task = undefined;
+      component.ngOnInit();
+      fixture.detectChanges();
+
+      const selectedDate = new Date('2026-06-15T00:00:00');
+      component.taskForm.get('due_date')?.setValue(selectedDate);
+
+      component.onTimeInputBlur({ target: { value: '1430' } } as unknown as Event);
+
+      const dateValue = component.taskForm.get('due_date')?.value as Date;
+      expect(dateValue).toBeDefined();
+      expect(dateValue.getFullYear()).toBe(2026);
+      expect(dateValue.getMonth()).toBe(5); // June = 5 (0-indexed)
+      expect(dateValue.getDate()).toBe(15);
+      expect(dateValue.getHours()).toBe(14);
+      expect(dateValue.getMinutes()).toBe(30);
+    });
+
+    it('should preserve the date after typing HHMM and blurring in edit mode with existing date', () => {
+      component.mode = 'edit';
+      component.task = { ...mockTask, due_date: '2026-03-10T09:00:00Z' };
+      component.ngOnInit();
+      fixture.detectChanges();
+
+      component.onTimeInputBlur({ target: { value: '1600' } } as unknown as Event);
+
+      const dateValue = component.taskForm.get('due_date')?.value as Date;
+      expect(dateValue).toBeDefined();
+      // Date should still be March 10 2026 (local date from '2026-03-10T09:00:00Z')
+      expect(dateValue.getFullYear()).toBe(2026);
+      expect(dateValue.getHours()).toBe(16);
+      expect(dateValue.getMinutes()).toBe(0);
+    });
+  });
+
   describe('onTimeInputBlur (military time input)', () => {
     const makeEvent = (value: string): Event => ({ target: { value } }) as unknown as Event;
 

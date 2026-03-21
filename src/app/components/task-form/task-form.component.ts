@@ -1,6 +1,7 @@
 import {
   Component,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Input,
   Output,
   EventEmitter,
@@ -66,6 +67,7 @@ export class TaskFormComponent implements OnInit {
     private authService: AuthService,
     private userService: UserService,
     private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef,
     @Optional() private dialogRef?: MatDialogRef<TaskFormComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) private dialogData?: Task
   ) {
@@ -159,17 +161,34 @@ export class TaskFormComponent implements OnInit {
     this._rawTimeInput = (event.target as HTMLInputElement).value;
   }
 
+  private parseRawTime(raw: string): Date | null {
+    const match = raw.match(/^(\d{1,2})(\d{2})$/);
+    if (!match) return null;
+    const h = parseInt(match[1], 10);
+    const m = parseInt(match[2], 10);
+    if (h > 23 || m > 59) return null;
+    const date = new Date();
+    date.setHours(h, m, 0, 0);
+    return date;
+  }
+
   onTimeInputBlur(event: Event): void {
     const raw = (event.target as HTMLInputElement).value || this._rawTimeInput;
     this._rawTimeInput = '';
-    const match = raw.match(/^(\d{1,2})(\d{2})$/);
-    if (!match) return;
-    const h = parseInt(match[1], 10);
-    const m = parseInt(match[2], 10);
-    if (h > 23 || m > 59) return;
-    const date = new Date();
-    date.setHours(h, m, 0, 0);
-    this.taskForm.get('due_time')?.setValue(date);
+    const parsed = this.parseRawTime(raw);
+    if (!parsed) return;
+    this.taskForm.get('due_time')?.setValue(parsed);
+  }
+
+  onTimeInputEnter(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const raw = input.value || this._rawTimeInput;
+    const parsed = this.parseRawTime(raw);
+    if (parsed) {
+      this._rawTimeInput = '';
+      this.taskForm.get('due_time')?.setValue(parsed);
+    }
+    (event as KeyboardEvent).preventDefault();
   }
 
   prefillCurrentTime(): void {
@@ -216,6 +235,7 @@ export class TaskFormComponent implements OnInit {
       combinedDate.setSeconds(0);
       combinedDate.setMilliseconds(0);
       this.taskForm.get('due_date')?.setValue(combinedDate, { emitEvent: false });
+      this.cdr.markForCheck();
     }
   }
 

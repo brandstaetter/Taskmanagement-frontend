@@ -6,6 +6,7 @@ import { TaskFormComponent } from '../task-form/task-form.component';
   selector: 'app-task-edit-dialog',
   standalone: true,
   imports: [CommonModule, TaskFormComponent],
-  template: '<app-task-form></app-task-form>',
+  templateUrl: './task-edit-dialog.component.html',
+  styleUrls: ['./task-edit-dialog.component.scss'],
 })
 export class TaskEditDialogComponent {}

@@ -50,6 +50,7 @@
             (click)="prefillCurrentTime()"
             (input)="storeRawTimeInput($event)"
             (blur)="onTimeInputBlur($event)"
+            (keydown.enter)="onTimeInputEnter($event)"
           />
           <mat-timepicker #timepicker />
           <mat-timepicker-toggle [for]="timepicker" matSuffix (click)="prefillCurrentTime()" />
