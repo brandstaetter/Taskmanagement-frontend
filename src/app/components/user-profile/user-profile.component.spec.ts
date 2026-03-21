@@ -32,6 +32,7 @@ describe('UserProfileComponent', () => {
     const userServiceSpy = {
       updatePassword: jest.fn(),
       updateAvatar: jest.fn(),
+      updateDisplayName: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
     const authServiceSpy = { getCurrentUser: jest.fn() } as unknown as jest.Mocked<AuthService>;
     const routerSpy = { navigate: jest.fn() } as unknown as jest.Mocked<Router>;
@@ -350,5 +351,101 @@ describe('UserProfileComponent', () => {
     });
     expect(component.user).toBe(mockUpdatedUser);
     expect(component.isLoadingAvatar).toBe(false);
+  });
+
+  it('should load display name when user has one', () => {
+    authService.getCurrentUser.mockReturnValue({
+      id: 1,
+      email: 'test@example.com',
+      is_active: true,
+      is_admin: false,
+      is_superadmin: false,
+      display_name: 'John Doe',
+      created_at: '2023-01-01',
+      updated_at: '2023-01-01',
+    });
+
+    component.loadUserProfile();
+    fixture.detectChanges();
+
+    expect(component.displayNameForm.get('displayName')?.value).toBe('John Doe');
+  });
+
+  it('should update display name successfully', () => {
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    const mockUpdatedUser = {
+      id: 1,
+      email: 'test@example.com',
+      is_active: true,
+      is_admin: false,
+      is_superadmin: false,
+      display_name: 'New Name',
+      created_at: '2023-01-01',
+      updated_at: '2023-01-01',
+    };
+    userService.updateDisplayName.mockReturnValue(of(mockUpdatedUser));
+
+    component.displayNameForm.patchValue({ displayName: 'New Name' });
+    component.updateDisplayName();
+
+    expect(userService.updateDisplayName).toHaveBeenCalledWith({ display_name: 'New Name' });
+    expect(snackBarSpy).toHaveBeenCalledWith('Display name updated successfully', 'Close', {
+      duration: 3000,
+      panelClass: ['success-snackbar'],
+    });
+    expect(component.user).toBe(mockUpdatedUser);
+    expect(component.isLoadingDisplayName).toBe(false);
+  });
+
+  it('should not update display name when form is invalid', () => {
+    component.displayNameForm.patchValue({ displayName: '' });
+
+    component.updateDisplayName();
+
+    expect(userService.updateDisplayName).not.toHaveBeenCalled();
+    expect(component.displayNameForm.controls.displayName.touched).toBe(true);
+  });
+
+  it('should not update display name when already loading', () => {
+    component.isLoadingDisplayName = true;
+    component.displayNameForm.patchValue({ displayName: 'New Name' });
+
+    component.updateDisplayName();
+
+    expect(userService.updateDisplayName).not.toHaveBeenCalled();
+  });
+
+  it('should handle display name update error with detail message', () => {
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    userService.updateDisplayName.mockReturnValue(
+      throwError(() => {
+        const error = new Error('Update failed');
+        (error as { error?: { detail?: string } }).error = { detail: 'Name too long' };
+        return error;
+      })
+    );
+
+    component.displayNameForm.patchValue({ displayName: 'New Name' });
+    component.updateDisplayName();
+
+    expect(snackBarSpy).toHaveBeenCalledWith('Name too long', 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+    });
+    expect(component.isLoadingDisplayName).toBe(false);
+  });
+
+  it('should handle display name update error without detail message', () => {
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    userService.updateDisplayName.mockReturnValue(throwError(() => new Error('Update failed')));
+
+    component.displayNameForm.patchValue({ displayName: 'New Name' });
+    component.updateDisplayName();
+
+    expect(snackBarSpy).toHaveBeenCalledWith('Failed to update display name', 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+    });
+    expect(component.isLoadingDisplayName).toBe(false);
   });
 });
