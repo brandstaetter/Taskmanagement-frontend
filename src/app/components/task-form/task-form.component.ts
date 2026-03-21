@@ -186,6 +186,10 @@ export class TaskFormComponent implements OnInit {
     if (parsed) {
       this._rawTimeInput = '';
       this.taskForm.get('due_time')?.setValue(parsed);
+      // Format the display — MatTimepicker skips formatting while input has focus
+      const hours = parsed.getHours().toString().padStart(2, '0');
+      const minutes = parsed.getMinutes().toString().padStart(2, '0');
+      input.value = `${hours}:${minutes}`;
     }
     (event as KeyboardEvent).preventDefault();
   }

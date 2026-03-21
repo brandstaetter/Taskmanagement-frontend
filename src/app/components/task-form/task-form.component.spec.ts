@@ -523,7 +523,7 @@ describe('TaskFormComponent', () => {
       fixture.detectChanges();
     });
 
-    it('should parse HHMM "1430" → hours=14, minutes=30 and prevent form submission', () => {
+    it('should parse HHMM "1430" → hours=14, minutes=30 and reformat input', () => {
       const event = makeKeyEvent('1430');
       component.onTimeInputEnter(event);
 
@@ -531,11 +531,12 @@ describe('TaskFormComponent', () => {
       expect(timeValue).toBeDefined();
       expect(timeValue.getHours()).toBe(14);
       expect(timeValue.getMinutes()).toBe(30);
+      expect((event.target as HTMLInputElement).value).toBe('14:30');
       expect((event as KeyboardEvent).preventDefault).toHaveBeenCalled();
       expect(taskService.createTask).not.toHaveBeenCalled();
     });
 
-    it('should parse HHMM "930" → hours=9, minutes=30 and prevent form submission', () => {
+    it('should parse HHMM "930" → hours=9, minutes=30 and reformat input', () => {
       const event = makeKeyEvent('930');
       component.onTimeInputEnter(event);
 
@@ -543,6 +544,7 @@ describe('TaskFormComponent', () => {
       expect(timeValue).toBeDefined();
       expect(timeValue.getHours()).toBe(9);
       expect(timeValue.getMinutes()).toBe(30);
+      expect((event.target as HTMLInputElement).value).toBe('09:30');
       expect((event as KeyboardEvent).preventDefault).toHaveBeenCalled();
     });
 
