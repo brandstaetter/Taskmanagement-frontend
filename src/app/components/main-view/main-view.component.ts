@@ -67,10 +67,10 @@ export class MainViewComponent {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result && this.currentView === 'do-it' && this.taskView) {
-        this.taskView.loadDueTasks();
-      } else if (result && this.currentView === 'plan-it' && this.planIt) {
-        this.planIt.loadTasks();
+      if (result && this.currentView === 'do-it') {
+        this.taskView?.loadDueTasks();
+      } else if (result && this.currentView === 'plan-it') {
+        this.planIt?.loadTasks();
       }
     });
   }

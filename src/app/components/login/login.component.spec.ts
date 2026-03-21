@@ -13,31 +13,31 @@ import { MatButtonHarness } from '@angular/material/button/testing';
 describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
-  let authService: jasmine.SpyObj<AuthService>;
-  let router: jasmine.SpyObj<Router>;
-  let snackBar: jasmine.SpyObj<MatSnackBar>;
+  let authService: jest.Mocked<AuthService>;
+  let router: jest.Mocked<Router>;
+  let snackBar: jest.Mocked<MatSnackBar>;
   let loader: HarnessLoader;
   let activatedRoute: {
     snapshot: {
       queryParamMap: {
-        get: jasmine.Spy;
+        get: jest.SpyInstance;
       };
     };
   };
 
   beforeEach(async () => {
-    authService = jasmine.createSpyObj('AuthService', ['login']);
-    router = jasmine.createSpyObj('Router', ['navigateByUrl']);
-    snackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
+    authService = { login: jest.fn() } as unknown as jest.Mocked<AuthService>;
+    router = { navigateByUrl: jest.fn() } as unknown as jest.Mocked<Router>;
+    snackBar = { open: jest.fn() } as unknown as jest.Mocked<MatSnackBar>;
 
     // Set up default return value for login spy
-    authService.login.and.returnValue(of({ access_token: 'test-token', token_type: 'Bearer' }));
+    authService.login.mockReturnValue(of({ access_token: 'test-token', token_type: 'Bearer' }));
 
     // Mock ActivatedRoute with snapshot
     activatedRoute = {
       snapshot: {
         queryParamMap: {
-          get: jasmine.createSpy('get').and.returnValue(null),
+          get: jest.fn().mockReturnValue(null),
         },
       },
     };
@@ -83,7 +83,7 @@ describe('LoginComponent', () => {
   });
 
   it('should mark form as touched and not submit when form is invalid', async () => {
-    spyOn(component.form, 'markAllAsTouched');
+    jest.spyOn(component.form, 'markAllAsTouched');
 
     component.submit();
 
@@ -101,9 +101,9 @@ describe('LoginComponent', () => {
     expect(authService.login).not.toHaveBeenCalled();
   });
 
-  it('should successfully login and navigate to home page', fakeAsync(async () => {
-    authService.login.and.returnValue(of({ access_token: 'test-token', token_type: 'Bearer' }));
-    router.navigateByUrl.and.returnValue(Promise.resolve(true));
+  it('should successfully login and navigate to home page', async () => {
+    authService.login.mockReturnValue(of({ access_token: 'test-token', token_type: 'Bearer' }));
+    router.navigateByUrl.mockReturnValue(Promise.resolve(true));
 
     const usernameInput = await loader.getHarness(
       MatInputHarness.with({ selector: '[formControlName="username"]' })
@@ -118,19 +118,17 @@ describe('LoginComponent', () => {
     await usernameInput.setValue('testuser');
     await passwordInput.setValue('testpass');
     await submitButton.click();
-
-    tick();
 
     expect(authService.login).toHaveBeenCalledWith('testuser', 'testpass');
     expect(router.navigateByUrl).toHaveBeenCalledWith('/');
     expect(component.isLoading).toBe(false);
-  }));
+  });
 
-  it('should navigate to return URL when provided', fakeAsync(async () => {
+  it('should navigate to return URL when provided', async () => {
     const returnUrl = '/tasks';
-    activatedRoute.snapshot.queryParamMap.get.and.returnValue(returnUrl);
-    authService.login.and.returnValue(of({ access_token: 'test-token', token_type: 'Bearer' }));
-    router.navigateByUrl.and.returnValue(Promise.resolve(true));
+    activatedRoute.snapshot.queryParamMap.get.mockReturnValue(returnUrl);
+    authService.login.mockReturnValue(of({ access_token: 'test-token', token_type: 'Bearer' }));
+    router.navigateByUrl.mockReturnValue(Promise.resolve(true));
 
     const usernameInput = await loader.getHarness(
       MatInputHarness.with({ selector: '[formControlName="username"]' })
@@ -146,10 +144,8 @@ describe('LoginComponent', () => {
     await passwordInput.setValue('testpass');
     await submitButton.click();
 
-    tick();
-
     expect(router.navigateByUrl).toHaveBeenCalledWith(returnUrl);
-  }));
+  });
 
   it('should handle null username gracefully', () => {
     component.form.controls.username.setValue(null);
@@ -202,8 +198,8 @@ describe('LoginComponent', () => {
   });
 
   it('should set isLoading to true during login', fakeAsync(() => {
-    authService.login.and.returnValue(of({ access_token: 'test-token', token_type: 'Bearer' }));
-    router.navigateByUrl.and.returnValue(Promise.resolve(true));
+    authService.login.mockReturnValue(of({ access_token: 'test-token', token_type: 'Bearer' }));
+    router.navigateByUrl.mockReturnValue(Promise.resolve(true));
 
     component.form.controls.username.setValue('testuser');
     component.form.controls.password.setValue('testpass');

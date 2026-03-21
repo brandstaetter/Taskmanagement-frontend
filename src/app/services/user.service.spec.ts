@@ -1,16 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { UserService } from './user.service';
-import { UserPasswordChange, UserAvatarUpdate } from '../generated';
+import { UserPasswordChange, UserAvatarUpdate, UserDisplayNameUpdate } from '../generated';
 
 describe('UserService', () => {
   let service: UserService;
 
   beforeEach(() => {
     // Ensure fetch spy exists before configuring it
-    if (!jasmine.isSpy(window.fetch)) {
-      spyOn(window, 'fetch');
+    if (!jest.isMockFunction(window.fetch)) {
+      jest.spyOn(window, 'fetch');
     }
-    (window.fetch as jasmine.Spy).and.returnValue(
+    (window.fetch as jest.SpyInstance).mockReturnValue(
       Promise.resolve({
         ok: true,
         status: 200,
@@ -81,6 +81,23 @@ describe('UserService', () => {
       };
 
       const observable = service.updateAvatar(avatarUpdate);
+      expect(observable).toBeDefined();
+      expect(typeof observable.subscribe).toBe('function');
+    });
+  });
+
+  describe('updateDisplayName', () => {
+    it('should have updateDisplayName method', () => {
+      expect(service.updateDisplayName).toBeDefined();
+      expect(typeof service.updateDisplayName).toBe('function');
+    });
+
+    it('should accept UserDisplayNameUpdate parameter and return Observable<User>', () => {
+      const displayNameUpdate: UserDisplayNameUpdate = {
+        display_name: 'New Display Name',
+      };
+
+      const observable = service.updateDisplayName(displayNameUpdate);
       expect(observable).toBeDefined();
       expect(typeof observable.subscribe).toBe('function');
     });

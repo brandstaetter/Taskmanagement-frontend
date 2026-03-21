@@ -4,14 +4,14 @@ import { AuthService } from './auth.service';
 
 describe('TaskService', () => {
   let service: TaskService;
-  let mockAuthService: jasmine.SpyObj<AuthService>;
+  let mockAuthService: jest.Mocked<AuthService>;
 
   beforeEach(() => {
     // Ensure fetch spy exists before configuring it
-    if (!jasmine.isSpy(window.fetch)) {
-      spyOn(window, 'fetch');
+    if (!jest.isMockFunction(window.fetch)) {
+      jest.spyOn(window, 'fetch');
     }
-    (window.fetch as jasmine.Spy).and.returnValue(
+    (window.fetch as jest.SpyInstance).mockReturnValue(
       Promise.resolve({
         ok: true,
         status: 200,
@@ -22,8 +22,8 @@ describe('TaskService', () => {
       } as Response)
     );
 
-    mockAuthService = jasmine.createSpyObj('AuthService', ['getAccessToken']);
-    mockAuthService.getAccessToken.and.returnValue('test-token');
+    mockAuthService = { getAccessToken: jest.fn() } as unknown as jest.Mocked<AuthService>;
+    mockAuthService.getAccessToken.mockReturnValue('test-token');
 
     TestBed.configureTestingModule({
       providers: [TaskService, { provide: AuthService, useValue: mockAuthService }],

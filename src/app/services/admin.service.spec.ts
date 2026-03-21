@@ -5,7 +5,7 @@ import { User, AdminUserCreate } from '../generated';
 
 describe('AdminService', () => {
   let service: AdminService;
-  let mockAuthService: jasmine.SpyObj<AuthService>;
+  let mockAuthService: jest.Mocked<AuthService>;
 
   const mockUser: User = {
     id: 1,
@@ -20,13 +20,10 @@ describe('AdminService', () => {
   };
 
   beforeEach(() => {
-    mockAuthService = jasmine.createSpyObj('AuthService', ['getAccessToken']);
+    mockAuthService = { getAccessToken: jest.fn() } as unknown as jest.Mocked<AuthService>;
 
     TestBed.configureTestingModule({
-      providers: [
-        AdminService,
-        { provide: AuthService, useValue: mockAuthService }
-      ]
+      providers: [AdminService, { provide: AuthService, useValue: mockAuthService }],
     });
     service = TestBed.inject(AdminService);
   });
@@ -37,19 +34,23 @@ describe('AdminService', () => {
 
   describe('getAuthSecurity', () => {
     it('should return security object when token is available', () => {
-      mockAuthService.getAccessToken.and.returnValue('test-token');
+      mockAuthService.getAccessToken.mockReturnValue('test-token');
 
       // Access private method through type assertion for testing
-      const authSecurity = (service as unknown as { getAuthSecurity(): { scheme: string; type: string; }[] | undefined }).getAuthSecurity();
+      const authSecurity = (
+        service as unknown as { getAuthSecurity(): { scheme: string; type: string }[] | undefined }
+      ).getAuthSecurity();
 
       expect(authSecurity).toEqual([{ scheme: 'bearer', type: 'http' }]);
       expect(mockAuthService.getAccessToken).toHaveBeenCalled();
     });
 
     it('should return undefined when no token is available', () => {
-      mockAuthService.getAccessToken.and.returnValue(null);
+      mockAuthService.getAccessToken.mockReturnValue(null);
 
-      const authSecurity = (service as unknown as { getAuthSecurity(): { scheme: string; type: string; }[] | undefined }).getAuthSecurity();
+      const authSecurity = (
+        service as unknown as { getAuthSecurity(): { scheme: string; type: string }[] | undefined }
+      ).getAuthSecurity();
 
       expect(authSecurity).toBeUndefined();
       expect(mockAuthService.getAccessToken).toHaveBeenCalled();
@@ -60,7 +61,11 @@ describe('AdminService', () => {
     it('should return data when response is successful', () => {
       const response = { data: mockUser, response: new Response() };
 
-      const result = (service as unknown as { handleApiResponse<T>(response: { data?: T; error?: unknown; response: Response }): T }).handleApiResponse(response);
+      const result = (
+        service as unknown as {
+          handleApiResponse<T>(response: { data?: T; error?: unknown; response: Response }): T;
+        }
+      ).handleApiResponse(response);
 
       expect(result).toEqual(mockUser);
     });
@@ -70,7 +75,11 @@ describe('AdminService', () => {
       const response = { error, response: new Response() };
 
       expect(() => {
-        (service as unknown as { handleApiResponse<T>(response: { data?: T; error?: unknown; response: Response }): T }).handleApiResponse(response);
+        (
+          service as unknown as {
+            handleApiResponse<T>(response: { data?: T; error?: unknown; response: Response }): T;
+          }
+        ).handleApiResponse(response);
       }).toThrow(error);
     });
   });

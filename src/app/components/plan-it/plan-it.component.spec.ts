@@ -12,10 +12,10 @@ import { Task } from '../../generated';
 describe('PlanItComponent', () => {
   let component: PlanItComponent;
   let fixture: ComponentFixture<PlanItComponent>;
-  let mockTaskService: jasmine.SpyObj<TaskService>;
-  let mockSnackBar: jasmine.SpyObj<MatSnackBar>;
-  let mockDialog: jasmine.SpyObj<MatDialog>;
-  let mockRouter: jasmine.SpyObj<Router>;
+  let mockTaskService: jest.Mocked<TaskService>;
+  let mockSnackBar: jest.Mocked<MatSnackBar>;
+  let mockDialog: jest.Mocked<MatDialog>;
+  let mockRouter: jest.Mocked<Router>;
 
   const mockTasks: Task[] = [
     {
@@ -45,18 +45,18 @@ describe('PlanItComponent', () => {
   ];
 
   beforeEach(async () => {
-    mockTaskService = jasmine.createSpyObj('TaskService', [
-      'getTasks',
-      'startTask',
-      'completeTask',
-      'archiveTask',
-      'printTask',
-      'updateTask',
-      'updateTaskState',
-    ]);
-    mockSnackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
-    mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
-    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
+    mockTaskService = {
+      getTasks: jest.fn(),
+      startTask: jest.fn(),
+      completeTask: jest.fn(),
+      archiveTask: jest.fn(),
+      printTask: jest.fn(),
+      updateTask: jest.fn(),
+      updateTaskState: jest.fn(),
+    } as unknown as jest.Mocked<TaskService>;
+    mockSnackBar = { open: jest.fn() } as unknown as jest.Mocked<MatSnackBar>;
+    mockDialog = { open: jest.fn() } as unknown as jest.Mocked<MatDialog>;
+    mockRouter = { navigate: jest.fn() } as unknown as jest.Mocked<Router>;
 
     // Simple mock that bypasses Angular Material's internal dialog logic
     const mockDialogRef = {
@@ -65,10 +65,10 @@ describe('PlanItComponent', () => {
         return;
       },
     } as MatDialogRef<unknown, unknown>;
-    mockDialog.open.and.returnValue(mockDialogRef);
+    mockDialog.open.mockReturnValue(mockDialogRef);
 
     // Mock getTasks BEFORE creating the component to prevent any real calls during ngOnInit
-    mockTaskService.getTasks = jasmine.createSpy('getTasks').and.returnValue(of(mockTasks));
+    mockTaskService.getTasks = jest.fn().mockReturnValue(of(mockTasks));
 
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, PlanItComponent],
@@ -111,7 +111,7 @@ describe('PlanItComponent', () => {
 
   describe('ngOnInit', () => {
     it('should call loadTasks on initialization', () => {
-      mockTaskService.getTasks.and.returnValue(of(mockTasks));
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
 
       component.ngOnInit();
 
@@ -121,7 +121,7 @@ describe('PlanItComponent', () => {
 
   describe('loadTasks', () => {
     it('should load and categorize tasks correctly', () => {
-      mockTaskService.getTasks.and.returnValue(of(mockTasks));
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
 
       component.loadTasks();
 
@@ -138,7 +138,7 @@ describe('PlanItComponent', () => {
     });
 
     it('should handle empty tasks array', () => {
-      mockTaskService.getTasks.and.returnValue(of([]));
+      mockTaskService.getTasks.mockReturnValue(of([]));
 
       component.loadTasks();
 
@@ -150,7 +150,7 @@ describe('PlanItComponent', () => {
 
     it('should handle 404 error gracefully', fakeAsync(() => {
       const error404 = { status: 404 };
-      mockTaskService.getTasks.and.returnValue(throwError(() => error404));
+      mockTaskService.getTasks.mockReturnValue(throwError(() => error404));
 
       component.loadTasks();
       tick();
@@ -175,7 +175,7 @@ describe('PlanItComponent', () => {
         { ...mockTasks[1], due_date: '2023-12-25T23:59:59.000Z' },
         { ...mockTasks[2], due_date: null },
       ];
-      mockTaskService.getTasks.and.returnValue(of(tasksWithDates));
+      mockTaskService.getTasks.mockReturnValue(of(tasksWithDates));
 
       component.loadTasks();
 
@@ -191,8 +191,8 @@ describe('PlanItComponent', () => {
     });
 
     it('should call taskService.startTask', () => {
-      mockTaskService.startTask.and.returnValue(of(mockTasks[0]));
-      mockTaskService.getTasks.and.returnValue(of(mockTasks));
+      mockTaskService.startTask.mockReturnValue(of(mockTasks[0]));
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
 
       component.onStartTask(mockTasks[0]);
 
@@ -207,8 +207,8 @@ describe('PlanItComponent', () => {
     });
 
     it('should call taskService.completeTask', () => {
-      mockTaskService.completeTask.and.returnValue(of(mockTasks[0]));
-      mockTaskService.getTasks.and.returnValue(of(mockTasks));
+      mockTaskService.completeTask.mockReturnValue(of(mockTasks[0]));
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
 
       component.onCompleteTask(mockTasks[0]);
 
@@ -223,8 +223,8 @@ describe('PlanItComponent', () => {
     });
 
     it('should call taskService.archiveTask', () => {
-      mockTaskService.archiveTask.and.returnValue(of(mockTasks[0]));
-      mockTaskService.getTasks.and.returnValue(of(mockTasks));
+      mockTaskService.archiveTask.mockReturnValue(of(mockTasks[0]));
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
 
       component.onArchiveTask(mockTasks[0]);
 
@@ -240,9 +240,9 @@ describe('PlanItComponent', () => {
 
     it('should call taskService.printTask', () => {
       const mockBlob = new Blob(['test'], { type: 'application/pdf' });
-      mockTaskService.printTask.and.returnValue(of(mockBlob));
-      spyOn(window, 'open').and.returnValue({} as Window);
-      spyOn(window.URL, 'createObjectURL').and.returnValue('blob-url');
+      mockTaskService.printTask.mockReturnValue(of(mockBlob));
+      jest.spyOn(window, 'open').mockReturnValue({} as Window);
+      jest.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob-url');
 
       component.onPrintTask(mockTasks[0]);
 
@@ -260,7 +260,7 @@ describe('PlanItComponent', () => {
       const mockDialogRef = {
         afterClosed: () => of(null),
       };
-      mockDialog.open.and.returnValue(mockDialogRef as unknown as MatDialogRef<unknown, unknown>);
+      mockDialog.open.mockReturnValue(mockDialogRef as unknown as MatDialogRef<unknown, unknown>);
 
       component.onEditTask(mockTasks[0]);
 
@@ -278,8 +278,8 @@ describe('PlanItComponent', () => {
     });
 
     it('should call taskService.updateTaskState', () => {
-      mockTaskService.updateTaskState.and.returnValue(of(mockTasks[0]));
-      mockTaskService.getTasks.and.returnValue(of(mockTasks));
+      mockTaskService.updateTaskState.mockReturnValue(of(mockTasks[0]));
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
 
       component.onReopenTask(mockTasks[0]);
 
@@ -289,7 +289,7 @@ describe('PlanItComponent', () => {
 
   describe('toggleArchivedTasks', () => {
     it('should toggle showArchived and reload tasks', () => {
-      mockTaskService.getTasks.and.returnValue(of(mockTasks));
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
 
       component.toggleArchivedTasks();
 
@@ -302,8 +302,9 @@ describe('PlanItComponent', () => {
     it('should format valid date', () => {
       const result = component.formatDueDate('2023-12-31T23:59:59.000Z');
       // toLocaleString format varies by timezone, check for basic date components
-      expect(result).toMatch(/\d{1,2}\/\d{1,2}\/\d{4}/); // Should match MM/DD/YYYY format
-      expect(result).toMatch(/\d{1,2}:\d{2}:\d{2}/); // Should include time
+      // Date format varies by locale/OS — just verify it contains year and time components
+      expect(result).toMatch(/2023|2024/); // Should contain the year
+      expect(result).toMatch(/\d{1,2}[.:]\d{2}/); // Should include time-like pattern
     });
 
     it('should return "No date" for null', () => {

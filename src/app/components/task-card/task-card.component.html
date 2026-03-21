@@ -56,6 +56,20 @@
         <span class="timespan">{{ getTimespan(task.started_at) }}</span>
       </div>
     }
+    <div class="task-meta">
+      @if (task.creator_display_name) {
+        <span class="meta-item" [matTooltip]="'Created by ' + task.creator_display_name">
+          <mat-icon>person_outline</mat-icon>
+          {{ task.creator_display_name }}
+        </span>
+      }
+      @if (task.worker_display_name && task.state === 'in_progress') {
+        <span class="meta-item" [matTooltip]="task.worker_display_name + ' is working on this'">
+          <mat-icon>engineering</mat-icon>
+          {{ task.worker_display_name }}
+        </span>
+      }
+    </div>
     <div class="description-container">
       <mat-icon class="info-icon">info</mat-icon>
       <p class="description">{{ task.description }}</p>

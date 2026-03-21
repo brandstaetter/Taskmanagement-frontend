@@ -10,9 +10,9 @@ import { Task } from '../../generated';
 describe('TaskDetailsComponent', () => {
   let component: TaskDetailsComponent;
   let fixture: ComponentFixture<TaskDetailsComponent>;
-  let mockTaskService: jasmine.SpyObj<TaskService>;
-  let mockRouter: jasmine.SpyObj<Router>;
-  let mockActivatedRoute: jasmine.SpyObj<ActivatedRoute>;
+  let mockTaskService: jest.Mocked<TaskService>;
+  let mockRouter: jest.Mocked<Router>;
+  let mockActivatedRoute: { snapshot: { paramMap: { get: jest.SpyInstance } } };
 
   const mockTask: Task = {
     id: 1,
@@ -24,14 +24,13 @@ describe('TaskDetailsComponent', () => {
   };
 
   beforeEach(async () => {
-    mockTaskService = jasmine.createSpyObj('TaskService', ['getTask', 'updateTaskState']);
-    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
-    mockActivatedRoute = jasmine.createSpyObj('ActivatedRoute', ['snapshot']);
-    mockActivatedRoute.snapshot = jasmine.createSpyObj('snapshot', ['paramMap']);
-    const paramMap = jasmine.createSpyObj('paramMap', ['get']);
-    paramMap.get.and.returnValue('1');
-    (mockActivatedRoute.snapshot as unknown as { paramMap: { get: jasmine.Spy } }).paramMap =
-      paramMap;
+    mockTaskService = {
+      getTask: jest.fn(),
+      updateTaskState: jest.fn(),
+    } as unknown as jest.Mocked<TaskService>;
+    mockRouter = { navigate: jest.fn() } as unknown as jest.Mocked<Router>;
+    const paramMap = { get: jest.fn().mockReturnValue('1') };
+    mockActivatedRoute = { snapshot: { paramMap } };
 
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, TaskDetailsComponent],
@@ -46,7 +45,7 @@ describe('TaskDetailsComponent', () => {
     component = fixture.componentInstance;
 
     // Mock the task service to prevent actual API calls
-    mockTaskService.getTask.and.returnValue(of(mockTask));
+    mockTaskService.getTask.mockReturnValue(of(mockTask));
 
     fixture.detectChanges();
   });
@@ -84,7 +83,7 @@ describe('TaskDetailsComponent', () => {
     });
 
     it('should call taskService.updateTaskState and refresh', () => {
-      mockTaskService.updateTaskState.and.returnValue(of(mockTask));
+      mockTaskService.updateTaskState.mockReturnValue(of(mockTask));
 
       component.reopenTask(mockTask);
 
@@ -99,7 +98,7 @@ describe('TaskDetailsComponent', () => {
     });
 
     it('should call taskService.updateTaskState', () => {
-      mockTaskService.updateTaskState.and.returnValue(of(mockTask));
+      mockTaskService.updateTaskState.mockReturnValue(of(mockTask));
 
       component.startTask(mockTask);
 
@@ -114,7 +113,7 @@ describe('TaskDetailsComponent', () => {
     });
 
     it('should call taskService.updateTaskState', () => {
-      mockTaskService.updateTaskState.and.returnValue(of(mockTask));
+      mockTaskService.updateTaskState.mockReturnValue(of(mockTask));
 
       component.completeTask(mockTask);
 
@@ -221,7 +220,7 @@ describe('TaskDetailsComponent', () => {
       expect(classes).toEqual({
         'task-card': true,
         todo: true,
-        'in_progress': false,
+        in_progress: false,
         done: false,
         archived: false,
         overdue: true, // 2023-12-31 is in the past, so it should be overdue
@@ -261,7 +260,7 @@ describe('TaskDetailsComponent', () => {
     });
 
     it('should call startTask for todo tasks', () => {
-      mockTaskService.updateTaskState.and.returnValue(of(mockTask));
+      mockTaskService.updateTaskState.mockReturnValue(of(mockTask));
 
       component.onActionButtonClick(mockTask);
 
@@ -270,7 +269,7 @@ describe('TaskDetailsComponent', () => {
 
     it('should call completeTask for in_progress tasks', () => {
       const inProgressTask = { ...mockTask, state: 'in_progress' as const };
-      mockTaskService.updateTaskState.and.returnValue(of(mockTask));
+      mockTaskService.updateTaskState.mockReturnValue(of(mockTask));
 
       component.onActionButtonClick(inProgressTask);
 
@@ -280,7 +279,7 @@ describe('TaskDetailsComponent', () => {
 
   describe('ngOnInit', () => {
     it('should call refreshTask on initialization', () => {
-      spyOn(component as unknown as { refreshTask: () => void }, 'refreshTask');
+      jest.spyOn(component as unknown as { refreshTask: () => void }, 'refreshTask');
 
       component.ngOnInit();
 

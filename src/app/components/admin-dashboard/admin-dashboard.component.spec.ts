@@ -28,22 +28,22 @@ const mockUser: User = {
 describe('AdminDashboardComponent', () => {
   let component: AdminDashboardComponent;
   let fixture: ComponentFixture<AdminDashboardComponent>;
-  let adminService: jasmine.SpyObj<AdminService>;
-  let router: jasmine.SpyObj<Router>;
+  let adminService: jest.Mocked<AdminService>;
+  let router: jest.Mocked<Router>;
 
   beforeEach(async () => {
-    const adminServiceSpy = jasmine.createSpyObj('AdminService', [
-      'createUser',
-      'listUsers',
-      'deleteUser',
-      'resetUserPassword',
-      'updateUserRole',
-      'initDatabase',
-      'migrateDatabase',
-    ]);
-    adminServiceSpy.listUsers.and.returnValue(of([mockUser]));
+    const adminServiceSpy = {
+      createUser: jest.fn(),
+      listUsers: jest.fn(),
+      deleteUser: jest.fn(),
+      resetUserPassword: jest.fn(),
+      updateUserRole: jest.fn(),
+      initDatabase: jest.fn(),
+      migrateDatabase: jest.fn(),
+    } as unknown as jest.Mocked<AdminService>;
+    (adminServiceSpy as jest.Mocked<AdminService>).listUsers.mockReturnValue(of([mockUser]));
 
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const routerSpy = { navigate: jest.fn() } as unknown as jest.Mocked<Router>;
 
     await TestBed.configureTestingModule({
       imports: [
@@ -60,8 +60,8 @@ describe('AdminDashboardComponent', () => {
 
     fixture = TestBed.createComponent(AdminDashboardComponent);
     component = fixture.componentInstance;
-    adminService = TestBed.inject(AdminService) as jasmine.SpyObj<AdminService>;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    adminService = TestBed.inject(AdminService) as jest.Mocked<AdminService>;
+    router = TestBed.inject(Router) as jest.Mocked<Router>;
     fixture.detectChanges();
   });
 
@@ -80,8 +80,8 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should handle load users error', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    adminService.listUsers.and.returnValue(
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    adminService.listUsers.mockReturnValue(
       throwError(() => ({ error: { detail: 'Load failed' } }))
     );
     component.loadUsers();
@@ -93,7 +93,7 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should create a user successfully and refresh list', () => {
-    adminService.createUser.and.returnValue(of(mockUser));
+    adminService.createUser.mockReturnValue(of(mockUser));
 
     component.createUserForm.patchValue({
       email: 'newuser@example.com',
@@ -112,7 +112,7 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should not create user when form is invalid', () => {
-    const markAllAsTouchedSpy = spyOn(component.createUserForm, 'markAllAsTouched');
+    const markAllAsTouchedSpy = jest.spyOn(component.createUserForm, 'markAllAsTouched');
     component.createUser();
     expect(markAllAsTouchedSpy).toHaveBeenCalled();
     expect(adminService.createUser).not.toHaveBeenCalled();
@@ -120,15 +120,15 @@ describe('AdminDashboardComponent', () => {
 
   it('should not create user when already creating', () => {
     component.isCreatingUser = true;
-    const markAllAsTouchedSpy = spyOn(component.createUserForm, 'markAllAsTouched');
+    const markAllAsTouchedSpy = jest.spyOn(component.createUserForm, 'markAllAsTouched');
     component.createUser();
     expect(markAllAsTouchedSpy).toHaveBeenCalled();
     expect(adminService.createUser).not.toHaveBeenCalled();
   });
 
   it('should handle create user error', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    adminService.createUser.and.returnValue(
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    adminService.createUser.mockReturnValue(
       throwError(() => ({ error: { detail: 'User creation failed' } }))
     );
 
@@ -148,8 +148,8 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should delete user after confirmation', () => {
-    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(true));
-    adminService.deleteUser.and.returnValue(of(mockUser));
+    jest.spyOn(component['dialog'], 'open').mockReturnValue(fakeDialogRef(true));
+    adminService.deleteUser.mockReturnValue(of(mockUser));
 
     component.deleteUser(1);
 
@@ -158,7 +158,7 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should not delete user without confirmation', () => {
-    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(false));
+    jest.spyOn(component['dialog'], 'open').mockReturnValue(fakeDialogRef(false));
 
     component.deleteUser(1);
 
@@ -166,9 +166,9 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should handle delete user error', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(true));
-    adminService.deleteUser.and.returnValue(
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    jest.spyOn(component['dialog'], 'open').mockReturnValue(fakeDialogRef(true));
+    adminService.deleteUser.mockReturnValue(
       throwError(() => ({ error: { detail: 'Delete failed' } }))
     );
 
@@ -185,10 +185,10 @@ describe('AdminDashboardComponent', () => {
       email: 'test@example.com',
       new_password: 'newTest1234!',
     };
-    const dialogOpenSpy = spyOn(component['dialog'], 'open').and.returnValue(
-      fakeDialogRef(undefined)
-    );
-    adminService.resetUserPassword.and.returnValue(of(mockResponse));
+    const dialogOpenSpy = jest
+      .spyOn(component['dialog'], 'open')
+      .mockReturnValue(fakeDialogRef(undefined));
+    adminService.resetUserPassword.mockReturnValue(of(mockResponse));
 
     component.resetPassword(1);
 
@@ -201,7 +201,7 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should not reset password when already resetting for that user', () => {
-    adminService.resetUserPassword.and.returnValue(of({ email: 'x@x.com', new_password: 'p' }));
+    adminService.resetUserPassword.mockReturnValue(of({ email: 'x@x.com', new_password: 'p' }));
     component.resettingPasswordIds.add(1);
 
     component.resetPassword(1);
@@ -214,8 +214,8 @@ describe('AdminDashboardComponent', () => {
       email: 'test@example.com',
       new_password: 'newTest1234!',
     };
-    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(undefined));
-    adminService.resetUserPassword.and.returnValue(of(mockResponse));
+    jest.spyOn(component['dialog'], 'open').mockReturnValue(fakeDialogRef(undefined));
+    adminService.resetUserPassword.mockReturnValue(of(mockResponse));
 
     component.resetPassword(1);
 
@@ -223,8 +223,8 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should handle reset password error', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    adminService.resetUserPassword.and.returnValue(
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    adminService.resetUserPassword.mockReturnValue(
       throwError(() => ({ error: { detail: 'Password reset failed' } }))
     );
 
@@ -239,7 +239,7 @@ describe('AdminDashboardComponent', () => {
 
   it('should toggle admin role', () => {
     const adminUser = { ...mockUser, is_admin: false };
-    adminService.updateUserRole.and.returnValue(of({ ...mockUser, is_admin: true }));
+    adminService.updateUserRole.mockReturnValue(of({ ...mockUser, is_admin: true }));
 
     component.toggleRole(adminUser);
 
@@ -248,8 +248,8 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should handle toggle role error', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    adminService.updateUserRole.and.returnValue(
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    adminService.updateUserRole.mockReturnValue(
       throwError(() => ({ error: { detail: 'Role update failed' } }))
     );
 
@@ -262,8 +262,8 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should initialize database with confirmation', () => {
-    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(true));
-    adminService.initDatabase.and.returnValue(of({ message: 'Database initialized successfully' }));
+    jest.spyOn(component['dialog'], 'open').mockReturnValue(fakeDialogRef(true));
+    adminService.initDatabase.mockReturnValue(of({ message: 'Database initialized successfully' }));
 
     component.initializeDatabase();
 
@@ -271,7 +271,7 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should not initialize database without confirmation', () => {
-    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(false));
+    jest.spyOn(component['dialog'], 'open').mockReturnValue(fakeDialogRef(false));
 
     component.initializeDatabase();
 
@@ -280,7 +280,7 @@ describe('AdminDashboardComponent', () => {
 
   it('should not initialize database when already initializing', () => {
     component.isInitializingDb = true;
-    const dialogSpy = spyOn(component['dialog'], 'open');
+    const dialogSpy = jest.spyOn(component['dialog'], 'open');
 
     component.initializeDatabase();
 
@@ -289,8 +289,8 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should migrate database with confirmation', () => {
-    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(true));
-    adminService.migrateDatabase.and.returnValue(of({ message: 'Database migrated successfully' }));
+    jest.spyOn(component['dialog'], 'open').mockReturnValue(fakeDialogRef(true));
+    adminService.migrateDatabase.mockReturnValue(of({ message: 'Database migrated successfully' }));
 
     component.migrateDatabase();
 
@@ -298,7 +298,7 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should not migrate database without confirmation', () => {
-    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(false));
+    jest.spyOn(component['dialog'], 'open').mockReturnValue(fakeDialogRef(false));
 
     component.migrateDatabase();
 
@@ -307,7 +307,7 @@ describe('AdminDashboardComponent', () => {
 
   it('should not migrate database when already migrating', () => {
     component.isMigratingDb = true;
-    const dialogSpy = spyOn(component['dialog'], 'open');
+    const dialogSpy = jest.spyOn(component['dialog'], 'open');
 
     component.migrateDatabase();
 
@@ -316,9 +316,9 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should handle initialize database error', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(true));
-    adminService.initDatabase.and.returnValue(
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    jest.spyOn(component['dialog'], 'open').mockReturnValue(fakeDialogRef(true));
+    adminService.initDatabase.mockReturnValue(
       throwError(() => ({ error: { detail: 'Database init failed' } }))
     );
 
@@ -332,9 +332,9 @@ describe('AdminDashboardComponent', () => {
   });
 
   it('should handle migrate database error', () => {
-    const snackBarSpy = spyOn(component['snackBar'], 'open');
-    spyOn(component['dialog'], 'open').and.returnValue(fakeDialogRef(true));
-    adminService.migrateDatabase.and.returnValue(
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    jest.spyOn(component['dialog'], 'open').mockReturnValue(fakeDialogRef(true));
+    adminService.migrateDatabase.mockReturnValue(
       throwError(() => ({ error: { detail: 'Database migration failed' } }))
     );
 

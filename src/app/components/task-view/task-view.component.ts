@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { Subscription, interval } from 'rxjs';
 import { Task } from '../../services/task.service';
 import { TaskService } from '../../services/task.service';
 import { MatIconModule } from '@angular/material/icon';
@@ -26,10 +27,13 @@ import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.co
   templateUrl: './task-view.component.html',
   styleUrls: ['./task-view.component.scss'],
 })
-export class TaskViewComponent implements OnInit {
+export class TaskViewComponent implements OnInit, OnDestroy {
   dueTasks: Task[] = [];
   isLoadingRandom = false;
   showArchived = false;
+
+  private static readonly REFRESH_INTERVAL_MS = 60_000;
+  private refreshSubscription?: Subscription;
 
   constructor(
     private taskService: TaskService,
@@ -40,6 +44,13 @@ export class TaskViewComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDueTasks();
+    this.refreshSubscription = interval(TaskViewComponent.REFRESH_INTERVAL_MS).subscribe(() => {
+      this.loadDueTasks();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.refreshSubscription?.unsubscribe();
   }
 
   loadDueTasks(): void {

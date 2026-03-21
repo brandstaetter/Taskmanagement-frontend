@@ -1,7 +1,21 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { AuthService } from './auth.service';
-import { of, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { User, Token } from '../generated';
+import {
+  loginUserForAccessTokenApiV1AuthUserTokenPost,
+  getCurrentUserInfoApiV1UsersMeGet,
+} from '../generated';
+
+// Mock the generated SDK functions
+jest.mock('../generated/sdk.gen', () => ({
+  ...jest.requireActual('../generated/sdk.gen'),
+  loginUserForAccessTokenApiV1AuthUserTokenPost: jest.fn(),
+  getCurrentUserInfoApiV1UsersMeGet: jest.fn(),
+}));
+
+const mockLoginFn = loginUserForAccessTokenApiV1AuthUserTokenPost as jest.Mock;
+const mockGetCurrentUserFn = getCurrentUserInfoApiV1UsersMeGet as jest.Mock;
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -19,7 +33,9 @@ describe('AuthService', () => {
 
   describe('Token Management', () => {
     it('should get access token from localStorage', () => {
-      const localStorageSpy = spyOn(localStorage, 'getItem').and.returnValue('test-token');
+      const localStorageSpy = jest
+        .spyOn(Storage.prototype, 'getItem')
+        .mockReturnValue('test-token');
 
       const token = service.getAccessToken();
 
@@ -28,7 +44,7 @@ describe('AuthService', () => {
     });
 
     it('should return null when no token is stored', () => {
-      spyOn(localStorage, 'getItem').and.returnValue(null);
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
 
       const token = service.getAccessToken();
 
@@ -36,7 +52,9 @@ describe('AuthService', () => {
     });
 
     it('should return null when localStorage throws error', () => {
-      spyOn(localStorage, 'getItem').and.throwError('Storage error');
+      jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+        throw new Error('Storage error');
+      });
 
       const token = service.getAccessToken();
 
@@ -44,7 +62,7 @@ describe('AuthService', () => {
     });
 
     it('should set access token in localStorage', () => {
-      const localStorageSpy = spyOn(localStorage, 'setItem');
+      const localStorageSpy = jest.spyOn(Storage.prototype, 'setItem');
 
       service.setAccessToken('new-token');
 
@@ -52,19 +70,21 @@ describe('AuthService', () => {
     });
 
     it('should handle error when setting token', () => {
-      const consoleSpy = spyOn(console, 'error');
-      spyOn(localStorage, 'setItem').and.throwError('Storage error');
+      const consoleSpy = jest.spyOn(console, 'error');
+      jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new Error('Storage error');
+      });
 
       service.setAccessToken('new-token');
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to set access token in localStorage:',
-        jasmine.any(Error)
+        expect.any(Error)
       );
     });
 
     it('should clear access token from localStorage', () => {
-      const localStorageSpy = spyOn(localStorage, 'removeItem');
+      const localStorageSpy = jest.spyOn(Storage.prototype, 'removeItem');
 
       service.clearAccessToken();
 
@@ -72,36 +92,38 @@ describe('AuthService', () => {
     });
 
     it('should handle error when clearing token', () => {
-      const consoleSpy = spyOn(console, 'error');
-      spyOn(localStorage, 'removeItem').and.throwError('Storage error');
+      const consoleSpy = jest.spyOn(console, 'error');
+      jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+        throw new Error('Storage error');
+      });
 
       service.clearAccessToken();
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to clear access token from localStorage:',
-        jasmine.any(Error)
+        expect.any(Error)
       );
     });
 
     it('should return authentication status correctly', () => {
-      const localStorageSpy = spyOn(localStorage, 'getItem');
-      spyOn(localStorage, 'removeItem'); // prevent logout side-effects
+      const localStorageSpy = jest.spyOn(Storage.prototype, 'getItem');
+      jest.spyOn(Storage.prototype, 'removeItem'); // prevent logout side-effects
 
       const futureExp = Math.floor(Date.now() / 1000) + 3600;
       const validToken = `header.${btoa(JSON.stringify({ exp: futureExp }))}.signature`;
 
-      localStorageSpy.and.returnValue(validToken);
+      localStorageSpy.mockReturnValue(validToken);
       expect(service.isAuthenticated()).toBe(true);
 
-      localStorageSpy.and.returnValue(null);
+      localStorageSpy.mockReturnValue(null);
       expect(service.isAuthenticated()).toBe(false);
     });
 
     it('should return false for an expired token', () => {
       const pastExp = Math.floor(Date.now() / 1000) - 60;
       const expiredToken = `header.${btoa(JSON.stringify({ exp: pastExp }))}.signature`;
-      spyOn(localStorage, 'getItem').and.returnValue(expiredToken);
-      spyOn(localStorage, 'removeItem');
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(expiredToken);
+      jest.spyOn(Storage.prototype, 'removeItem');
 
       expect(service.isAuthenticated()).toBe(false);
     });
@@ -109,8 +131,8 @@ describe('AuthService', () => {
     it('should call logout when token is expired', () => {
       const pastExp = Math.floor(Date.now() / 1000) - 60;
       const expiredToken = `header.${btoa(JSON.stringify({ exp: pastExp }))}.signature`;
-      spyOn(localStorage, 'getItem').and.returnValue(expiredToken);
-      const removeItemSpy = spyOn(localStorage, 'removeItem');
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(expiredToken);
+      const removeItemSpy = jest.spyOn(Storage.prototype, 'removeItem');
 
       service.isAuthenticated();
 
@@ -120,14 +142,14 @@ describe('AuthService', () => {
     it('should return true for a valid token with future exp', () => {
       const futureExp = Math.floor(Date.now() / 1000) + 3600;
       const validToken = `header.${btoa(JSON.stringify({ exp: futureExp }))}.signature`;
-      spyOn(localStorage, 'getItem').and.returnValue(validToken);
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(validToken);
 
       expect(service.isAuthenticated()).toBe(true);
     });
 
     it('should return false for a malformed token', () => {
-      spyOn(localStorage, 'getItem').and.returnValue('not-a-valid-jwt');
-      spyOn(localStorage, 'removeItem');
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue('not-a-valid-jwt');
+      jest.spyOn(Storage.prototype, 'removeItem');
 
       expect(service.isAuthenticated()).toBe(false);
     });
@@ -152,7 +174,7 @@ describe('AuthService', () => {
     });
 
     it('should return current user from localStorage', () => {
-      spyOn(localStorage, 'getItem').and.returnValue(JSON.stringify(mockUser));
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(JSON.stringify(mockUser));
 
       const freshService = new AuthService();
       const user = freshService.getCurrentUser();
@@ -160,7 +182,7 @@ describe('AuthService', () => {
     });
 
     it('should return null when no user in localStorage', () => {
-      spyOn(localStorage, 'getItem').and.returnValue(null);
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
 
       const freshService = new AuthService();
       const user = freshService.getCurrentUser();
@@ -174,20 +196,20 @@ describe('AuthService', () => {
 
     it('should return admin status correctly for non-admin', () => {
       const adminUser = { ...mockUser, is_admin: false };
-      spyOn(localStorage, 'getItem').and.returnValue(JSON.stringify(adminUser));
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(JSON.stringify(adminUser));
       const service = new AuthService();
       expect(service.isAdmin()).toBe(false);
     });
 
     it('should return admin status correctly for admin', () => {
       const adminUser = { ...mockUser, is_admin: true };
-      spyOn(localStorage, 'getItem').and.returnValue(JSON.stringify(adminUser));
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(JSON.stringify(adminUser));
       const service = new AuthService();
       expect(service.isAdmin()).toBe(true);
     });
 
     it('should return admin status correctly for null user', () => {
-      spyOn(localStorage, 'getItem').and.returnValue(null);
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
       const service = new AuthService();
       expect(service.isAdmin()).toBe(false);
     });
@@ -199,118 +221,96 @@ describe('AuthService', () => {
 
     it('should return super admin status correctly for non-superadmin', () => {
       const superAdminUser = { ...mockUser, is_superadmin: false };
-      spyOn(localStorage, 'getItem').and.returnValue(JSON.stringify(superAdminUser));
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(JSON.stringify(superAdminUser));
       const service = new AuthService();
       expect(service.isSuperAdmin()).toBe(false);
     });
 
     it('should return super admin status correctly for superadmin', () => {
       const superAdminUser = { ...mockUser, is_superadmin: true };
-      spyOn(localStorage, 'getItem').and.returnValue(JSON.stringify(superAdminUser));
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(JSON.stringify(superAdminUser));
       const service = new AuthService();
       expect(service.isSuperAdmin()).toBe(true);
     });
 
     it('should return super admin status correctly for null user', () => {
-      spyOn(localStorage, 'getItem').and.returnValue(null);
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
       const service = new AuthService();
       expect(service.isSuperAdmin()).toBe(false);
     });
   });
 
   describe('Authentication Flow', () => {
-    it('should handle login errors', () => {
-      // Temporarily disabled to prevent CI failures
-      pending();
-
-      // Ensure spy exists before configuring it
-      if (!jasmine.isSpy(window.fetch)) {
-        spyOn(window, 'fetch');
-      }
-      const mockFetch = (window.fetch as jasmine.Spy).and.returnValue(
-        Promise.resolve({
-          ok: false,
-          status: 401,
-          json: () => Promise.resolve({ detail: 'Invalid credentials' }),
-        } as Response)
+    it('should handle login errors', async () => {
+      const apiError = { detail: 'Invalid credentials' };
+      mockLoginFn.mockReturnValue(
+        Promise.resolve({ data: undefined, error: apiError, response: {} as Response })
       );
 
-      service.login('test@example.com', 'wrong-password').subscribe({
-        next: () => fail('should have failed'),
-        error: err => {
-          expect(String(err)).toContain('response.text is not a function');
-        },
-        complete: () => {
-          expect(mockFetch).toHaveBeenCalled();
-        },
-      });
-
-      // Add expectation to prevent warning
-      expect(mockFetch).toBeDefined();
+      await expect(
+        new Promise((resolve, reject) => {
+          service.login('test@example.com', 'wrong-password').subscribe({
+            next: resolve,
+            error: reject,
+          });
+        })
+      ).rejects.toEqual(apiError);
     });
 
-    it('should handle login when response has no access token', () => {
-      // Temporarily disabled to prevent CI failures
-      pending();
+    it('should not set token when response has no access token', async () => {
+      const responseData = { access_token: null, token_type: 'bearer' } as unknown as Token;
+      mockLoginFn.mockReturnValue(
+        Promise.resolve({ data: responseData, error: undefined, response: {} as Response })
+      );
+      const setTokenSpy = jest.spyOn(service, 'setAccessToken');
 
-      const setTokenSpy = spyOn(service, 'setAccessToken');
-      const fetchUserSpy = spyOn(
-        service as unknown as { fetchCurrentUser: jasmine.Spy },
-        'fetchCurrentUser'
-      ).and.returnValue(of({}));
-      spyOn(
-        service as unknown as { authenticatedClient: jasmine.Spy },
-        'authenticatedClient'
-      ).and.returnValue({
-        loginUserForAccessTokenApiV1AuthUserTokenPost: () =>
-          Promise.resolve({
-            data: { access_token: null, token_type: 'bearer' } as unknown as Token,
-            response: {} as Response,
-          }),
+      const result = await new Promise<Token>(resolve => {
+        service.login('test@example.com', 'password').subscribe(resolve);
       });
 
-      service.login('test@example.com', 'password').subscribe(result => {
-        expect(result).toEqual({ access_token: null, token_type: 'bearer' } as unknown as Token);
-        expect(setTokenSpy).not.toHaveBeenCalled();
-        expect(fetchUserSpy).not.toHaveBeenCalled();
-      });
-
-      expect(setTokenSpy).toBeDefined();
+      expect(result).toEqual(responseData);
+      expect(setTokenSpy).not.toHaveBeenCalled();
     });
 
-    it('should handle login when response is undefined', () => {
-      // Temporarily disabled to prevent CI failures
-      pending();
+    it('should set token and fetch user when login succeeds with token', async () => {
+      const responseData: Token = { access_token: 'new-token', token_type: 'bearer' };
+      const mockUser: User = {
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        avatar_url: null,
+        last_login: null,
+        created_at: '2023-01-01T00:00:00.000Z',
+        updated_at: '2023-01-01T00:00:00.000Z',
+      };
 
-      const setTokenSpy = spyOn(service, 'setAccessToken');
-      const fetchUserSpy = spyOn(
-        service as unknown as { fetchCurrentUser: jasmine.Spy },
-        'fetchCurrentUser'
-      ).and.returnValue(of({}));
-      spyOn(
-        service as unknown as { authenticatedClient: jasmine.Spy },
-        'authenticatedClient'
-      ).and.returnValue({
-        loginUserForAccessTokenApiV1AuthUserTokenPost: () =>
-          Promise.resolve({ data: undefined, response: {} as Response }),
+      mockLoginFn.mockReturnValue(
+        Promise.resolve({ data: responseData, error: undefined, response: {} as Response })
+      );
+      mockGetCurrentUserFn.mockReturnValue(
+        Promise.resolve({ data: mockUser, error: undefined, response: {} as Response })
+      );
+      const setTokenSpy = jest.spyOn(service, 'setAccessToken');
+      jest.spyOn(Storage.prototype, 'setItem');
+
+      const result = await new Promise<Token>(resolve => {
+        service.login('test@example.com', 'password').subscribe(resolve);
       });
 
-      service.login('test@example.com', 'password').subscribe(result => {
-        expect(result).toBeUndefined();
-        expect(setTokenSpy).not.toHaveBeenCalled();
-        expect(fetchUserSpy).not.toHaveBeenCalled();
-      });
-
-      expect(setTokenSpy).toBeDefined();
+      expect(result).toEqual(responseData);
+      expect(setTokenSpy).toHaveBeenCalledWith('new-token');
+      expect(mockGetCurrentUserFn).toHaveBeenCalled();
     });
 
     it('should handle getAuthSecurity when token exists', () => {
-      spyOn(localStorage, 'getItem').and.returnValue('test-token');
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue('test-token');
       // Mock fetch to prevent real HTTP calls
-      if (!jasmine.isSpy(window.fetch)) {
-        spyOn(window, 'fetch');
+      if (!jest.isMockFunction(window.fetch)) {
+        jest.spyOn(window, 'fetch');
       }
-      (window.fetch as jasmine.Spy).and.returnValue(
+      (window.fetch as jest.SpyInstance).mockReturnValue(
         Promise.resolve(
           new Response(JSON.stringify({}), {
             status: 200,
@@ -329,12 +329,12 @@ describe('AuthService', () => {
     });
 
     it('should handle getAuthSecurity when token is null', fakeAsync(() => {
-      spyOn(localStorage, 'getItem').and.returnValue(null);
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
       // Mock fetch to prevent real HTTP calls
-      if (!jasmine.isSpy(window.fetch)) {
-        spyOn(window, 'fetch');
+      if (!jest.isMockFunction(window.fetch)) {
+        jest.spyOn(window, 'fetch');
       }
-      (window.fetch as jasmine.Spy).and.returnValue(
+      (window.fetch as jest.SpyInstance).mockReturnValue(
         Promise.resolve(
           new Response(JSON.stringify({}), {
             status: 200,
@@ -354,12 +354,12 @@ describe('AuthService', () => {
     }));
 
     it('should handle getAuthSecurity when token is empty string', () => {
-      spyOn(localStorage, 'getItem').and.returnValue('');
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue('');
       // Mock fetch to prevent real HTTP calls
-      if (!jasmine.isSpy(window.fetch)) {
-        spyOn(window, 'fetch');
+      if (!jest.isMockFunction(window.fetch)) {
+        jest.spyOn(window, 'fetch');
       }
-      (window.fetch as jasmine.Spy).and.returnValue(
+      (window.fetch as jest.SpyInstance).mockReturnValue(
         Promise.resolve(
           new Response(JSON.stringify({}), {
             status: 200,
@@ -378,7 +378,7 @@ describe('AuthService', () => {
     });
 
     it('should handle getStoredUser when JSON parsing fails', () => {
-      spyOn(localStorage, 'getItem').and.returnValue('invalid-json');
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue('invalid-json');
 
       const user = (service as unknown as { getStoredUser: () => User | null }).getStoredUser();
 
@@ -407,30 +407,19 @@ describe('AuthService', () => {
       expect(result).toEqual(data);
     });
 
-    it('should handle fetchCurrentUser error', () => {
-      pending();
-      const consoleSpy = spyOn(console, 'error');
-      // Ensure spy exists before configuring it
-      if (!jasmine.isSpy(window.fetch)) {
-        spyOn(window, 'fetch');
-      }
-      (window.fetch as jasmine.Spy).and.returnValue(
-        Promise.resolve({
-          ok: false,
-          status: 500,
-          json: () => Promise.resolve({ detail: 'API Error' }),
-        } as Response)
+    it('should handle fetchCurrentUser error', async () => {
+      const apiError = { detail: 'API Error' };
+      mockGetCurrentUserFn.mockReturnValue(
+        Promise.resolve({ data: undefined, error: apiError, response: {} as Response })
       );
 
-      (service as unknown as { fetchCurrentUser: () => Observable<User> })
-        .fetchCurrentUser()
-        .subscribe({
-          next: () => fail('should have failed'),
-          error: error => {
-            expect(error).toBeTruthy();
-            expect(consoleSpy).toHaveBeenCalled();
-          },
-        });
+      await expect(
+        new Promise((resolve, reject) => {
+          (service as unknown as { fetchCurrentUser: () => Observable<User> })
+            .fetchCurrentUser()
+            .subscribe({ next: resolve, error: reject });
+        })
+      ).rejects.toEqual(apiError);
     });
 
     it('should have all required methods', () => {
@@ -446,9 +435,9 @@ describe('AuthService', () => {
     });
 
     it('should logout and clear stored data', () => {
-      const clearTokenSpy = spyOn(service, 'clearAccessToken');
-      const clearUserSpy = spyOn(
-        service as unknown as { clearStoredUser: jasmine.Spy },
+      const clearTokenSpy = jest.spyOn(service, 'clearAccessToken');
+      const clearUserSpy = jest.spyOn(
+        service as unknown as { clearStoredUser: jest.SpyInstance },
         'clearStoredUser'
       );
 
@@ -478,7 +467,7 @@ describe('AuthService', () => {
         updated_at: '2023-01-01T00:00:00.000Z',
       };
 
-      spyOn(localStorage, 'getItem').and.returnValue(JSON.stringify(testUser));
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(JSON.stringify(testUser));
 
       const freshService = new AuthService();
 
@@ -502,21 +491,23 @@ describe('AuthService', () => {
         updated_at: '2023-01-01T00:00:00.000Z',
       };
 
-      spyOn(localStorage, 'getItem').and.returnValue(JSON.stringify(mockUser));
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(JSON.stringify(mockUser));
 
       const user = (service as unknown as { getStoredUser: () => User | null }).getStoredUser();
       expect(user).toEqual(mockUser);
     });
 
     it('should return null when no user stored', () => {
-      spyOn(localStorage, 'getItem').and.returnValue(null);
+      jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
 
       const user = (service as unknown as { getStoredUser: () => User | null }).getStoredUser();
       expect(user).toBeNull();
     });
 
     it('should return null when localStorage throws error', () => {
-      spyOn(localStorage, 'getItem').and.throwError('Storage error');
+      jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+        throw new Error('Storage error');
+      });
 
       const user = (service as unknown as { getStoredUser: () => User | null }).getStoredUser();
       expect(user).toBeNull();
@@ -535,7 +526,7 @@ describe('AuthService', () => {
         updated_at: '2023-01-01T00:00:00.000Z',
       };
 
-      const localStorageSpy = spyOn(localStorage, 'setItem');
+      const localStorageSpy = jest.spyOn(Storage.prototype, 'setItem');
 
       (service as unknown as { setStoredUser: (user: User) => void }).setStoredUser(mockUser);
 
@@ -543,7 +534,7 @@ describe('AuthService', () => {
     });
 
     it('should handle error when storing user', () => {
-      const consoleSpy = spyOn(console, 'error');
+      const consoleSpy = jest.spyOn(console, 'error');
       const mockUser: User = {
         id: 1,
         email: 'test@example.com',
@@ -556,18 +547,20 @@ describe('AuthService', () => {
         updated_at: '2023-01-01T00:00:00.000Z',
       };
 
-      spyOn(localStorage, 'setItem').and.throwError('Storage error');
+      jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new Error('Storage error');
+      });
 
       (service as unknown as { setStoredUser: (user: User) => void }).setStoredUser(mockUser);
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to store user in localStorage:',
-        jasmine.any(Error)
+        expect.any(Error)
       );
     });
 
     it('should clear stored user successfully', () => {
-      const localStorageSpy = spyOn(localStorage, 'removeItem');
+      const localStorageSpy = jest.spyOn(Storage.prototype, 'removeItem');
 
       (service as unknown as { clearStoredUser: () => void }).clearStoredUser();
 
@@ -575,14 +568,16 @@ describe('AuthService', () => {
     });
 
     it('should handle error when clearing user', () => {
-      const consoleSpy = spyOn(console, 'error');
-      spyOn(localStorage, 'removeItem').and.throwError('Storage error');
+      const consoleSpy = jest.spyOn(console, 'error');
+      jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+        throw new Error('Storage error');
+      });
 
       (service as unknown as { clearStoredUser: () => void }).clearStoredUser();
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to clear user from localStorage:',
-        jasmine.any(Error)
+        expect.any(Error)
       );
     });
   });

@@ -49,12 +49,12 @@ describe('TaskCardComponent', () => {
 
   describe('Date formatting methods', () => {
     beforeEach(() => {
-      jasmine.clock().install();
-      jasmine.clock().mockDate(new Date('2025-02-19T12:00:00Z'));
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2025-02-19T12:00:00Z'));
     });
 
     afterEach(() => {
-      jasmine.clock().uninstall();
+      jest.useRealTimers();
     });
 
     it('should format timespan for future tasks', () => {
@@ -102,12 +102,12 @@ describe('TaskCardComponent', () => {
 
   describe('isDueSoon method', () => {
     beforeEach(() => {
-      jasmine.clock().install();
-      jasmine.clock().mockDate(new Date('2025-02-19T12:00:00Z'));
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2025-02-19T12:00:00Z'));
     });
 
     afterEach(() => {
-      jasmine.clock().uninstall();
+      jest.useRealTimers();
     });
 
     it('should return true for tasks due within threshold', () => {
@@ -133,12 +133,12 @@ describe('TaskCardComponent', () => {
 
   describe('getTaskClass method', () => {
     beforeEach(() => {
-      jasmine.clock().install();
-      jasmine.clock().mockDate(new Date('2025-02-19T12:00:00Z'));
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2025-02-19T12:00:00Z'));
     });
 
     afterEach(() => {
-      jasmine.clock().uninstall();
+      jest.useRealTimers();
     });
 
     it('should return archived-task for archived tasks', () => {
@@ -240,7 +240,7 @@ describe('TaskCardComponent', () => {
     }));
 
     it('should emit reopenTask event when reopen button is clicked', fakeAsync(() => {
-      spyOn(component.reopenTask, 'emit');
+      jest.spyOn(component.reopenTask, 'emit');
       component.task.state = 'done';
       fixture.detectChanges();
 
@@ -256,7 +256,7 @@ describe('TaskCardComponent', () => {
         item.textContent?.includes('Reopen Task')
       ) as HTMLElement;
 
-      expect(reopenButton).toBeTruthy('Reopen Task button should be present');
+      expect(reopenButton).toBeTruthy();
       reopenButton?.click();
       fixture.detectChanges();
       tick();
@@ -265,7 +265,7 @@ describe('TaskCardComponent', () => {
     }));
 
     it('should emit archiveTask event when archive button is clicked', fakeAsync(() => {
-      spyOn(component.archiveTask, 'emit');
+      jest.spyOn(component.archiveTask, 'emit');
       component.task.state = 'todo';
       fixture.detectChanges();
 
@@ -288,7 +288,7 @@ describe('TaskCardComponent', () => {
     }));
 
     it('should emit editTask event when edit button is clicked', fakeAsync(() => {
-      spyOn(component.editTask, 'emit');
+      jest.spyOn(component.editTask, 'emit');
       component.task.state = 'todo';
       fixture.detectChanges();
 
@@ -320,7 +320,7 @@ describe('TaskCardComponent', () => {
     });
 
     it('should emit startTask event when START button is clicked', () => {
-      spyOn(component.startTask, 'emit');
+      jest.spyOn(component.startTask, 'emit');
       component.task.state = 'todo';
       fixture.detectChanges();
 
@@ -338,7 +338,7 @@ describe('TaskCardComponent', () => {
     });
 
     it('should emit completeTask event when COMPLETE button is clicked', () => {
-      spyOn(component.completeTask, 'emit');
+      jest.spyOn(component.completeTask, 'emit');
       component.task.state = 'in_progress';
       fixture.detectChanges();
 
@@ -368,12 +368,12 @@ describe('TaskCardComponent', () => {
 
   describe('Overdue warning', () => {
     beforeEach(() => {
-      jasmine.clock().install();
-      jasmine.clock().mockDate(new Date('2025-02-19T00:00:00Z'));
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2025-02-19T00:00:00Z'));
     });
 
     afterEach(() => {
-      jasmine.clock().uninstall();
+      jest.useRealTimers();
     });
 
     it('should show warning icon for overdue todo tasks', () => {
@@ -411,7 +411,7 @@ describe('TaskCardComponent', () => {
 
   describe('viewDetails event', () => {
     it('should emit viewDetails event when menu item is clicked', fakeAsync(() => {
-      spyOn(component.viewDetails, 'emit');
+      jest.spyOn(component.viewDetails, 'emit');
       component.task.state = 'todo';
       fixture.detectChanges();
 
@@ -425,7 +425,7 @@ describe('TaskCardComponent', () => {
         item.textContent?.includes('View Details')
       ) as HTMLElement;
 
-      expect(viewDetailsButton).toBeTruthy('View Details button should be present');
+      expect(viewDetailsButton).toBeTruthy();
       viewDetailsButton?.click();
       fixture.detectChanges();
       tick();
@@ -434,7 +434,7 @@ describe('TaskCardComponent', () => {
     }));
 
     it('should emit viewDetails from print-only mode footer', () => {
-      spyOn(component.viewDetails, 'emit');
+      jest.spyOn(component.viewDetails, 'emit');
       component.mode = 'print-only';
       component.task.state = 'todo';
       fixture.detectChanges();
@@ -446,7 +446,7 @@ describe('TaskCardComponent', () => {
         btn => btn.nativeElement.querySelector('mat-icon')?.textContent?.trim() === 'visibility'
       );
 
-      expect(detailsButton).toBeTruthy('Visibility button should be present in print-only mode');
+      expect(detailsButton).toBeTruthy();
       detailsButton?.nativeElement.click();
 
       expect(component.viewDetails.emit).toHaveBeenCalledWith(component.task);
