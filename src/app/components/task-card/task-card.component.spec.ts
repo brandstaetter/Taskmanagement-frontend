@@ -452,4 +452,75 @@ describe('TaskCardComponent', () => {
       expect(component.viewDetails.emit).toHaveBeenCalledWith(component.task);
     });
   });
+
+  describe('Avatar display', () => {
+    it('should show creator avatar image when creator_avatar_url is set', () => {
+      component.task = {
+        id: 1,
+        title: 'Test',
+        description: 'Desc',
+        state: 'todo',
+        creator_display_name: 'Alice',
+        creator_avatar_url: 'https://gravatar.com/avatar/abc',
+      };
+      fixture.detectChanges();
+
+      const avatarImg = fixture.debugElement.query(By.css('.meta-avatar'));
+      expect(avatarImg).toBeTruthy();
+      expect(avatarImg.nativeElement.src).toContain('gravatar.com');
+    });
+
+    it('should show person_outline icon when no creator avatar', () => {
+      component.task = {
+        id: 1,
+        title: 'Test',
+        description: 'Desc',
+        state: 'todo',
+        creator_display_name: 'Alice',
+      };
+      fixture.detectChanges();
+
+      const avatarImg = fixture.debugElement.query(By.css('.meta-item .meta-avatar'));
+      expect(avatarImg).toBeFalsy();
+      const icon = fixture.debugElement.query(By.css('.meta-item mat-icon'));
+      expect(icon).toBeTruthy();
+      expect(icon.nativeElement.textContent.trim()).toBe('person_outline');
+    });
+
+    it('should show worker avatar image when worker_avatar_url is set and in_progress', () => {
+      component.task = {
+        id: 1,
+        title: 'Test',
+        description: 'Desc',
+        state: 'in_progress',
+        worker_display_name: 'Bob',
+        worker_avatar_url: 'https://gravatar.com/avatar/def',
+      };
+      fixture.detectChanges();
+
+      const avatars = fixture.debugElement.queryAll(By.css('.meta-avatar'));
+      const workerAvatar = avatars.find(
+        a => a.nativeElement.src && a.nativeElement.src.includes('def')
+      );
+      expect(workerAvatar).toBeTruthy();
+    });
+
+    it('should not show worker avatar when task is not in_progress', () => {
+      component.task = {
+        id: 1,
+        title: 'Test',
+        description: 'Desc',
+        state: 'todo',
+        worker_display_name: 'Bob',
+        worker_avatar_url: 'https://gravatar.com/avatar/def',
+      };
+      fixture.detectChanges();
+
+      const avatars = fixture.debugElement.queryAll(By.css('.meta-avatar'));
+      const workerAvatar = avatars.find(
+        a => a.nativeElement.src && a.nativeElement.src.includes('def')
+      );
+      expect(workerAvatar).toBeFalsy();
+    });
+  });
 });
