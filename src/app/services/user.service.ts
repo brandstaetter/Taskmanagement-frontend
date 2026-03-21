@@ -5,15 +5,17 @@ import { environment } from '../../environments/environment';
 import {
   UserPasswordChange,
   UserAvatarUpdate,
+  UserDisplayNameUpdate,
   changePasswordApiV1UsersMePasswordPut,
   updateAvatarApiV1UsersMeAvatarPut,
+  updateDisplayNameApiV1UsersMeDisplayNamePatch,
   User,
 } from '../generated';
 import { createClient, createConfig, type Client } from '../generated/client';
 import { AuthService } from './auth.service';
 
 // Re-export types for backward compatibility
-export type { UserPasswordChange, UserAvatarUpdate, User };
+export type { UserPasswordChange, UserAvatarUpdate, UserDisplayNameUpdate, User };
 
 @Injectable({
   providedIn: 'root',
@@ -51,6 +53,16 @@ export class UserService {
         client: this.authenticatedClient,
         security: this.getAuthSecurity(),
         body: avatarUpdate,
+      })
+    ).pipe(map(response => response.data as User));
+  }
+
+  updateDisplayName(update: UserDisplayNameUpdate): Observable<User> {
+    return from(
+      updateDisplayNameApiV1UsersMeDisplayNamePatch({
+        client: this.authenticatedClient,
+        security: this.getAuthSecurity(),
+        body: update,
       })
     ).pipe(map(response => response.data as User));
   }

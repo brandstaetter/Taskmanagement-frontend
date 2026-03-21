@@ -40,6 +40,7 @@ export class UserProfileComponent implements OnInit {
   user: User | null = null;
   isLoadingPassword = false;
   isLoadingAvatar = false;
+  isLoadingDisplayName = false;
 
   passwordForm = this.fb.group({
     currentPassword: ['', [Validators.required, Validators.minLength(8)]],
@@ -51,6 +52,10 @@ export class UserProfileComponent implements OnInit {
     avatarUrl: ['', [Validators.required]],
   });
 
+  displayNameForm = this.fb.group({
+    displayName: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(50)]],
+  });
+
   ngOnInit(): void {
     this.loadUserProfile();
   }
@@ -59,6 +64,9 @@ export class UserProfileComponent implements OnInit {
     this.user = this.authService.getCurrentUser();
     if (this.user?.avatar_url) {
       this.avatarForm.patchValue({ avatarUrl: this.user.avatar_url });
+    }
+    if (this.user?.display_name) {
+      this.displayNameForm.patchValue({ displayName: this.user.display_name });
     }
   }
 
@@ -135,6 +143,36 @@ export class UserProfileComponent implements OnInit {
             panelClass: ['error-snackbar'],
           });
           this.isLoadingAvatar = false;
+        },
+      });
+  }
+
+  updateDisplayName(): void {
+    if (this.displayNameForm.invalid || this.isLoadingDisplayName) {
+      this.displayNameForm.markAllAsTouched();
+      return;
+    }
+
+    this.isLoadingDisplayName = true;
+    this.userService
+      .updateDisplayName({
+        display_name: this.displayNameForm.controls.displayName.value ?? '',
+      })
+      .subscribe({
+        next: user => {
+          this.user = user;
+          this.snackBar.open('Display name updated successfully', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar'],
+          });
+          this.isLoadingDisplayName = false;
+        },
+        error: err => {
+          this.snackBar.open(err.error?.detail || 'Failed to update display name', 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+          });
+          this.isLoadingDisplayName = false;
         },
       });
   }

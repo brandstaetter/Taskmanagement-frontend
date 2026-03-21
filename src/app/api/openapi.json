@@ -569,7 +569,7 @@
           "tasks"
         ],
         "summary": "Print Task",
-        "description": "Print a task using the specified printer (defaults to PDF).",
+        "description": "Print a task using the specified printer (defaults to PDF).\n\nThe optional ``tz`` query parameter accepts an IANA timezone name\n(e.g. ``Europe/Vienna``).  When provided, all timestamps on the\nprintout are converted from UTC to the given timezone so they match\nthe user's local time.",
         "operationId": "print_task_api_v1_tasks__task_id__print_post",
         "security": [
           {
@@ -603,6 +603,24 @@
               "title": "Printer Type"
             },
             "description": "Type of printer to use"
+          },
+          {
+            "name": "timezone",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "IANA timezone name (e.g. 'Europe/Vienna') for timestamps",
+              "title": "Timezone"
+            },
+            "description": "IANA timezone name (e.g. 'Europe/Vienna') for timestamps"
           }
         ],
         "responses": {
@@ -1019,17 +1037,42 @@
           "print"
         ],
         "summary": "Print Data",
-        "description": "Print data using the configured printer.\n\nArgs:\n    request: PrintRequest object containing the data to print\n\nReturns:\n    Response from the printer (e.g., PDF file for download)",
+        "description": "Print data using the configured printer.\n\nArgs:\n    request: PrintRequest object containing the data to print\n    timezone: Optional IANA timezone name for timestamp conversion\n\nReturns:\n    Response from the printer (e.g., PDF file for download)",
         "operationId": "print_data_api_v1_print__post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "timezone",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "IANA timezone name (e.g. 'Europe/Vienna') for timestamps",
+              "title": "Timezone"
+            },
+            "description": "IANA timezone name (e.g. 'Europe/Vienna') for timestamps"
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PrintRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -1050,12 +1093,7 @@
               }
             }
           }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
+        }
       }
     },
     "/api/v1/users/me": {
@@ -1145,6 +1183,53 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UserAvatarUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/me/display-name": {
+      "patch": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Update Display Name",
+        "description": "Update the current user's display name.",
+        "operationId": "update_display_name_api_v1_users_me_display_name_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserDisplayNameUpdate"
               }
             }
           },
@@ -1566,6 +1651,39 @@
           "id": {
             "type": "integer",
             "title": "Id"
+          },
+          "started_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started By"
+          },
+          "creator_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creator Display Name"
+          },
+          "worker_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worker Display Name"
           }
         },
         "type": "object",
@@ -1852,6 +1970,17 @@
             "title": "Is Superadmin",
             "default": false
           },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
           "avatar_url": {
             "anyOf": [
               {
@@ -1912,6 +2041,21 @@
           "avatar_url"
         ],
         "title": "UserAvatarUpdate"
+      },
+      "UserDisplayNameUpdate": {
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "display_name"
+        ],
+        "title": "UserDisplayNameUpdate"
       },
       "UserPasswordChange": {
         "properties": {

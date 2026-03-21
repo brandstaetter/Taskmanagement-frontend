@@ -41,6 +41,24 @@
           <mat-divider></mat-divider>
 
           <div class="timestamps">
+            @if (task.creator_display_name) {
+              <div class="timestamp-item">
+                <mat-icon>person_outline</mat-icon>
+                <div class="timestamp-content">
+                  <div class="timestamp-label">Created by</div>
+                  <div class="timestamp-value">{{ task.creator_display_name }}</div>
+                </div>
+              </div>
+            }
+            @if (task.worker_display_name) {
+              <div class="timestamp-item">
+                <mat-icon>engineering</mat-icon>
+                <div class="timestamp-content">
+                  <div class="timestamp-label">Working on it</div>
+                  <div class="timestamp-value">{{ task.worker_display_name }}</div>
+                </div>
+              </div>
+            }
             @if (task.created_at) {
               <div class="timestamp-item">
                 <mat-icon>add_circle_outline</mat-icon>
