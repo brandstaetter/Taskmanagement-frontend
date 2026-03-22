@@ -13,6 +13,38 @@
     margin-bottom: 4px;
     display: flex;
     justify-content: flex-end;
+    gap: 8px;
+
+    button:not(.random-task-button) {
+      font-family: 'Mulish', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #808088;
+      border: 1px solid #38383e;
+      border-radius: 3px;
+      padding: 0 12px;
+      height: 32px;
+      background: transparent;
+      transition:
+        color 0.15s ease,
+        border-color 0.15s ease;
+
+      mat-icon {
+        font-size: 15px;
+        width: 15px;
+        height: 15px;
+        margin-right: 5px;
+        vertical-align: middle;
+      }
+
+      &:hover {
+        color: #f0a030;
+        border-color: rgba(240, 160, 48, 0.4);
+        background: rgba(240, 160, 48, 0.05);
+      }
+    }
   }
 
   .random-task-button {
