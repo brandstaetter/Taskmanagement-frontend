@@ -78,6 +78,10 @@ export class TaskViewComponent implements OnInit, OnDestroy {
     if (!this.showArchived && (task.state === 'archived' || task.state === 'done')) {
       return;
     }
+    // Don't show private tasks when private mode is off
+    if (!this.privateMode && (task as Task & { is_private?: boolean }).is_private) {
+      return;
+    }
     // Avoid duplicates
     if (!this.dueTasks.some(t => t.id === task.id)) {
       this.dueTasks = [...this.dueTasks, task];
