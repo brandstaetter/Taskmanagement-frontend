@@ -76,6 +76,9 @@
           Assign to me
         </button>
       </div>
+      @if (mode === 'create') {
+        <mat-slide-toggle formControlName="anonymous">Create anonymously</mat-slide-toggle>
+      }
     </div>
   </mat-dialog-content>
 

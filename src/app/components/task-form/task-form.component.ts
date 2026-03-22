@@ -22,6 +22,7 @@ import {
 } from '@angular/material/core';
 import { MatTimepickerModule } from '@angular/material/timepicker';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Task, TaskService, TaskCreate, TaskUpdate } from '../../services/task.service';
 import { AuthService } from '../../services/auth.service';
@@ -41,6 +42,7 @@ import { UserService, User } from '../../services/user.service';
     MatNativeDateModule,
     MatTimepickerModule,
     MatSelectModule,
+    MatSlideToggleModule,
   ],
   providers: [provideNativeDateAdapter(), { provide: MAT_DATE_LOCALE, useValue: 'en-GB' }],
   templateUrl: './task-form.component.html',
@@ -118,6 +120,7 @@ export class TaskFormComponent implements OnInit {
       due_time: [dueTime],
       reward: [this.task?.reward || null],
       assigned_user_ids: [existingAssigneeIds],
+      anonymous: [false],
     });
 
     // Update time when date changes if time is already set
@@ -292,7 +295,7 @@ export class TaskFormComponent implements OnInit {
       if (this.mode === 'create') {
         // For create, include all values
         const currentUser = this.authService.getCurrentUser();
-        const taskData: TaskCreate = {
+        const taskData: TaskCreate & { anonymous?: boolean } = {
           ...formValue,
           state: 'todo',
           due_date: formValue.due_date || undefined,
@@ -301,6 +304,7 @@ export class TaskFormComponent implements OnInit {
           assigned_user_ids: formValue.assigned_user_ids?.length
             ? formValue.assigned_user_ids
             : undefined,
+          anonymous: formValue.anonymous || undefined,
         };
 
         this.taskService.createTask(taskData).subscribe({
