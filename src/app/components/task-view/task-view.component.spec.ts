@@ -375,7 +375,6 @@ describe('TaskViewComponent', () => {
   }));
 
   it('should handle edit task dialog with result', fakeAsync(() => {
-    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
     const mockEditResult = { title: 'Updated Task', description: 'Updated Description' };
     const mockDialogRef = {
       afterClosed: () => of(mockEditResult),
@@ -394,10 +393,8 @@ describe('TaskViewComponent', () => {
       data: mockTasks[0],
       width: '500px',
     });
-    expect(taskService.updateTask).toHaveBeenCalledWith(mockTasks[0].id, mockEditResult);
-    expect(snackBarSpy).toHaveBeenCalledWith('Task updated successfully', 'Close', {
-      duration: 3000,
-    });
+    // After dialog closes with result, loadDueTasks is called to refresh
+    expect(taskService.getDueTasks).toHaveBeenCalledTimes(2); // initial + after edit
   }));
 
   it('should handle edit task dialog with no result', fakeAsync(() => {
@@ -416,12 +413,7 @@ describe('TaskViewComponent', () => {
     expect(taskService.updateTask).not.toHaveBeenCalled();
   }));
 
-  it('should handle edit task dialog error - simple test', fakeAsync(() => {
-    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
-    const consoleSpy = jest.spyOn(console, 'error');
-
-    taskService.updateTask.mockReturnValue(throwError(() => new Error('Test error')));
-
+  it('should not call updateTask when dialog closes with result', fakeAsync(() => {
     const mockEditResult = { title: 'Updated Task', description: 'Updated Description' };
     const mockDialogRef = {
       afterClosed: () => of(mockEditResult),
@@ -436,11 +428,8 @@ describe('TaskViewComponent', () => {
     flushMicrotasks();
     tick();
 
-    expect(consoleSpy).toHaveBeenCalledWith('Error updating task:', expect.any(Error));
-    expect(snackBarSpy).toHaveBeenCalledWith('Failed to update task. Please try again.', 'Close', {
-      duration: 3000,
-      panelClass: ['error-snackbar'],
-    });
+    // The form handles the API update; the parent only refreshes the list
+    expect(taskService.updateTask).not.toHaveBeenCalled();
   }));
 
   it('should handle print task error', fakeAsync(() => {
