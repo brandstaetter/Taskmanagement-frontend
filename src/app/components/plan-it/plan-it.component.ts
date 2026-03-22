@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Task } from '../../services/task.service';
@@ -43,7 +43,8 @@ export class PlanItComponent implements OnInit {
     private taskService: TaskService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -82,6 +83,7 @@ export class PlanItComponent implements OnInit {
           this.inProgressTasks = sortedTasks.filter(task => task.state === 'in_progress');
           this.doneTasks = sortedTasks.filter(task => task.state === 'done');
           this.archivedTasks = sortedTasks.filter(task => task.state === 'archived');
+          this.cdr.detectChanges();
         },
         error: error => {
           // Only show error toast if it's not a 404 (no tasks found)
@@ -162,18 +164,7 @@ export class PlanItComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.taskService.updateTask(task.id, result).subscribe({
-          next: () => {
-            this.loadTasks();
-            this.snackBar.open('Task updated successfully', 'Close', { duration: 3000 });
-          },
-          error: error => {
-            console.error('Error updating task:', error);
-            this.snackBar.open('Failed to update task. Please try again.', 'Close', {
-              duration: 3000,
-            });
-          },
-        });
+        this.loadTasks();
       }
     });
   }

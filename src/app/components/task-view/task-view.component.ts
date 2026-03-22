@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
@@ -42,7 +42,8 @@ export class TaskViewComponent implements OnInit, OnDestroy {
     private taskService: TaskService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -71,6 +72,7 @@ export class TaskViewComponent implements OnInit, OnDestroy {
         }
         return task.state !== 'archived' && task.state !== 'done';
       });
+      this.cdr.detectChanges();
     });
   }
 
@@ -142,19 +144,7 @@ export class TaskViewComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.taskService.updateTask(task.id, result).subscribe({
-          next: () => {
-            this.loadDueTasks();
-            this.snackBar.open('Task updated successfully', 'Close', { duration: 3000 });
-          },
-          error: error => {
-            console.error('Error updating task:', error);
-            this.snackBar.open('Failed to update task. Please try again.', 'Close', {
-              duration: 3000,
-              panelClass: ['error-snackbar'],
-            });
-          },
-        });
+        this.loadDueTasks();
       }
     });
   }
