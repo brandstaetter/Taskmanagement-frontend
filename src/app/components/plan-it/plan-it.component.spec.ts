@@ -115,7 +115,7 @@ describe('PlanItComponent', () => {
 
       component.ngOnInit();
 
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false, true);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false, false);
     });
   });
 
@@ -332,7 +332,7 @@ describe('PlanItComponent', () => {
       component.toggleArchivedTasks();
 
       expect(component.showArchived).toBe(true);
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, true, true, false, true);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, true, true, false, false);
     });
   });
 
@@ -348,7 +348,7 @@ describe('PlanItComponent', () => {
       component.togglePrivateMode();
 
       expect(component.privateMode).toBe(true);
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, true, true);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, true, false);
     });
 
     it('should toggle privateMode back to false', () => {
@@ -358,7 +358,7 @@ describe('PlanItComponent', () => {
       component.togglePrivateMode();
 
       expect(component.privateMode).toBe(false);
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false, true);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false, false);
     });
 
     it('should persist privateMode state to localStorage', () => {
@@ -390,13 +390,13 @@ describe('PlanItComponent', () => {
 
     it('should toggle myTasksOnly and reload tasks', () => {
       mockTaskService.getTasks.mockReturnValue(of(mockTasks));
-      expect(component.myTasksOnly).toBe(false);
+      expect(component.myTasksOnly).toBe(true);
 
       component.toggleMyTasks();
 
-      expect(component.myTasksOnly).toBe(true);
-      // showAll=false when myTasksOnly=true
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false, false);
+      expect(component.myTasksOnly).toBe(false);
+      // showAll=true when myTasksOnly=false
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false, true);
     });
 
     it('should persist myTasksOnly state to localStorage', () => {
@@ -404,11 +404,11 @@ describe('PlanItComponent', () => {
 
       component.toggleMyTasks();
 
-      expect(localStorage.getItem('planIt_myTasksOnly')).toBe('true');
+      expect(localStorage.getItem('planIt_myTasksOnly')).toBe('false');
 
       component.toggleMyTasks();
 
-      expect(localStorage.getItem('planIt_myTasksOnly')).toBe('false');
+      expect(localStorage.getItem('planIt_myTasksOnly')).toBe('true');
     });
   });
 

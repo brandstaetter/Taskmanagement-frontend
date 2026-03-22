@@ -35,7 +35,7 @@ export class PlanItComponent implements OnInit, OnDestroy {
   doneTasks: Task[] = [];
   archivedTasks: Task[] = [];
   showArchived = false;
-  myTasksOnly = localStorage.getItem(MY_TASKS_STORAGE_KEY) === 'true';
+  myTasksOnly = localStorage.getItem(MY_TASKS_STORAGE_KEY) !== 'false';
   privateMode = localStorage.getItem(PRIVATE_MODE_STORAGE_KEY) === 'true';
   private readonly SOON_THRESHOLD_HOURS = 12;
   private destroyed = false;
