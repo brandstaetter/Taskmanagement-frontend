@@ -12,6 +12,8 @@ import { TaskCardComponent } from '../task-card/task-card.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
 
+const PRIVATE_MODE_STORAGE_KEY = 'taskView_privateMode';
+
 @Component({
   selector: 'app-task-view',
   standalone: true,
@@ -31,6 +33,7 @@ export class TaskViewComponent implements OnInit, OnDestroy {
   dueTasks: Task[] = [];
   isLoadingRandom = false;
   showArchived = false;
+  privateMode = localStorage.getItem(PRIVATE_MODE_STORAGE_KEY) === 'true';
 
   private static readonly REFRESH_INTERVAL_MS = 60_000;
   private refreshSubscription?: Subscription;
@@ -53,8 +56,14 @@ export class TaskViewComponent implements OnInit, OnDestroy {
     this.refreshSubscription?.unsubscribe();
   }
 
+  togglePrivateMode(): void {
+    this.privateMode = !this.privateMode;
+    localStorage.setItem(PRIVATE_MODE_STORAGE_KEY, String(this.privateMode));
+    this.loadDueTasks();
+  }
+
   loadDueTasks(): void {
-    this.taskService.getDueTasks().subscribe(tasks => {
+    this.taskService.getDueTasks(this.privateMode).subscribe(tasks => {
       // Filter tasks based on archived state
       this.dueTasks = tasks.filter(task => {
         if (this.showArchived) {

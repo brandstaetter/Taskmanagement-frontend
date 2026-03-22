@@ -115,7 +115,7 @@ describe('PlanItComponent', () => {
 
       component.ngOnInit();
 
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false);
     });
   });
 
@@ -294,7 +294,7 @@ describe('PlanItComponent', () => {
       component.toggleArchivedTasks();
 
       expect(component.showArchived).toBe(true);
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, true, true);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, true, true, false);
     });
   });
 
@@ -311,7 +311,7 @@ describe('PlanItComponent', () => {
 
       expect(component.myTasksOnly).toBe(true);
       // include_created=false when myTasksOnly=true
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, false);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, false, false);
     });
 
     it('should persist myTasksOnly state to localStorage', () => {
