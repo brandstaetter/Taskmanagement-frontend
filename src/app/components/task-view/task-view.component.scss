@@ -44,6 +44,12 @@
         border-color: rgba(240, 160, 48, 0.4);
         background: rgba(240, 160, 48, 0.05);
       }
+
+      &.mat-warn {
+        color: #f0a030;
+        border-color: rgba(240, 160, 48, 0.4);
+        background: rgba(240, 160, 48, 0.08);
+      }
     }
   }
 
