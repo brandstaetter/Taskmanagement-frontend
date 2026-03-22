@@ -131,7 +131,7 @@ export class TaskService {
           q: query,
           include_archived: includeArchived,
           ...(includePrivate ? { include_private: true } : {}),
-        } as Record<string, unknown>,
+        } as { q: string; include_archived?: boolean } & Record<string, unknown>,
       })
     ).pipe(map(response => this.handleApiResponse(response)));
   }
