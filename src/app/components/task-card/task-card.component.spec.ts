@@ -487,6 +487,53 @@ describe('TaskCardComponent', () => {
     });
   });
 
+  describe('isPrivate method', () => {
+    it('should return true when task has is_private=true', () => {
+      component.task = { ...component.task, is_private: true } as Task & { is_private: boolean };
+      expect(component.isPrivate()).toBe(true);
+    });
+
+    it('should return false when task has is_private=false', () => {
+      component.task = { ...component.task, is_private: false } as Task & { is_private: boolean };
+      expect(component.isPrivate()).toBe(false);
+    });
+
+    it('should return false when task has no is_private property', () => {
+      expect(component.isPrivate()).toBe(false);
+    });
+
+    it('should return false when is_private is undefined', () => {
+      component.task = {
+        ...component.task,
+        is_private: undefined,
+      } as Task & { is_private: undefined };
+      expect(component.isPrivate()).toBe(false);
+    });
+  });
+
+  describe('Private task lock icon', () => {
+    it('should show lock icon when task is private', () => {
+      component.task = { ...component.task, is_private: true } as Task & { is_private: boolean };
+      fixture.detectChanges();
+      const lockIcon = fixture.debugElement.query(By.css('.private-icon'));
+      expect(lockIcon).toBeTruthy();
+      expect(lockIcon.nativeElement.textContent.trim()).toBe('lock');
+    });
+
+    it('should not show lock icon when task is not private', () => {
+      component.task = { ...component.task, is_private: false } as Task & { is_private: boolean };
+      fixture.detectChanges();
+      const lockIcon = fixture.debugElement.query(By.css('.private-icon'));
+      expect(lockIcon).toBeFalsy();
+    });
+
+    it('should not show lock icon when is_private is not set', () => {
+      fixture.detectChanges();
+      const lockIcon = fixture.debugElement.query(By.css('.private-icon'));
+      expect(lockIcon).toBeFalsy();
+    });
+  });
+
   describe('Avatar display', () => {
     it('should show creator avatar image when creator_avatar_url is set', () => {
       component.task = {

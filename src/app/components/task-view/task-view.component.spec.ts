@@ -553,6 +553,139 @@ describe('TaskViewComponent', () => {
     expect(taskService.getDueTasks.mock.calls.length).toBe(1); // no more calls
   }));
 
+  describe('togglePrivateMode', () => {
+    afterEach(() => {
+      localStorage.removeItem('taskView_privateMode');
+    });
+
+    it('should toggle privateMode and reload tasks', () => {
+      expect(component.privateMode).toBe(false);
+
+      component.togglePrivateMode();
+
+      expect(component.privateMode).toBe(true);
+      expect(taskService.getDueTasks).toHaveBeenCalledWith(true);
+    });
+
+    it('should toggle privateMode back to false', () => {
+      component.privateMode = true;
+
+      component.togglePrivateMode();
+
+      expect(component.privateMode).toBe(false);
+      expect(taskService.getDueTasks).toHaveBeenCalledWith(false);
+    });
+
+    it('should persist privateMode state to localStorage', () => {
+      component.togglePrivateMode();
+      expect(localStorage.getItem('taskView_privateMode')).toBe('true');
+
+      component.togglePrivateMode();
+      expect(localStorage.getItem('taskView_privateMode')).toBe('false');
+    });
+  });
+
+  describe('addTaskToView', () => {
+    it('should add a task to dueTasks', () => {
+      component.dueTasks = [];
+      const newTask: Task = {
+        id: 99,
+        title: 'New Task',
+        description: 'Desc',
+        state: 'todo',
+      };
+
+      component.addTaskToView(newTask);
+
+      expect(component.dueTasks).toContainEqual(newTask);
+    });
+
+    it('should not add duplicate tasks', () => {
+      component.dueTasks = [mockTasks[0]];
+
+      component.addTaskToView(mockTasks[0]);
+
+      expect(component.dueTasks.length).toBe(1);
+    });
+
+    it('should not add archived tasks when showArchived is false', () => {
+      component.dueTasks = [];
+      component.showArchived = false;
+      const archivedTask: Task = {
+        id: 99,
+        title: 'Archived',
+        description: 'Desc',
+        state: 'archived',
+      };
+
+      component.addTaskToView(archivedTask);
+
+      expect(component.dueTasks.length).toBe(0);
+    });
+
+    it('should not add done tasks when showArchived is false', () => {
+      component.dueTasks = [];
+      component.showArchived = false;
+      const doneTask: Task = {
+        id: 99,
+        title: 'Done',
+        description: 'Desc',
+        state: 'done',
+      };
+
+      component.addTaskToView(doneTask);
+
+      expect(component.dueTasks.length).toBe(0);
+    });
+
+    it('should not add private tasks when privateMode is false', () => {
+      component.dueTasks = [];
+      component.privateMode = false;
+      const privateTask = {
+        id: 99,
+        title: 'Private',
+        description: 'Desc',
+        state: 'todo',
+        is_private: true,
+      } as Task & { is_private: boolean };
+
+      component.addTaskToView(privateTask);
+
+      expect(component.dueTasks.length).toBe(0);
+    });
+
+    it('should add private tasks when privateMode is true', () => {
+      component.dueTasks = [];
+      component.privateMode = true;
+      const privateTask = {
+        id: 99,
+        title: 'Private',
+        description: 'Desc',
+        state: 'todo',
+        is_private: true,
+      } as Task & { is_private: boolean };
+
+      component.addTaskToView(privateTask);
+
+      expect(component.dueTasks).toContainEqual(privateTask);
+    });
+
+    it('should add non-private tasks when privateMode is false', () => {
+      component.dueTasks = [];
+      component.privateMode = false;
+      const normalTask: Task = {
+        id: 99,
+        title: 'Normal',
+        description: 'Desc',
+        state: 'todo',
+      };
+
+      component.addTaskToView(normalTask);
+
+      expect(component.dueTasks).toContainEqual(normalTask);
+    });
+  });
+
   it('should navigate to task details on onViewDetails', () => {
     component.onViewDetails(mockTasks[0]);
 

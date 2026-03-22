@@ -298,6 +298,53 @@ describe('PlanItComponent', () => {
     });
   });
 
+  describe('togglePrivateMode', () => {
+    afterEach(() => {
+      localStorage.removeItem('planIt_privateMode');
+    });
+
+    it('should toggle privateMode and reload tasks', () => {
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
+      expect(component.privateMode).toBe(false);
+
+      component.togglePrivateMode();
+
+      expect(component.privateMode).toBe(true);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, true);
+    });
+
+    it('should toggle privateMode back to false', () => {
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
+      component.privateMode = true;
+
+      component.togglePrivateMode();
+
+      expect(component.privateMode).toBe(false);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false);
+    });
+
+    it('should persist privateMode state to localStorage', () => {
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
+
+      component.togglePrivateMode();
+      expect(localStorage.getItem('planIt_privateMode')).toBe('true');
+
+      component.togglePrivateMode();
+      expect(localStorage.getItem('planIt_privateMode')).toBe('false');
+    });
+
+    it('should pass privateMode=true to getTasks when combined with other toggles', () => {
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
+      component.privateMode = true;
+      component.showArchived = true;
+      component.myTasksOnly = true;
+
+      component.loadTasks();
+
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, true, false, true);
+    });
+  });
+
   describe('toggleMyTasks', () => {
     afterEach(() => {
       localStorage.removeItem('planIt_myTasksOnly');
