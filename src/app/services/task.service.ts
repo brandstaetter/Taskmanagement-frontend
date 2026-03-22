@@ -60,7 +60,8 @@ export class TaskService {
     limit = 100,
     includeArchived = false,
     includeCreated = true,
-    includePrivate = false
+    includePrivate = false,
+    showAll = false
   ): Observable<Task[]> {
     return from(
       readTasksApiV1TasksGet({
@@ -71,6 +72,7 @@ export class TaskService {
           limit,
           include_archived: includeArchived,
           include_created: includeCreated,
+          show_all: showAll,
           ...(includePrivate ? { include_private: true } : {}),
         } as Record<string, unknown>,
       })
