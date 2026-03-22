@@ -46,6 +46,50 @@ describe('TaskService', () => {
       expect(observable).toBeDefined();
       expect(typeof observable.subscribe).toBe('function');
     });
+
+    it('should call fetch without include_private when includePrivate is false', done => {
+      (window.fetch as jest.SpyInstance).mockReturnValue(
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve([]),
+          text: () => Promise.resolve('[]'),
+        } as Response)
+      );
+
+      service.getTasks(0, 100, false, true, false).subscribe({
+        next: () => {
+          const fetchCall = (window.fetch as jest.SpyInstance).mock.calls.pop();
+          const url = fetchCall[0] instanceof Request ? fetchCall[0].url : String(fetchCall[0]);
+          expect(url).not.toContain('include_private');
+          done();
+        },
+        error: done,
+      });
+    });
+
+    it('should call fetch with include_private=true when includePrivate is true', done => {
+      (window.fetch as jest.SpyInstance).mockReturnValue(
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve([]),
+          text: () => Promise.resolve('[]'),
+        } as Response)
+      );
+
+      service.getTasks(0, 100, false, true, true).subscribe({
+        next: () => {
+          const fetchCall = (window.fetch as jest.SpyInstance).mock.calls.pop();
+          const url = fetchCall[0] instanceof Request ? fetchCall[0].url : String(fetchCall[0]);
+          expect(url).toContain('include_private=true');
+          done();
+        },
+        error: done,
+      });
+    });
   });
 
   describe('getTask', () => {
@@ -60,6 +104,50 @@ describe('TaskService', () => {
       expect(service.getDueTasks).toBeDefined();
       expect(typeof service.getDueTasks).toBe('function');
     });
+
+    it('should call fetch without include_private when includePrivate is false', done => {
+      (window.fetch as jest.SpyInstance).mockReturnValue(
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve([]),
+          text: () => Promise.resolve('[]'),
+        } as Response)
+      );
+
+      service.getDueTasks(false).subscribe({
+        next: () => {
+          const fetchCall = (window.fetch as jest.SpyInstance).mock.calls.pop();
+          const url = fetchCall[0] instanceof Request ? fetchCall[0].url : String(fetchCall[0]);
+          expect(url).not.toContain('include_private');
+          done();
+        },
+        error: done,
+      });
+    });
+
+    it('should call fetch with include_private=true when includePrivate is true', done => {
+      (window.fetch as jest.SpyInstance).mockReturnValue(
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve([]),
+          text: () => Promise.resolve('[]'),
+        } as Response)
+      );
+
+      service.getDueTasks(true).subscribe({
+        next: () => {
+          const fetchCall = (window.fetch as jest.SpyInstance).mock.calls.pop();
+          const url = fetchCall[0] instanceof Request ? fetchCall[0].url : String(fetchCall[0]);
+          expect(url).toContain('include_private=true');
+          done();
+        },
+        error: done,
+      });
+    });
   });
 
   describe('getRandomTask', () => {
@@ -73,6 +161,50 @@ describe('TaskService', () => {
     it('should have searchTasks method', () => {
       expect(service.searchTasks).toBeDefined();
       expect(typeof service.searchTasks).toBe('function');
+    });
+
+    it('should call fetch without include_private when includePrivate is false', done => {
+      (window.fetch as jest.SpyInstance).mockReturnValue(
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve([]),
+          text: () => Promise.resolve('[]'),
+        } as Response)
+      );
+
+      service.searchTasks('test', false, false).subscribe({
+        next: () => {
+          const fetchCall = (window.fetch as jest.SpyInstance).mock.calls.pop();
+          const url = fetchCall[0] instanceof Request ? fetchCall[0].url : String(fetchCall[0]);
+          expect(url).not.toContain('include_private');
+          done();
+        },
+        error: done,
+      });
+    });
+
+    it('should call fetch with include_private=true when includePrivate is true', done => {
+      (window.fetch as jest.SpyInstance).mockReturnValue(
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve([]),
+          text: () => Promise.resolve('[]'),
+        } as Response)
+      );
+
+      service.searchTasks('test', false, true).subscribe({
+        next: () => {
+          const fetchCall = (window.fetch as jest.SpyInstance).mock.calls.pop();
+          const url = fetchCall[0] instanceof Request ? fetchCall[0].url : String(fetchCall[0]);
+          expect(url).toContain('include_private=true');
+          done();
+        },
+        error: done,
+      });
     });
   });
 

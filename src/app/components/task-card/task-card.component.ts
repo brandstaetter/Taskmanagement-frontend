@@ -135,6 +135,10 @@ export class TaskCardComponent {
     return (assignee.display_name ?? String(assignee.id)).charAt(0).toUpperCase();
   }
 
+  isPrivate(): boolean {
+    return (this.task as Task & { is_private?: boolean }).is_private === true;
+  }
+
   getTaskClass(): string {
     if (this.task.state === 'archived') {
       return 'archived-task';

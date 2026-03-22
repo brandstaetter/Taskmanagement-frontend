@@ -12,6 +12,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
 
 const MY_TASKS_STORAGE_KEY = 'planIt_myTasksOnly';
+const PRIVATE_MODE_STORAGE_KEY = 'planIt_privateMode';
 
 @Component({
   selector: 'app-plan-it',
@@ -35,6 +36,7 @@ export class PlanItComponent implements OnInit {
   archivedTasks: Task[] = [];
   showArchived = false;
   myTasksOnly = localStorage.getItem(MY_TASKS_STORAGE_KEY) === 'true';
+  privateMode = localStorage.getItem(PRIVATE_MODE_STORAGE_KEY) === 'true';
   private readonly SOON_THRESHOLD_HOURS = 12;
 
   constructor(
@@ -54,38 +56,46 @@ export class PlanItComponent implements OnInit {
     this.loadTasks();
   }
 
+  togglePrivateMode(): void {
+    this.privateMode = !this.privateMode;
+    localStorage.setItem(PRIVATE_MODE_STORAGE_KEY, String(this.privateMode));
+    this.loadTasks();
+  }
+
   loadTasks(): void {
     // When myTasksOnly=true: include_created=false (only assigned to me)
     // When myTasksOnly=false: include_created=true (all tasks visible to me)
-    this.taskService.getTasks(0, 100, this.showArchived, !this.myTasksOnly).subscribe({
-      next: tasks => {
-        // Sort tasks by due date (null dates go to the end)
-        const sortedTasks = tasks.sort((a, b) => {
-          if (!a.due_date && !b.due_date) return 0;
-          if (!a.due_date) return 1;
-          if (!b.due_date) return -1;
-          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-        });
+    this.taskService
+      .getTasks(0, 100, this.showArchived, !this.myTasksOnly, this.privateMode)
+      .subscribe({
+        next: tasks => {
+          // Sort tasks by due date (null dates go to the end)
+          const sortedTasks = tasks.sort((a, b) => {
+            if (!a.due_date && !b.due_date) return 0;
+            if (!a.due_date) return 1;
+            if (!b.due_date) return -1;
+            return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+          });
 
-        // Filter tasks by state
-        this.todoTasks = sortedTasks.filter(task => task.state === 'todo');
-        this.inProgressTasks = sortedTasks.filter(task => task.state === 'in_progress');
-        this.doneTasks = sortedTasks.filter(task => task.state === 'done');
-        this.archivedTasks = sortedTasks.filter(task => task.state === 'archived');
-      },
-      error: error => {
-        // Only show error toast if it's not a 404 (no tasks found)
-        if (error.status !== 404) {
-          console.error('Error loading tasks:', error);
-          this.snackBar.open('Error loading tasks', 'Close', { duration: 3000 });
-        }
-        // Initialize empty arrays for all task lists
-        this.todoTasks = [];
-        this.inProgressTasks = [];
-        this.doneTasks = [];
-        this.archivedTasks = [];
-      },
-    });
+          // Filter tasks by state
+          this.todoTasks = sortedTasks.filter(task => task.state === 'todo');
+          this.inProgressTasks = sortedTasks.filter(task => task.state === 'in_progress');
+          this.doneTasks = sortedTasks.filter(task => task.state === 'done');
+          this.archivedTasks = sortedTasks.filter(task => task.state === 'archived');
+        },
+        error: error => {
+          // Only show error toast if it's not a 404 (no tasks found)
+          if (error.status !== 404) {
+            console.error('Error loading tasks:', error);
+            this.snackBar.open('Error loading tasks', 'Close', { duration: 3000 });
+          }
+          // Initialize empty arrays for all task lists
+          this.todoTasks = [];
+          this.inProgressTasks = [];
+          this.doneTasks = [];
+          this.archivedTasks = [];
+        },
+      });
   }
 
   onStartTask(task: Task): void {

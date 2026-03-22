@@ -59,7 +59,8 @@ export class TaskService {
     skip = 0,
     limit = 100,
     includeArchived = false,
-    includeCreated = true
+    includeCreated = true,
+    includePrivate = false
   ): Observable<Task[]> {
     return from(
       readTasksApiV1TasksGet({
@@ -70,7 +71,8 @@ export class TaskService {
           limit,
           include_archived: includeArchived,
           include_created: includeCreated,
-        },
+          ...(includePrivate ? { include_private: true } : {}),
+        } as Record<string, unknown>,
       })
     ).pipe(map(response => this.handleApiResponse(response)));
   }
@@ -85,12 +87,13 @@ export class TaskService {
     ).pipe(map(response => this.handleApiResponse(response)));
   }
 
-  getDueTasks(): Observable<Task[]> {
+  getDueTasks(includePrivate = false): Observable<Task[]> {
     return from(
       readDueTasksApiV1TasksDueGet({
         client: this.authenticatedClient,
         security: this.getAuthSecurity(),
-      })
+        ...(includePrivate ? { query: { include_private: true } } : {}),
+      } as Record<string, unknown>)
     ).pipe(map(response => this.handleApiResponse(response)));
   }
 
@@ -119,7 +122,7 @@ export class TaskService {
     );
   }
 
-  searchTasks(query: string, includeArchived = false): Observable<Task[]> {
+  searchTasks(query: string, includeArchived = false, includePrivate = false): Observable<Task[]> {
     return from(
       searchTasksApiV1TasksSearchGet({
         client: this.authenticatedClient,
@@ -127,7 +130,8 @@ export class TaskService {
         query: {
           q: query,
           include_archived: includeArchived,
-        },
+          ...(includePrivate ? { include_private: true } : {}),
+        } as { q: string; include_archived?: boolean } & Record<string, unknown>,
       })
     ).pipe(map(response => this.handleApiResponse(response)));
   }

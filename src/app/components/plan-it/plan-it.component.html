@@ -23,6 +23,19 @@
       <mat-icon>{{ myTasksOnly ? 'person' : 'group' }}</mat-icon>
       {{ myTasksOnly ? 'My Tasks' : 'All Tasks' }}
     </button>
+    <button
+      mat-flat-button
+      [color]="privateMode ? 'warn' : undefined"
+      (click)="togglePrivateMode()"
+      [matTooltip]="
+        privateMode
+          ? 'Private mode ON — private tasks are visible'
+          : 'Private mode OFF — click to show private tasks'
+      "
+    >
+      <mat-icon>{{ privateMode ? 'lock_open' : 'lock' }}</mat-icon>
+      {{ privateMode ? 'Private ON' : 'Private OFF' }}
+    </button>
   </div>
 
   @if (!hasAnyTasks()) {

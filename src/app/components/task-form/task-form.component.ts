@@ -120,6 +120,7 @@ export class TaskFormComponent implements OnInit {
       due_time: [dueTime],
       reward: [this.task?.reward || null],
       assigned_user_ids: [existingAssigneeIds],
+      is_private: [(this.task as Task & { is_private?: boolean })?.is_private ?? false],
       anonymous: [false],
     });
 
@@ -288,6 +289,10 @@ export class TaskFormComponent implements OnInit {
         if (formValue['reward'] !== this.task.reward) {
           changes['reward'] = formValue['reward']?.trim() || undefined;
         }
+        const currentPrivate = (this.task as Task & { is_private?: boolean })?.is_private ?? false;
+        if (formValue['is_private'] !== currentPrivate) {
+          (changes as Record<string, unknown>)['is_private'] = formValue['is_private'] || false;
+        }
         // Always include assigned_user_ids in edit to allow clearing
         changes['assigned_user_ids'] = formValue['assigned_user_ids'] ?? [];
       }
@@ -295,7 +300,7 @@ export class TaskFormComponent implements OnInit {
       if (this.mode === 'create') {
         // For create, include all values
         const currentUser = this.authService.getCurrentUser();
-        const taskData: TaskCreate & { anonymous?: boolean } = {
+        const taskData: TaskCreate & { is_private?: boolean; anonymous?: boolean } = {
           ...formValue,
           state: 'todo',
           due_date: formValue.due_date || undefined,
@@ -304,6 +309,7 @@ export class TaskFormComponent implements OnInit {
           assigned_user_ids: formValue.assigned_user_ids?.length
             ? formValue.assigned_user_ids
             : undefined,
+          is_private: formValue.is_private || undefined,
           anonymous: formValue.anonymous || undefined,
         };
 

@@ -700,6 +700,113 @@ describe('TaskFormComponent', () => {
     });
   });
 
+  describe('is_private form control', () => {
+    it('should default is_private to false in create mode', () => {
+      component.mode = 'create';
+      component.task = undefined;
+      component.ngOnInit();
+      fixture.detectChanges();
+
+      expect(component.taskForm.get('is_private')?.value).toBe(false);
+    });
+
+    it('should initialize is_private from existing task in edit mode', () => {
+      const privateTask = { ...mockTask, is_private: true } as Task & { is_private: boolean };
+      component.mode = 'edit';
+      component.task = privateTask;
+      component.ngOnInit();
+      fixture.detectChanges();
+
+      expect(component.taskForm.get('is_private')?.value).toBe(true);
+    });
+
+    it('should default is_private to false when editing task without is_private', () => {
+      component.mode = 'edit';
+      component.task = mockTask;
+      component.ngOnInit();
+      fixture.detectChanges();
+
+      expect(component.taskForm.get('is_private')?.value).toBe(false);
+    });
+
+    it('should include is_private in create payload when toggled on', async () => {
+      component.mode = 'create';
+      component.task = undefined;
+      component.ngOnInit();
+      fixture.detectChanges();
+
+      const titleInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="title"]' })
+      );
+      const descInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="description"]' })
+      );
+      const submitButton = await loader.getHarness(
+        MatButtonHarness.with({ selector: 'button[type="submit"]' })
+      );
+
+      await titleInput.setValue('Private Task');
+      await descInput.setValue('Secret Description');
+      component.taskForm.get('is_private')?.setValue(true);
+
+      await submitButton.click();
+      await fixture.whenStable();
+
+      expect(taskService.createTask).toHaveBeenCalledWith(
+        expect.objectContaining({ is_private: true })
+      );
+    });
+
+    it('should detect is_private change in edit mode', async () => {
+      component.mode = 'edit';
+      component.task = mockTask;
+      component.ngOnInit();
+      fixture.detectChanges();
+      taskService.updateTask.mockClear();
+
+      const updatedTask = { ...mockTask, is_private: true } as Task & { is_private: boolean };
+      taskService.updateTask.mockReturnValue(of(updatedTask));
+
+      component.taskForm.get('is_private')?.setValue(true);
+
+      const submitButton = await loader.getHarness(
+        MatButtonHarness.with({ selector: 'button[type="submit"]' })
+      );
+      await submitButton.click();
+      await fixture.whenStable();
+
+      expect(taskService.updateTask).toHaveBeenCalledWith(
+        mockTask.id,
+        expect.objectContaining({ is_private: true })
+      );
+    });
+
+    it('should not send is_private when unchanged in edit mode', async () => {
+      component.mode = 'edit';
+      component.task = mockTask;
+      component.ngOnInit();
+      fixture.detectChanges();
+      taskService.updateTask.mockClear();
+
+      // Change title only
+      const titleInput = await loader.getHarness(
+        MatInputHarness.with({ selector: '[formControlName="title"]' })
+      );
+      await titleInput.setValue('Updated Title');
+
+      taskService.updateTask.mockReturnValue(of({ ...mockTask, title: 'Updated Title' }));
+
+      const submitButton = await loader.getHarness(
+        MatButtonHarness.with({ selector: 'button[type="submit"]' })
+      );
+      await submitButton.click();
+      await fixture.whenStable();
+
+      const updateCall = taskService.updateTask.mock.calls[0];
+      expect(updateCall[1]).not.toHaveProperty('is_private');
+    });
+  });
+
   describe('getUserDisplayName', () => {
     it('should return display_name when set', () => {
       const user = {

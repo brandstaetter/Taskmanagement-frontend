@@ -1,6 +1,11 @@
 <mat-card class="task-card" [ngClass]="getTaskClass()">
   <mat-card-header>
-    <mat-card-title>{{ task.title }}</mat-card-title>
+    <mat-card-title>
+      @if (isPrivate()) {
+        <mat-icon class="private-icon" matTooltip="Private task">lock</mat-icon>
+      }
+      {{ task.title }}
+    </mat-card-title>
     @if (showActions) {
       <button mat-icon-button [matMenuTriggerFor]="menu" class="more-actions">
         <mat-icon>more_vert</mat-icon>
