@@ -43,6 +43,7 @@ export class UserProfileComponent implements OnInit {
   isLoadingPassword = false;
   isLoadingAvatar = false;
   isLoadingDisplayName = false;
+  isLoadingWipLimit = false;
 
   passwordForm = this.fb.group({
     currentPassword: ['', [Validators.required, Validators.minLength(8)]],
@@ -58,6 +59,10 @@ export class UserProfileComponent implements OnInit {
     displayName: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(50)]],
   });
 
+  wipLimitForm = this.fb.group({
+    wipLimit: [5, [Validators.required, Validators.min(1), Validators.max(50)]],
+  });
+
   ngOnInit(): void {
     this.loadUserProfile();
   }
@@ -69,6 +74,10 @@ export class UserProfileComponent implements OnInit {
     }
     if (this.user?.display_name) {
       this.displayNameForm.patchValue({ displayName: this.user.display_name });
+    }
+    const wipLimit = (this.user as User & { wip_limit?: number })?.wip_limit;
+    if (wipLimit !== undefined) {
+      this.wipLimitForm.patchValue({ wipLimit });
     }
   }
 
@@ -199,6 +208,33 @@ export class UserProfileComponent implements OnInit {
           panelClass: ['error-snackbar'],
         });
         this.isLoadingAvatar = false;
+      },
+    });
+  }
+
+  updateWipLimit(): void {
+    if (this.wipLimitForm.invalid || this.isLoadingWipLimit) {
+      this.wipLimitForm.markAllAsTouched();
+      return;
+    }
+
+    this.isLoadingWipLimit = true;
+    const wipLimit = this.wipLimitForm.controls.wipLimit.value ?? 5;
+    this.userService.updateWipLimit(wipLimit).subscribe({
+      next: user => {
+        this.user = user;
+        this.snackBar.open('WIP limit updated successfully', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar'],
+        });
+        this.isLoadingWipLimit = false;
+      },
+      error: err => {
+        this.snackBar.open(err.error?.detail || 'Failed to update WIP limit', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+        });
+        this.isLoadingWipLimit = false;
       },
     });
   }

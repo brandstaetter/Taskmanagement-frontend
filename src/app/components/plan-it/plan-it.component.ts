@@ -100,7 +100,10 @@ export class PlanItComponent implements OnInit {
 
   onStartTask(task: Task): void {
     this.taskService.startTask(task.id).subscribe({
-      next: () => {
+      next: result => {
+        if (result.warning) {
+          this.snackBar.open(result.warning, 'Close', { duration: 5000 });
+        }
         this.loadTasks();
       },
       error: error => {

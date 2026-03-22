@@ -198,6 +198,44 @@ describe('PlanItComponent', () => {
 
       expect(mockTaskService.startTask).toHaveBeenCalledWith(mockTasks[0].id);
     });
+
+    it('should show warning snackbar when startTask returns a warning', () => {
+      const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+      mockTaskService.startTask.mockReturnValue(
+        of({ ...mockTasks[0], warning: 'WIP limit exceeded' })
+      );
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
+
+      component.onStartTask(mockTasks[0]);
+
+      expect(snackBarSpy).toHaveBeenCalledWith('WIP limit exceeded', 'Close', {
+        duration: 5000,
+      });
+    });
+
+    it('should not show warning snackbar when startTask returns without warning', () => {
+      const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+      mockTaskService.startTask.mockReturnValue(of(mockTasks[0]));
+      mockTaskService.getTasks.mockReturnValue(of(mockTasks));
+
+      component.onStartTask(mockTasks[0]);
+
+      expect(snackBarSpy).not.toHaveBeenCalled();
+    });
+
+    it('should handle startTask error', () => {
+      const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      mockTaskService.startTask.mockReturnValue(throwError(() => new Error('Start failed')));
+
+      component.onStartTask(mockTasks[0]);
+
+      expect(consoleSpy).toHaveBeenCalledWith('Error starting task:', expect.any(Error));
+      expect(snackBarSpy).toHaveBeenCalledWith('Error starting task', 'Close', {
+        duration: 3000,
+      });
+      consoleSpy.mockRestore();
+    });
   });
 
   describe('onCompleteTask', () => {

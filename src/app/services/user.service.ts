@@ -1,3 +1,4 @@
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -23,8 +24,13 @@ export type { UserPasswordChange, UserAvatarUpdate, UserDisplayNameUpdate, User 
 })
 export class UserService {
   private authenticatedClient: Client;
+  private http: HttpClient;
 
-  constructor(private authService: AuthService) {
+  constructor(
+    private authService: AuthService,
+    http: HttpClient
+  ) {
+    this.http = http;
     this.authenticatedClient = createClient(
       createConfig({
         baseUrl: environment.baseUrl,
@@ -75,5 +81,15 @@ export class UserService {
         security: this.getAuthSecurity(),
       })
     ).pipe(map(response => response.data as User[]));
+  }
+
+  updateWipLimit(wipLimit: number): Observable<User> {
+    const token = this.authService.getAccessToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.patch<User>(
+      `${environment.baseUrl}/api/v1/users/me/wip-limit`,
+      { wip_limit: wipLimit },
+      { headers }
+    );
   }
 }

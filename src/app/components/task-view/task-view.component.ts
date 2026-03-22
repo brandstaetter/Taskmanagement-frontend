@@ -108,7 +108,10 @@ export class TaskViewComponent implements OnInit, OnDestroy {
   }
 
   onStartTask(task: Task): void {
-    this.taskService.startTask(task.id).subscribe(() => {
+    this.taskService.startTask(task.id).subscribe(result => {
+      if (result.warning) {
+        this.snackBar.open(result.warning, 'Close', { duration: 5000 });
+      }
       this.loadDueTasks();
     });
   }
@@ -180,7 +183,10 @@ export class TaskViewComponent implements OnInit, OnDestroy {
         // After successful print, start the task if it's in todo state
         if (task.state === 'todo') {
           this.taskService.startTask(task.id).subscribe({
-            next: () => {
+            next: result => {
+              if (result.warning) {
+                this.snackBar.open(result.warning, 'Close', { duration: 5000 });
+              }
               this.loadDueTasks();
             },
           });
