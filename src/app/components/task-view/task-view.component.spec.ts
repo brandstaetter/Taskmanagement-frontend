@@ -183,6 +183,47 @@ describe('TaskViewComponent', () => {
     expect(taskService.getDueTasks).toHaveBeenCalledTimes(2); // initial + after start
   }));
 
+  it('should show warning snackbar when starting a task returns a warning', fakeAsync(() => {
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    taskService.startTask.mockReturnValue(
+      of({ ...mockTasks[0], state: 'in_progress', warning: 'WIP limit exceeded' })
+    );
+
+    component.onStartTask(mockTasks[0]);
+    tick();
+
+    expect(snackBarSpy).toHaveBeenCalledWith('WIP limit exceeded', 'Close', {
+      duration: 5000,
+    });
+  }));
+
+  it('should not show warning snackbar when starting a task without warning', fakeAsync(() => {
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    taskService.startTask.mockReturnValue(of({ ...mockTasks[0], state: 'in_progress' }));
+
+    component.onStartTask(mockTasks[0]);
+    tick();
+
+    expect(snackBarSpy).not.toHaveBeenCalled();
+  }));
+
+  it('should show warning snackbar when printing a todo task triggers start with warning', fakeAsync(() => {
+    const snackBarSpy = jest.spyOn(component['snackBar'], 'open');
+    taskService.startTask.mockReturnValue(
+      of({ ...mockTasks[0], state: 'in_progress', warning: 'WIP limit exceeded' })
+    );
+
+    // Mock non-PDF response to avoid DOM manipulation issues
+    taskService.printTask.mockReturnValue(of({ message: 'Sent to printer' }));
+
+    component.onPrintTask(mockTasks[0]); // mockTasks[0] is in 'todo' state
+    tick();
+
+    expect(snackBarSpy).toHaveBeenCalledWith('WIP limit exceeded', 'Close', {
+      duration: 5000,
+    });
+  }));
+
   it('should complete a task', fakeAsync(() => {
     component.onCompleteTask(mockTasks[0]);
     tick();

@@ -1,9 +1,15 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { UserService } from './user.service';
 import { UserPasswordChange, UserAvatarUpdate, UserDisplayNameUpdate } from '../generated';
+import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 describe('UserService', () => {
   let service: UserService;
+  let httpMock: HttpTestingController;
+  let mockAuthService: jest.Mocked<AuthService>;
 
   beforeEach(() => {
     // Ensure fetch spy exists before configuring it
@@ -20,10 +26,24 @@ describe('UserService', () => {
       } as Response)
     );
 
+    mockAuthService = {
+      getAccessToken: jest.fn().mockReturnValue('test-token'),
+    } as unknown as jest.Mocked<AuthService>;
+
     TestBed.configureTestingModule({
-      providers: [UserService],
+      providers: [
+        UserService,
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: mockAuthService },
+      ],
     });
     service = TestBed.inject(UserService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
   });
 
   it('should be created', () => {
@@ -113,6 +133,49 @@ describe('UserService', () => {
       const observable = service.getUsers();
       expect(observable).toBeDefined();
       expect(typeof observable.subscribe).toBe('function');
+    });
+  });
+
+  describe('updateWipLimit', () => {
+    it('should have updateWipLimit method', () => {
+      expect(service.updateWipLimit).toBeDefined();
+      expect(typeof service.updateWipLimit).toBe('function');
+    });
+
+    it('should send PATCH request with correct body and auth header', () => {
+      const mockUser = {
+        id: 1,
+        email: 'test@example.com',
+        is_active: true,
+        is_admin: false,
+        is_superadmin: false,
+        created_at: '2023-01-01',
+        updated_at: '2023-01-01',
+        wip_limit: 10,
+      };
+
+      service.updateWipLimit(10).subscribe(user => {
+        expect(user).toEqual(mockUser);
+      });
+
+      const req = httpMock.expectOne(`${environment.baseUrl}/api/v1/users/me/wip-limit`);
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.body).toEqual({ wip_limit: 10 });
+      expect(req.request.headers.get('Authorization')).toBe('Bearer test-token');
+      req.flush(mockUser);
+    });
+
+    it('should return Observable<User>', () => {
+      const observable = service.updateWipLimit(5);
+      expect(observable).toBeDefined();
+      expect(typeof observable.subscribe).toBe('function');
+
+      // Subscribe to trigger the HTTP request
+      observable.subscribe();
+
+      // Consume the pending request
+      const req = httpMock.expectOne(`${environment.baseUrl}/api/v1/users/me/wip-limit`);
+      req.flush({});
     });
   });
 
