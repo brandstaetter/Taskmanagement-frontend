@@ -37,6 +37,7 @@ export class TaskViewComponent implements OnInit, OnDestroy {
 
   private static readonly REFRESH_INTERVAL_MS = 60_000;
   private refreshSubscription?: Subscription;
+  private destroyed = false;
 
   constructor(
     private taskService: TaskService,
@@ -54,6 +55,7 @@ export class TaskViewComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.refreshSubscription?.unsubscribe();
   }
 
@@ -72,7 +74,9 @@ export class TaskViewComponent implements OnInit, OnDestroy {
         }
         return task.state !== 'archived' && task.state !== 'done';
       });
-      this.cdr.detectChanges();
+      if (!this.destroyed) {
+        this.cdr.detectChanges();
+      }
     });
   }
 

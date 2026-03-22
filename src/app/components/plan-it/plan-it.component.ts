@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Task } from '../../services/task.service';
@@ -29,7 +29,7 @@ const PRIVATE_MODE_STORAGE_KEY = 'planIt_privateMode';
   templateUrl: './plan-it.component.html',
   styleUrls: ['./plan-it.component.scss'],
 })
-export class PlanItComponent implements OnInit {
+export class PlanItComponent implements OnInit, OnDestroy {
   todoTasks: Task[] = [];
   inProgressTasks: Task[] = [];
   doneTasks: Task[] = [];
@@ -38,6 +38,7 @@ export class PlanItComponent implements OnInit {
   myTasksOnly = localStorage.getItem(MY_TASKS_STORAGE_KEY) === 'true';
   privateMode = localStorage.getItem(PRIVATE_MODE_STORAGE_KEY) === 'true';
   private readonly SOON_THRESHOLD_HOURS = 12;
+  private destroyed = false;
 
   constructor(
     private taskService: TaskService,
@@ -49,6 +50,10 @@ export class PlanItComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadTasks();
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
   }
 
   toggleMyTasks(): void {
@@ -83,7 +88,9 @@ export class PlanItComponent implements OnInit {
           this.inProgressTasks = sortedTasks.filter(task => task.state === 'in_progress');
           this.doneTasks = sortedTasks.filter(task => task.state === 'done');
           this.archivedTasks = sortedTasks.filter(task => task.state === 'archived');
-          this.cdr.detectChanges();
+          if (!this.destroyed) {
+            this.cdr.detectChanges();
+          }
         },
         error: error => {
           // Only show error toast if it's not a 404 (no tasks found)
