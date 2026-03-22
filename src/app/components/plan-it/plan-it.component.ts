@@ -69,10 +69,10 @@ export class PlanItComponent implements OnInit, OnDestroy {
   }
 
   loadTasks(): void {
-    // When myTasksOnly=true: include_created=false (only assigned to me)
-    // When myTasksOnly=false: include_created=true (all tasks visible to me)
+    // When myTasksOnly=true: show only tasks assigned to me
+    // When myTasksOnly=false: show all tasks in the system
     this.taskService
-      .getTasks(0, 100, this.showArchived, !this.myTasksOnly, this.privateMode)
+      .getTasks(0, 100, this.showArchived, true, this.privateMode, !this.myTasksOnly)
       .subscribe({
         next: tasks => {
           // Sort tasks by due date (null dates go to the end)

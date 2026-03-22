@@ -3,7 +3,7 @@
   "info": {
     "title": "Task Management API",
     "description": "API for managing tasks with printing capabilities",
-    "version": "0.11.2"
+    "version": "0.13.0"
   },
   "paths": {
     "/api/v1/auth/user/token": {
@@ -1031,6 +1031,82 @@
         }
       }
     },
+    "/api/v1/admin/data/export": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Export All Data",
+        "description": "Export all tasks and users as JSON. Admin-only.",
+        "operationId": "export_all_data_api_v1_admin_data_export_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataExport"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/data/import": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Import All Data",
+        "description": "Import tasks and users from a JSON export. Admin-only.\n\nMerges with existing data — does not replace the database.\nReturns a summary of what was imported and what was skipped.",
+        "operationId": "import_all_data_api_v1_admin_data_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/print/": {
       "post": {
         "tags": [
@@ -1482,6 +1558,36 @@
         ],
         "title": "Body_login_user_for_access_token_api_v1_auth_user_token_post"
       },
+      "DataExport": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "default": 1
+          },
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/ExportedUser"
+            },
+            "type": "array",
+            "title": "Users"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/ExportedTask"
+            },
+            "type": "array",
+            "title": "Tasks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "users",
+          "tasks"
+        ],
+        "title": "DataExport",
+        "description": "Root export envelope with version for backwards compatibility."
+      },
       "DbOperationResponse": {
         "properties": {
           "message": {
@@ -1507,6 +1613,171 @@
         "title": "DbOperationResponse",
         "description": "Response for database operations."
       },
+      "ExportedTask": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "reward": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reward"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "started_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started By"
+          },
+          "assigned_user_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Assigned User Ids",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "state"
+        ],
+        "title": "ExportedTask",
+        "description": "Task data for export."
+      },
+      "ExportedUser": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "title": "Is Admin"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "is_active",
+          "is_admin"
+        ],
+        "title": "ExportedUser",
+        "description": "User data for export (excludes sensitive fields like hashed_password)."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1519,6 +1790,65 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ImportResult": {
+        "properties": {
+          "users_imported": {
+            "type": "integer",
+            "title": "Users Imported",
+            "default": 0
+          },
+          "users_skipped": {
+            "type": "integer",
+            "title": "Users Skipped",
+            "default": 0
+          },
+          "tasks_imported": {
+            "type": "integer",
+            "title": "Tasks Imported",
+            "default": 0
+          },
+          "tasks_skipped": {
+            "type": "integer",
+            "title": "Tasks Skipped",
+            "default": 0
+          },
+          "skipped_items": {
+            "items": {
+              "$ref": "#/components/schemas/ImportSkippedItem"
+            },
+            "type": "array",
+            "title": "Skipped Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ImportResult",
+        "description": "Summary of an import operation."
+      },
+      "ImportSkippedItem": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "identifier",
+          "reason"
+        ],
+        "title": "ImportSkippedItem",
+        "description": "An item that was skipped during import."
       },
       "MaintenanceResponse": {
         "properties": {
