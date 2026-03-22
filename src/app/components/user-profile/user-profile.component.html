@@ -61,6 +61,37 @@
             </div>
           </mat-tab>
 
+          <mat-tab label="WIP Limit">
+            <div class="tab-content">
+              <form [formGroup]="wipLimitForm" (ngSubmit)="updateWipLimit()">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Work In Progress Limit</mat-label>
+                  <input matInput type="number" formControlName="wipLimit" min="1" max="50" />
+                  <mat-hint>Maximum tasks you can have in progress at once (1–50)</mat-hint>
+                  @if (wipLimitForm.controls.wipLimit.hasError('required')) {
+                    <mat-error>WIP limit is required</mat-error>
+                  }
+                  @if (wipLimitForm.controls.wipLimit.hasError('min')) {
+                    <mat-error>WIP limit must be at least 1</mat-error>
+                  }
+                  @if (wipLimitForm.controls.wipLimit.hasError('max')) {
+                    <mat-error>WIP limit must be 50 or fewer</mat-error>
+                  }
+                </mat-form-field>
+
+                <button
+                  mat-raised-button
+                  color="primary"
+                  type="submit"
+                  class="full-width"
+                  [disabled]="wipLimitForm.invalid || isLoadingWipLimit"
+                >
+                  {{ isLoadingWipLimit ? 'Updating...' : 'Update WIP Limit' }}
+                </button>
+              </form>
+            </div>
+          </mat-tab>
+
           <mat-tab label="Change Password">
             <div class="tab-content">
               <form [formGroup]="passwordForm" (ngSubmit)="updatePassword()">

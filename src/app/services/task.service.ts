@@ -142,14 +142,14 @@ export class TaskService {
     ).pipe(map(response => this.handleApiResponse(response)));
   }
 
-  startTask(id: number): Observable<Task> {
+  startTask(id: number): Observable<Task & { warning?: string }> {
     return from(
       startTaskApiV1TasksTaskIdStartPost({
         client: this.authenticatedClient,
         security: this.getAuthSecurity(),
         path: { task_id: id },
       })
-    ).pipe(map(response => this.handleApiResponse(response)));
+    ).pipe(map(response => this.handleApiResponse(response) as Task & { warning?: string }));
   }
 
   printTask(id: number, printerType?: string): Observable<Blob | Record<string, unknown>> {
