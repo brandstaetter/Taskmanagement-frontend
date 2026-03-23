@@ -3,7 +3,16 @@
     <h2 class="app-title">TASKMAN</h2>
     <div class="user-menu">
       <button mat-icon-button [matMenuTriggerFor]="menu">
-        <mat-icon>account_circle</mat-icon>
+        @if (userAvatarUrl) {
+          <img
+            [src]="userAvatarUrl"
+            alt="User avatar"
+            class="user-avatar"
+            referrerpolicy="no-referrer"
+          />
+        } @else {
+          <mat-icon>account_circle</mat-icon>
+        }
       </button>
       <mat-menu #menu="matMenu">
         <div class="user-info" mat-menu-item disabled>
