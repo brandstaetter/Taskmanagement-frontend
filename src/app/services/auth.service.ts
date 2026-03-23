@@ -90,6 +90,10 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  updateCurrentUser(user: User): void {
+    this.setStoredUser(user);
+  }
+
   isAdmin(): boolean {
     const user = this.getCurrentUser();
     return user?.is_admin ?? false;
