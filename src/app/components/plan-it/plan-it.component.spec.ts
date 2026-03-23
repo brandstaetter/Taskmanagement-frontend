@@ -6,6 +6,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { PlanItComponent } from './plan-it.component';
 import { TaskService } from '../../services/task.service';
+import { AuthService } from '../../services/auth.service';
 import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
 import { Task } from '../../generated';
 
@@ -16,6 +17,7 @@ describe('PlanItComponent', () => {
   let mockSnackBar: jest.Mocked<MatSnackBar>;
   let mockDialog: jest.Mocked<MatDialog>;
   let mockRouter: jest.Mocked<Router>;
+  let mockAuthService: jest.Mocked<AuthService>;
 
   const mockTasks: Task[] = [
     {
@@ -57,6 +59,17 @@ describe('PlanItComponent', () => {
     mockSnackBar = { open: jest.fn() } as unknown as jest.Mocked<MatSnackBar>;
     mockDialog = { open: jest.fn() } as unknown as jest.Mocked<MatDialog>;
     mockRouter = { navigate: jest.fn() } as unknown as jest.Mocked<Router>;
+    mockAuthService = {
+      getCurrentUser: jest
+        .fn()
+        .mockReturnValue({
+          id: 42,
+          email: 'test@example.com',
+          is_active: true,
+          is_admin: false,
+          is_superadmin: false,
+        }),
+    } as unknown as jest.Mocked<AuthService>;
 
     // Simple mock that bypasses Angular Material's internal dialog logic
     const mockDialogRef = {
@@ -74,6 +87,7 @@ describe('PlanItComponent', () => {
       imports: [BrowserAnimationsModule, PlanItComponent],
       providers: [
         { provide: TaskService, useValue: mockTaskService },
+        { provide: AuthService, useValue: mockAuthService },
         { provide: MatSnackBar, useValue: mockSnackBar },
         { provide: Router, useValue: mockRouter },
       ],
@@ -115,7 +129,7 @@ describe('PlanItComponent', () => {
 
       component.ngOnInit();
 
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false, true);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false, false);
     });
   });
 
@@ -332,13 +346,13 @@ describe('PlanItComponent', () => {
       component.toggleArchivedTasks();
 
       expect(component.showArchived).toBe(true);
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, true, true, false, true);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, true, true, false, false);
     });
   });
 
   describe('togglePrivateMode', () => {
     afterEach(() => {
-      localStorage.removeItem('planIt_privateMode');
+      localStorage.removeItem('planIt_privateMode_42');
     });
 
     it('should toggle privateMode and reload tasks', () => {
@@ -348,7 +362,7 @@ describe('PlanItComponent', () => {
       component.togglePrivateMode();
 
       expect(component.privateMode).toBe(true);
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, true, true);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, true, false);
     });
 
     it('should toggle privateMode back to false', () => {
@@ -358,17 +372,17 @@ describe('PlanItComponent', () => {
       component.togglePrivateMode();
 
       expect(component.privateMode).toBe(false);
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false, true);
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false, false);
     });
 
     it('should persist privateMode state to localStorage', () => {
       mockTaskService.getTasks.mockReturnValue(of(mockTasks));
 
       component.togglePrivateMode();
-      expect(localStorage.getItem('planIt_privateMode')).toBe('true');
+      expect(localStorage.getItem('planIt_privateMode_42')).toBe('true');
 
       component.togglePrivateMode();
-      expect(localStorage.getItem('planIt_privateMode')).toBe('false');
+      expect(localStorage.getItem('planIt_privateMode_42')).toBe('false');
     });
 
     it('should pass privateMode=true to getTasks when combined with other toggles', () => {
@@ -385,18 +399,18 @@ describe('PlanItComponent', () => {
 
   describe('toggleMyTasks', () => {
     afterEach(() => {
-      localStorage.removeItem('planIt_myTasksOnly');
+      localStorage.removeItem('planIt_myTasksOnly_42');
     });
 
     it('should toggle myTasksOnly and reload tasks', () => {
       mockTaskService.getTasks.mockReturnValue(of(mockTasks));
-      expect(component.myTasksOnly).toBe(false);
+      expect(component.myTasksOnly).toBe(true);
 
       component.toggleMyTasks();
 
-      expect(component.myTasksOnly).toBe(true);
-      // showAll=false when myTasksOnly=true
-      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false, false);
+      expect(component.myTasksOnly).toBe(false);
+      // showAll=true when myTasksOnly=false
+      expect(mockTaskService.getTasks).toHaveBeenCalledWith(0, 100, false, true, false, true);
     });
 
     it('should persist myTasksOnly state to localStorage', () => {
@@ -404,11 +418,11 @@ describe('PlanItComponent', () => {
 
       component.toggleMyTasks();
 
-      expect(localStorage.getItem('planIt_myTasksOnly')).toBe('true');
+      expect(localStorage.getItem('planIt_myTasksOnly_42')).toBe('false');
 
       component.toggleMyTasks();
 
-      expect(localStorage.getItem('planIt_myTasksOnly')).toBe('false');
+      expect(localStorage.getItem('planIt_myTasksOnly_42')).toBe('true');
     });
   });
 

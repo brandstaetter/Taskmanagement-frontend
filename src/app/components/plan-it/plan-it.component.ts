@@ -10,9 +10,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TaskEditDialogComponent } from '../task-edit-dialog/task-edit-dialog.component';
+import { AuthService } from '../../services/auth.service';
 
-const MY_TASKS_STORAGE_KEY = 'planIt_myTasksOnly';
-const PRIVATE_MODE_STORAGE_KEY = 'planIt_privateMode';
+const MY_TASKS_STORAGE_KEY_PREFIX = 'planIt_myTasksOnly';
+const PRIVATE_MODE_STORAGE_KEY_PREFIX = 'planIt_privateMode';
 
 @Component({
   selector: 'app-plan-it',
@@ -35,18 +36,29 @@ export class PlanItComponent implements OnInit, OnDestroy {
   doneTasks: Task[] = [];
   archivedTasks: Task[] = [];
   showArchived = false;
-  myTasksOnly = localStorage.getItem(MY_TASKS_STORAGE_KEY) === 'true';
-  privateMode = localStorage.getItem(PRIVATE_MODE_STORAGE_KEY) === 'true';
+  myTasksOnly = true;
+  privateMode = false;
   private readonly SOON_THRESHOLD_HOURS = 12;
   private destroyed = false;
 
   constructor(
     private taskService: TaskService,
+    private authService: AuthService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
     private router: Router,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    const userId = this.authService.getCurrentUser()?.id;
+    const myTasksKey = userId
+      ? `${MY_TASKS_STORAGE_KEY_PREFIX}_${userId}`
+      : MY_TASKS_STORAGE_KEY_PREFIX;
+    const privateModeKey = userId
+      ? `${PRIVATE_MODE_STORAGE_KEY_PREFIX}_${userId}`
+      : PRIVATE_MODE_STORAGE_KEY_PREFIX;
+    this.myTasksOnly = localStorage.getItem(myTasksKey) !== 'false';
+    this.privateMode = localStorage.getItem(privateModeKey) === 'true';
+  }
 
   ngOnInit(): void {
     this.loadTasks();
@@ -58,14 +70,25 @@ export class PlanItComponent implements OnInit, OnDestroy {
 
   toggleMyTasks(): void {
     this.myTasksOnly = !this.myTasksOnly;
-    localStorage.setItem(MY_TASKS_STORAGE_KEY, String(this.myTasksOnly));
+    localStorage.setItem(
+      this.getUserStorageKey(MY_TASKS_STORAGE_KEY_PREFIX),
+      String(this.myTasksOnly)
+    );
     this.loadTasks();
   }
 
   togglePrivateMode(): void {
     this.privateMode = !this.privateMode;
-    localStorage.setItem(PRIVATE_MODE_STORAGE_KEY, String(this.privateMode));
+    localStorage.setItem(
+      this.getUserStorageKey(PRIVATE_MODE_STORAGE_KEY_PREFIX),
+      String(this.privateMode)
+    );
     this.loadTasks();
+  }
+
+  private getUserStorageKey(prefix: string): string {
+    const userId = this.authService.getCurrentUser()?.id;
+    return userId ? `${prefix}_${userId}` : prefix;
   }
 
   loadTasks(): void {
