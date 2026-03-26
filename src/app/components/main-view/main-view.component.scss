@@ -49,6 +49,19 @@
           background-color: rgba(255, 255, 255, 0.06) !important;
         }
       }
+
+      .user-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1.5px solid #32323a;
+        transition: border-color 0.2s ease;
+      }
+
+      button:hover .user-avatar {
+        border-color: #f0a030;
+      }
     }
   }
 

@@ -35,7 +35,10 @@ describe('UserProfileComponent', () => {
       updateDisplayName: jest.fn(),
       updateWipLimit: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
-    const authServiceSpy = { getCurrentUser: jest.fn() } as unknown as jest.Mocked<AuthService>;
+    const authServiceSpy = {
+      getCurrentUser: jest.fn(),
+      updateCurrentUser: jest.fn(),
+    } as unknown as jest.Mocked<AuthService>;
     const routerSpy = { navigate: jest.fn() } as unknown as jest.Mocked<Router>;
 
     await TestBed.configureTestingModule({

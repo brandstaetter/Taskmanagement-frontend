@@ -49,6 +49,11 @@ export class MainViewComponent {
     return this.authService.getCurrentUser();
   }
 
+  get userAvatarUrl(): string | null {
+    const user = this.currentUser;
+    return user?.avatar_url || user?.gravatar_url || null;
+  }
+
   onTabChange(index: number): void {
     this.selectedIndex = index;
     this.currentView = index === 0 ? 'do-it' : 'plan-it';

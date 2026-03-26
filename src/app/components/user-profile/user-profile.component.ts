@@ -142,6 +142,7 @@ export class UserProfileComponent implements OnInit {
       .subscribe({
         next: user => {
           this.user = user;
+          this.authService.updateCurrentUser(user);
           this.snackBar.open('Avatar updated successfully', 'Close', {
             duration: 3000,
             panelClass: ['success-snackbar'],
@@ -172,6 +173,7 @@ export class UserProfileComponent implements OnInit {
       .subscribe({
         next: user => {
           this.user = user;
+          this.authService.updateCurrentUser(user);
           this.snackBar.open('Display name updated successfully', 'Close', {
             duration: 3000,
             panelClass: ['success-snackbar'],
@@ -195,6 +197,7 @@ export class UserProfileComponent implements OnInit {
     this.userService.updateAvatar({ avatar_url: this.user.gravatar_url }).subscribe({
       next: user => {
         this.user = user;
+        this.authService.updateCurrentUser(user);
         this.avatarForm.patchValue({ avatarUrl: user.avatar_url ?? '' });
         this.snackBar.open('Avatar set to Gravatar', 'Close', {
           duration: 3000,
@@ -223,6 +226,7 @@ export class UserProfileComponent implements OnInit {
     this.userService.updateWipLimit(wipLimit).subscribe({
       next: user => {
         this.user = user;
+        this.authService.updateCurrentUser(user);
         this.snackBar.open('WIP limit updated successfully', 'Close', {
           duration: 3000,
           panelClass: ['success-snackbar'],
