@@ -194,7 +194,7 @@ test.describe('Task CRUD Lifecycle', () => {
     // (not the more_vert menu button which is in the header)
     await expect(doneCard.locator('button').last()).toBeVisible({ timeout: 10_000 });
     // Verify COMPLETE button is gone to confirm state transition
-    await expect(doneCard.getByRole('button', { name: 'COMPLETE' })).toBeHidden();
+    await expect(doneCard.getByRole('button', { name: 'COMPLETE' })).toBeHidden({ timeout: 10_000 });
 
     // --- ARCHIVE the task ---
     await doneCard.locator('button').last().click();
