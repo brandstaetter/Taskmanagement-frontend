@@ -4,10 +4,11 @@
 services:
   backend:
     build:
-      context: ../Taskmanagement-App
+      # CI checks out to ./Taskmanagement-App, local dev uses ../Taskmanagement-App
+      context: ${BACKEND_PATH:-../Taskmanagement-App}
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "${E2E_BACKEND_PORT:-8000}:8000"
     environment:
       # Use SQLite in-memory for fast, isolated tests
       DATABASE_URL: "sqlite:///./e2e_test.db"

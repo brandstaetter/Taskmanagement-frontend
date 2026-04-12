@@ -73,7 +73,15 @@ jobs:
     - name: Start backend via Docker Compose
       run: |
         docker compose -f docker-compose.e2e.yml up -d --build --wait
-        echo "Backend container started"
+        echo "Backend container started on port 8001"
+      env:
+        BACKEND_PATH: ./Taskmanagement-App
+        E2E_BACKEND_PORT: 8001
+
+    - name: Configure frontend for E2E backend port
+      run: |
+        sed -i 's|localhost:8000|localhost:8001|g' src/environments/environment.ts
+        echo "Updated environment.ts to use port 8001"
 
     - name: Start frontend dev server
       run: npm start &
