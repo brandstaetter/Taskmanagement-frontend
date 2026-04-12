@@ -68,7 +68,7 @@ jobs:
       run: npm ci
 
     - name: Install Playwright browsers
-      run: npx playwright install --with-deps chromium
+      run: npx playwright install chromium  # deps pre-installed on runner
 
     - name: Start backend via Docker Compose
       run: |
