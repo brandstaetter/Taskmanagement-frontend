@@ -74,6 +74,8 @@ jobs:
       run: |
         docker compose -f docker-compose.e2e.yml up -d --build --wait
         echo "Backend container started"
+      env:
+        BACKEND_PATH: ./Taskmanagement-App
 
     - name: Start frontend dev server
       run: npm start &
