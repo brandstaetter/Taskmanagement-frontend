@@ -9,11 +9,12 @@ test.describe('Smoke Tests - Navigation', () => {
   test.use({ storageState: 'e2e/.auth/user.json' });
 
   test('login page renders', async ({ page }) => {
-    // Clear auth state for this test so the guard redirects to login
+    // Navigate first to establish origin, then clear auth state
+    await page.goto('/login');
     await page.context().clearCookies();
     await page.evaluate(() => localStorage.clear());
-
-    await page.goto('/login');
+    // Reload to trigger redirect with cleared state
+    await page.reload();
     const loginPage = new LoginPage(page);
     await expect(loginPage.usernameInput).toBeVisible();
     await expect(loginPage.passwordInput).toBeVisible();
