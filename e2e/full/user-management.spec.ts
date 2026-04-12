@@ -48,10 +48,9 @@ test.describe('User Management', () => {
     await expect(userRow).toBeVisible({ timeout: 10_000 });
 
     // --- Delete the user ---
-    // Click the delete button (the red trash icon) in this user's row
-    await userRow
-      .getByRole('button', { name: /Delete user/i })
-      .click();
+    // Click the delete button (trash icon) - it's the last button in the row
+    const deleteBtn = userRow.locator('button').last();
+    await deleteBtn.click();
 
     // The confirm dialog should appear
     await expect(
@@ -67,6 +66,11 @@ test.describe('User Management', () => {
         hasText: /deleted successfully/i,
       })
     ).toBeVisible({ timeout: 10_000 });
+
+    // Reload the page and switch back to Users tab to verify deletion persisted
+    await page.reload();
+    await page.getByRole('tab', { name: 'Users' }).click();
+    await expect(page.locator('.users-table')).toBeVisible({ timeout: 10_000 });
 
     // Verify the user row is gone from the table
     await expect(userRow).toBeHidden({ timeout: 10_000 });

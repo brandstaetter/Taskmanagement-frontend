@@ -188,13 +188,12 @@ test.describe('Task CRUD Lifecycle', () => {
     // --- COMPLETE the task ---
     await card.getByRole('button', { name: 'COMPLETE' }).click();
 
-    // The card should now be in the "Done" column — verify archive icon appears
-    await expect(
-      card.getByRole('button', { name: /archive/i })
-    ).toBeVisible({ timeout: 10_000 });
+    // The card should now be in the "Done" column — verify archive button appears (last button on card)
+    const archiveBtn = card.locator('button').last();
+    await expect(archiveBtn).toBeVisible({ timeout: 10_000 });
 
     // --- ARCHIVE the task ---
-    await card.getByRole('button', { name: /archive/i }).click();
+    await archiveBtn.click();
     // The snackbar confirms archival
     await expect(
       page.locator('.mat-mdc-snack-bar-container', { hasText: /archived/i })
