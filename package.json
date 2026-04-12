@@ -22,7 +22,9 @@
     "test:coverage": "jest --coverage",
     "lint": "ng lint && eslint \"src/**/*.ts\"",
     "lint:fix": "ng lint --fix && eslint \"src/**/*.ts\" --fix",
-    "e2e": "ng e2e",
+    "e2e": "playwright test",
+    "e2e:smoke": "playwright test --project=smoke",
+    "e2e:headed": "playwright test --headed",
     "analyze": "ng build --stats-json && webpack-bundle-analyzer dist/frontend/stats.json",
     "clean": "rimraf dist node_modules",
     "clean:dist": "rimraf dist",
@@ -83,6 +85,7 @@
     "sonarqube-scanner": "^4.3.0",
     "typescript": "~5.9.0",
     "typescript-eslint": "8.58.1",
+    "@playwright/test": "^1.52.0",
     "webpack-bundle-analyzer": "^5.0.0"
   }
 }

@@ -1,0 +1,48 @@
+# Docker Compose for E2E testing
+# Starts the backend API for frontend E2E tests to hit
+
+services:
+  backend:
+    build:
+      context: ../Taskmanagement-App
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # Use SQLite in-memory for fast, isolated tests
+      DATABASE_URL: "sqlite:///./e2e_test.db"
+      SECRET_KEY: "e2e-test-secret-key-not-for-production"
+      ADMIN_USERNAME: "admin"
+      ADMIN_PASSWORD: "E2eAdminPass-123"
+      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      FRONTEND_URL: "http://localhost:4200"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    # Init the DB and create a test user on startup
+    command: >
+      sh -c "
+        python -m alembic upgrade head &&
+        python -c \"
+        import httpx
+        import time
+        from taskmanagement_app.main import app
+        from taskmanagement_app.db.session import SessionLocal
+        from taskmanagement_app.crud.user import create_user
+        from taskmanagement_app.schemas.user import UserCreate
+
+        db = SessionLocal()
+        try:
+            # Create test user if not exists
+            from taskmanagement_app.crud.user import get_user_by_email
+            if not get_user_by_email(db, 'e2e-test@example.com'):
+                create_user(db, UserCreate(email='e2e-test@example.com', password='E2eTestPass-123'))
+                print('Created e2e test user')
+        finally:
+            db.close()
+        \" &&
+        python -m uvicorn taskmanagement_app.main:app --host 0.0.0.0 --port 8000
+      "
