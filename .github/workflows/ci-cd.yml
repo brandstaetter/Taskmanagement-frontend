@@ -172,6 +172,8 @@ jobs:
         E2E_BASE_URL: ${{ secrets.DEPLOY_URL }}
         E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
         E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+        E2E_ADMIN_USERNAME: ${{ secrets.E2E_ADMIN_USERNAME }}
+        E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
 
     - name: Upload smoke test report
       if: always()
