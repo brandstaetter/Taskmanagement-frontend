@@ -4,7 +4,8 @@
 services:
   backend:
     build:
-      context: ../Taskmanagement-App
+      # CI checks out to ./Taskmanagement-App, local dev uses ../Taskmanagement-App
+      context: ${BACKEND_PATH:-../Taskmanagement-App}
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
