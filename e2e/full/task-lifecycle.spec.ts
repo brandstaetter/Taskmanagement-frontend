@@ -33,8 +33,8 @@ async function createTask(
  */
 async function goToPlanIt(page: Page): Promise<void> {
   await page.getByRole('tab', { name: 'Plan It' }).click();
-  // Wait for at least one column heading to be visible
-  await expect(page.locator('h2', { hasText: 'To Do' })).toBeVisible({
+  // Wait for the Plan It tab panel to be visible (toolbar buttons always present)
+  await expect(page.getByRole('button', { name: /Show Archived/i })).toBeVisible({
     timeout: 10_000,
   });
 }
