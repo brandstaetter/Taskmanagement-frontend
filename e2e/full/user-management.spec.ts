@@ -70,7 +70,13 @@ test.describe('User Management', () => {
     // Reload the page and switch back to Users tab to verify deletion persisted
     await page.reload();
     await page.getByRole('tab', { name: 'Users' }).click();
+    // Wait for spinner to disappear and table to be fully loaded
+    await expect(page.locator('mat-spinner')).toBeHidden({ timeout: 10_000 });
     await expect(page.locator('.users-table')).toBeVisible({ timeout: 10_000 });
+    // Wait for at least one row to ensure data has loaded
+    await expect(page.locator('.users-table .mat-mdc-row').first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Verify the user row is gone from the table
     await expect(userRow).toBeHidden({ timeout: 10_000 });

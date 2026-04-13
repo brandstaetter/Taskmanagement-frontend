@@ -188,12 +188,16 @@ test.describe('Task CRUD Lifecycle', () => {
     // --- COMPLETE the task ---
     await card.getByRole('button', { name: 'COMPLETE' }).click();
 
-    // The card should now be in the "Done" column — verify archive button appears (last button on card)
-    const archiveBtn = card.locator('button').last();
-    await expect(archiveBtn).toBeVisible({ timeout: 10_000 });
+    // Wait for the card to move to Done column (re-fetch card since DOM changed)
+    const doneCard = taskCard(page, title);
+    // Wait for archive button to appear - it's the standalone button at the bottom of the card
+    // (not the more_vert menu button which is in the header)
+    await expect(doneCard.locator('button').last()).toBeVisible({ timeout: 10_000 });
+    // Verify COMPLETE button is gone to confirm state transition
+    await expect(doneCard.getByRole('button', { name: 'COMPLETE' })).toBeHidden();
 
     // --- ARCHIVE the task ---
-    await archiveBtn.click();
+    await doneCard.locator('button').last().click();
     // The snackbar confirms archival
     await expect(
       page.locator('.mat-mdc-snack-bar-container', { hasText: /archived/i })
