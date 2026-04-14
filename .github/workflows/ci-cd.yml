@@ -133,7 +133,7 @@ jobs:
         retention-days: 14
 
   deploy-to-lan:
-    needs: build-and-test
+    needs: [build-and-test, e2e-tests]
     if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, lan, nginx]
 
