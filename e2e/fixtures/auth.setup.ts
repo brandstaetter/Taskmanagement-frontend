@@ -12,8 +12,8 @@ setup('authenticate as regular user', async ({ page }) => {
   await loginPage.goto();
   await loginPage.login(username, password);
 
-  // Wait for redirect away from login page
-  await expect(page).not.toHaveURL(/\/login/);
+  // Wait for redirect away from login page (longer timeout for slow production servers)
+  await expect(page).not.toHaveURL(/\/login/, { timeout: 30_000 });
 
   await page.context().storageState({ path: USER_FILE });
 });
@@ -26,8 +26,8 @@ setup('authenticate as admin', async ({ page }) => {
   await loginPage.goto();
   await loginPage.login(username, password);
 
-  // Wait for redirect away from login page
-  await expect(page).not.toHaveURL(/\/login/);
+  // Wait for redirect away from login page (longer timeout for slow production servers)
+  await expect(page).not.toHaveURL(/\/login/, { timeout: 30_000 });
 
   await page.context().storageState({ path: ADMIN_FILE });
 });
