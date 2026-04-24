@@ -82,7 +82,7 @@
     "lint-staged": "^16.0.0",
     "prettier": "^3.5.1",
     "rimraf": "^6.0.1",
-    "sonarqube-scanner": "^4.3.0",
+    "sonarqube-scanner": "^4.3.6",
     "typescript": "~5.9.0",
     "typescript-eslint": "8.58.2",
     "@playwright/test": "^1.52.0",
