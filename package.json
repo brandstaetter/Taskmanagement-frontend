@@ -64,7 +64,7 @@
     "zone.js": "~0.16.0"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^21.0.0",
+    "@angular-devkit/build-angular": "^21.2.8",
     "@angular/cli": "^21.0.0",
     "@angular/compiler-cli": "^21.0.0",
     "@eslint/js": "^10.0.0",
