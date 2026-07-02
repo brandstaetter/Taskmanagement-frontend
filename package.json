@@ -68,7 +68,7 @@
     "@angular/cli": "^21.0.0",
     "@angular/compiler-cli": "^21.0.0",
     "@eslint/js": "^10.0.0",
-    "@hey-api/openapi-ts": "^0.96.0",
+    "@hey-api/openapi-ts": "^0.97.0",
     "@types/jest": "^30.0.0",
     "angular-eslint": "^21.0.0",
     "esbuild": ">=0.25.0",
