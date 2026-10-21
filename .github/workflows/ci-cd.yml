@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     
     - name: Setup Node.js
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: '24.x'
     
@@ -46,21 +46,26 @@ jobs:
   # Full E2E tests run against local dev server + backend via Docker Compose.
   # Runs on self-hosted runner which has Docker available.
   e2e-tests:
+    # All jobs using the shared LAN workspace must use this same group.
+    concurrency:
+      group: shared-lan-runner
+      queue: max
+      cancel-in-progress: false
     needs: build-and-test
     runs-on: [self-hosted, lan]
     timeout-minutes: 30
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Checkout backend repo (for Docker build)
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         repository: brandstaetter/Taskmanagement-App
         path: Taskmanagement-App
 
     - name: Setup Node.js
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: '24.x'
 
@@ -133,6 +138,11 @@ jobs:
         retention-days: 14
 
   deploy-to-lan:
+    # All jobs using the shared LAN workspace must use this same group.
+    concurrency:
+      group: shared-lan-runner
+      queue: max
+      cancel-in-progress: false
     needs: [build-and-test, e2e-tests]
     if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, lan, nginx]
@@ -154,16 +164,21 @@ jobs:
   # Post-deployment smoke tests run against the live production URL.
   # Runs on self-hosted runner to access LAN-deployed app.
   smoke-test:
+    # All jobs using the shared LAN workspace must use this same group.
+    concurrency:
+      group: shared-lan-runner
+      queue: max
+      cancel-in-progress: false
     needs: deploy-to-lan
     if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, lan]
     timeout-minutes: 15
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Setup Node.js
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: '24.x'
 
