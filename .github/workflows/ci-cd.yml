@@ -89,18 +89,30 @@ jobs:
         echo "Updated environment.ts to use port 8001"
 
     - name: Start frontend dev server
-      run: npm start &
+      run: |
+        rm -f "$RUNNER_TEMP/frontend-dev-server.pid"
+        npm run prestart
+        nohup ./node_modules/.bin/ng serve > "$RUNNER_TEMP/frontend-dev-server.log" 2>&1 < /dev/null &
+        echo "$!" > "$RUNNER_TEMP/frontend-dev-server.pid"
       env:
         NODE_ENV: development
+        CI: 'true'
+        NG_CLI_ANALYTICS: 'false'
 
     - name: Wait for frontend dev server
       run: |
         echo "Waiting for frontend on http://localhost:4200 ..."
         timeout=120
         elapsed=0
-        until curl -sf http://localhost:4200 > /dev/null 2>&1; do
+        until curl --max-time 5 -sf http://localhost:4200 > /dev/null 2>&1; do
+          if ! kill -0 "$(cat "$RUNNER_TEMP/frontend-dev-server.pid")" 2>/dev/null; then
+            echo "Frontend process exited before becoming ready"
+            cat "$RUNNER_TEMP/frontend-dev-server.log"
+            exit 1
+          fi
           if [ "$elapsed" -ge "$timeout" ]; then
             echo "Frontend did not start within ${timeout}s"
+            cat "$RUNNER_TEMP/frontend-dev-server.log"
             exit 1
           fi
           sleep 2
@@ -116,6 +128,21 @@ jobs:
         E2E_ADMIN_PASSWORD: 'E2eAdminPass-123'
         E2E_USERNAME: 'e2e-test@example.com'
         E2E_PASSWORD: 'E2eTestPass-123'
+
+    - name: Stop frontend dev server
+      if: always()
+      run: |
+        if [ -f "$RUNNER_TEMP/frontend-dev-server.pid" ]; then
+          kill "$(cat "$RUNNER_TEMP/frontend-dev-server.pid")" 2>/dev/null || true
+        fi
+
+    - name: Upload frontend server log
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: frontend-dev-server-log
+        path: ${{ runner.temp }}/frontend-dev-server.log
+        retention-days: 14
 
     - name: Stop backend container
       if: always()
