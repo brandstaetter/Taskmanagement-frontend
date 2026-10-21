@@ -304,6 +304,47 @@ describe('AuthService', () => {
       expect(mockGetCurrentUserFn).toHaveBeenCalled();
     });
 
+    it('waits for the profile before emitting login success', async () => {
+      const token: Token = { access_token: 'new-token', token_type: 'bearer' };
+      const user = { id: 1, email: 'test@example.com', is_admin: false } as User;
+      let resolveProfile!: (value: unknown) => void;
+      mockLoginFn.mockResolvedValue({ data: token, response: {} as Response });
+      mockGetCurrentUserFn.mockReturnValue(
+        new Promise(resolve => {
+          resolveProfile = resolve;
+        })
+      );
+      const next = jest.fn();
+      const complete = jest.fn();
+      service.login('test@example.com', 'password').subscribe({ next, complete });
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(mockGetCurrentUserFn).toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
+      expect(complete).not.toHaveBeenCalled();
+
+      resolveProfile({ data: user, response: {} as Response });
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(next).toHaveBeenCalledWith(token);
+      expect(complete).toHaveBeenCalledTimes(1);
+      expect(service.getCurrentUser()).toEqual(user);
+    });
+
+    it('propagates profile loading failure instead of emitting login success', async () => {
+      mockLoginFn.mockResolvedValue({
+        data: { access_token: 'new-token', token_type: 'bearer' },
+        response: {} as Response,
+      });
+      const error = { detail: 'Profile unavailable' };
+      mockGetCurrentUserFn.mockResolvedValue({ error, response: {} as Response });
+      await expect(
+        new Promise((resolve, reject) => {
+          service.login('test@example.com', 'password').subscribe({ next: resolve, error: reject });
+        })
+      ).rejects.toEqual(error);
+    });
+
     it('should handle getAuthSecurity when token exists', () => {
       jest.spyOn(Storage.prototype, 'getItem').mockReturnValue('test-token');
       // Mock fetch to prevent real HTTP calls
