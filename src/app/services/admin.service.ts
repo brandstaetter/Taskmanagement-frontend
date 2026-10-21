@@ -40,7 +40,7 @@ export class AdminService {
     return token ? [{ scheme: 'bearer' as const, type: 'http' as const }] : undefined;
   }
 
-  private handleApiResponse<T>(response: { data?: T; error?: unknown; response: Response }): T {
+  private handleApiResponse<T>(response: { data?: T; error?: unknown; response?: Response }): T {
     if (response.error) {
       throw response.error;
     }
