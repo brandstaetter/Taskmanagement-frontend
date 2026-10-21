@@ -56,7 +56,7 @@ export class AuthService {
     }
   }
 
-  private handleApiResponse<T>(response: { data?: T; error?: unknown; response: Response }): T {
+  private handleApiResponse<T>(response: { data?: T; error?: unknown; response?: Response }): T {
     if (response.error) {
       throw response.error;
     }
