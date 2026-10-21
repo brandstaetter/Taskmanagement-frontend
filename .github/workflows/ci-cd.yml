@@ -46,6 +46,10 @@ jobs:
   # Full E2E tests run against local dev server + backend via Docker Compose.
   # Runs on self-hosted runner which has Docker available.
   e2e-tests:
+    # All jobs using the shared LAN workspace must use this same group.
+    concurrency:
+      group: shared-lan-runner
+      cancel-in-progress: false
     needs: build-and-test
     runs-on: [self-hosted, lan]
     timeout-minutes: 30
@@ -133,6 +137,10 @@ jobs:
         retention-days: 14
 
   deploy-to-lan:
+    # All jobs using the shared LAN workspace must use this same group.
+    concurrency:
+      group: shared-lan-runner
+      cancel-in-progress: false
     needs: [build-and-test, e2e-tests]
     if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, lan, nginx]
@@ -154,6 +162,10 @@ jobs:
   # Post-deployment smoke tests run against the live production URL.
   # Runs on self-hosted runner to access LAN-deployed app.
   smoke-test:
+    # All jobs using the shared LAN workspace must use this same group.
+    concurrency:
+      group: shared-lan-runner
+      cancel-in-progress: false
     needs: deploy-to-lan
     if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, lan]
