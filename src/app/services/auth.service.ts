@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of, tap } from 'rxjs';
+import { BehaviorSubject, Observable, of, tap, throwError } from 'rxjs';
 import { from } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import {
   loginUserForAccessTokenApiV1AuthUserTokenPost,
   getCurrentUserInfoApiV1UsersMeGet,
@@ -165,7 +165,13 @@ export class AuthService {
         }
         this.setAccessToken(response.access_token);
         // Navigation and persisted sessions must see the fully loaded user.
-        return this.fetchCurrentUser().pipe(map(() => response));
+        return this.fetchCurrentUser().pipe(
+          map(() => response),
+          catchError(error => {
+            this.logout();
+            return throwError(() => error);
+          })
+        );
       })
     );
   }

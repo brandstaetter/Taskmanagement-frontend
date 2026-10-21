@@ -332,6 +332,8 @@ describe('AuthService', () => {
     });
 
     it('propagates profile loading failure instead of emitting login success', async () => {
+      const user = { id: 1, email: 'test@example.com', is_admin: false } as User;
+      service.updateCurrentUser(user);
       mockLoginFn.mockResolvedValue({
         data: { access_token: 'new-token', token_type: 'bearer' },
         response: {} as Response,
@@ -343,6 +345,9 @@ describe('AuthService', () => {
           service.login('test@example.com', 'password').subscribe({ next: resolve, error: reject });
         })
       ).rejects.toEqual(error);
+      expect(service.getAccessToken()).toBeNull();
+      expect(localStorage.getItem('taskman_user')).toBeNull();
+      expect(service.getCurrentUser()).toBeNull();
     });
 
     it('should handle getAuthSecurity when token exists', () => {
