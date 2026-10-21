@@ -87,5 +87,15 @@
     "typescript-eslint": "8.58.2",
     "@playwright/test": "^1.52.0",
     "webpack-bundle-analyzer": "^5.0.0"
+  },
+  "overrides": {
+    "vite": "7.3.7",
+    "@angular/cli": {
+      "@modelcontextprotocol/sdk": "1.32.0"
+    },
+    "sonarqube-scanner": {
+      "axios": "1.20.0",
+      "adm-zip": "0.6.1"
+    }
   }
 }
