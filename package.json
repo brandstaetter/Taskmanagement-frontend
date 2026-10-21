@@ -91,7 +91,7 @@
   "overrides": {
     "vite": "7.3.7",
     "@angular/cli": {
-      "@modelcontextprotocol/sdk": "1.32.0"
+      "@modelcontextprotocol/sdk": "1.32.1"
     },
     "sonarqube-scanner": {
       "axios": "1.20.0",
