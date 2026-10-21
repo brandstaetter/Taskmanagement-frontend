@@ -49,6 +49,7 @@ jobs:
     # All jobs using the shared LAN workspace must use this same group.
     concurrency:
       group: shared-lan-runner
+      queue: max
       cancel-in-progress: false
     needs: build-and-test
     runs-on: [self-hosted, lan]
@@ -140,6 +141,7 @@ jobs:
     # All jobs using the shared LAN workspace must use this same group.
     concurrency:
       group: shared-lan-runner
+      queue: max
       cancel-in-progress: false
     needs: [build-and-test, e2e-tests]
     if: github.ref == 'refs/heads/main'
@@ -165,6 +167,7 @@ jobs:
     # All jobs using the shared LAN workspace must use this same group.
     concurrency:
       group: shared-lan-runner
+      queue: max
       cancel-in-progress: false
     needs: deploy-to-lan
     if: github.ref == 'refs/heads/main'
