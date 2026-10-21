@@ -33,6 +33,7 @@ jobs:
         run: npm run test:ci -- --coverage
       
       - name: SonarQube Scan
+        if: github.actor != 'dependabot[bot]'
         uses: SonarSource/sonarqube-scan-action@f099b441665cb71b0414100cfaf6d835492cee5f
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
