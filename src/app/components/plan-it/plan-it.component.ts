@@ -1,4 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Task } from '../../services/task.service';
@@ -28,6 +34,7 @@ const PRIVATE_MODE_STORAGE_KEY_PREFIX = 'planIt_privateMode';
     MatDialogModule,
   ],
   templateUrl: './plan-it.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./plan-it.component.scss'],
 })
 export class PlanItComponent implements OnInit, OnDestroy {

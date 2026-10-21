@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TaskFormComponent } from '../task-form/task-form.component';
 
@@ -7,6 +7,7 @@ import { TaskFormComponent } from '../task-form/task-form.component';
   standalone: true,
   imports: [CommonModule, TaskFormComponent],
   templateUrl: './task-edit-dialog.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./task-edit-dialog.component.scss'],
 })
 export class TaskEditDialogComponent {}

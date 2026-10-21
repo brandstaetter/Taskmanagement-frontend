@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Task } from '../../services/task.service';
 import { MatCardModule } from '@angular/material/card';
@@ -21,6 +21,7 @@ import { MatMenuModule } from '@angular/material/menu';
     MatMenuModule,
   ],
   templateUrl: './task-card.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./task-card.component.scss'],
 })
 export class TaskCardComponent {
