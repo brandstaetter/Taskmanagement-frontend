@@ -1,4 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
@@ -27,6 +33,7 @@ const PRIVATE_MODE_STORAGE_KEY = 'taskView_privateMode';
     MatDialogModule,
   ],
   templateUrl: './task-view.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./task-view.component.scss'],
 })
 export class TaskViewComponent implements OnInit, OnDestroy {

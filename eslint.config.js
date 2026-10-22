@@ -31,6 +31,8 @@ module.exports = tseslint.config(
         },
       ],
       "@angular-eslint/prefer-inject": "off",
+      // Angular 22 migration retains eager checks for existing mutable component state.
+      "@angular-eslint/prefer-on-push-component-change-detection": "off",
     },
   },
   {
