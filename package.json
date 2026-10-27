@@ -98,7 +98,7 @@
       "@modelcontextprotocol/sdk": "1.32.2"
     },
     "sonarqube-scanner": {
-      "axios": "1.20.0",
+      "axios": "1.21.0",
       "adm-zip": "0.6.1"
     }
   }
